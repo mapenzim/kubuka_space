@@ -1,12 +1,12 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../lib/generated/prisma"
-  runtime  = "vercel-edge"
+  provider = "prisma-client-js"
+  runtime  = env("PRISMA_RUNTIME") // node (local) or vercel-edge (vercel)
+  output   = env("PRISMA_OUTPUT")  // custom for local, empty for vercel
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = env("PRISMA_DATABASE_URL")
 }
 
 model User {

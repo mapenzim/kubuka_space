@@ -5,7 +5,6 @@ import prisma from './prisma';
 import NextAuth, { type User } from 'next-auth';
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
       name: 'Credentials',
