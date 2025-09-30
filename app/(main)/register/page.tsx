@@ -4,7 +4,10 @@ import { useFormState } from "react-dom";
 import { registerUser } from "~/actions/data-actions";
 
 const initialState = { success: false, error: "" };
-
+/**
+ * 
+ * @returns the form 
+ */
 export default function RegisterForm() {
   const [state, formAction] = useFormState(registerUser, initialState);
 
