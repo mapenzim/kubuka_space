@@ -1,0 +1,13 @@
+'use client';
+
+import Loading from "~/components/loading";
+
+export default function LoadingSlug () {
+  return (
+    <div className="fixed left-0 top-0 z-50 h-full w-full bg-white opacity-75">
+      <div className="mt-[50vh] flex items-center justify-center">
+        <Loading size={40} className={""} />
+      </div>
+    </div>
+  );
+}
