@@ -7,12 +7,26 @@ import { registerUser } from "~/actions/data-actions";
 import { SubmitButton } from "./submitbtn";
 import { useFormState } from "react-dom";
 
+type RegisterResult = {
+  success?: boolean;
+  error?: string;
+};
+
+const initialState: RegisterResult = {};
+
 const Register = () => {
   const { data: session, status } = useSession();
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/";
+
+  const registerAction = async (
+    prevState: RegisterResult,
+    formData: FormData
+  ): Promise<RegisterResult> => {
+    return await registerUser(formData); // call your server action
+  };
     
   /**
    * Auto redirect if already logged in
@@ -31,7 +45,7 @@ const Register = () => {
     return <p>Loading...</p>
   }
 
-  const [state, formAction] = useFormState(registerUser, {error: undefined});
+  const [state, formAction] = useFormState(registerAction, {error: undefined});
 
   return (
     <form 

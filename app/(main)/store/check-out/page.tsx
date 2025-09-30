@@ -8,17 +8,14 @@ import { ReactElement, JSXElementConstructor, ReactNode, ReactPortal, Key, useSt
 import toast from "react-hot-toast";
 import { Ctx } from "~/context/provider";
 
-type Params = Promise<{ slug: string }>
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>
 
-const Page = (props: { params: Params, searchParams: SearchParams }) => {
+const Page = (props: { searchParams: SearchParams }) => {
   const [show, setShow] = useState(false);
   const { storeItems, user }: any = Ctx();
 
-  const params = use(props.params);
   const searchParams = use(props.searchParams);
   const query = searchParams.query;
-  const slug = params.slug;
   
   const router = useRouter();
   const cburl = usePathname();
@@ -46,7 +43,7 @@ const Page = (props: { params: Params, searchParams: SearchParams }) => {
         <p>
           This slug is: {query}
         </p>
-        <p>{query}{slug}</p>
+        <p>{query}</p>
         {storeItems?.filter((x: any) => x.plan === query)?.map((item: { plan: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; price: any; packages: any[]; }, index: Key | null | undefined) => (
           <div key={index} className="mt-8">
             <ul>

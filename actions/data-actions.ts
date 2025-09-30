@@ -8,23 +8,22 @@ import prisma from "~/lib/prisma";
 interface RegisterResult {
   success: boolean;
   error: string;
-  user: { id: number | null; email: string; role: Role };
+  user: { id: number | null; email: string; role: Role | null };
 }
 
 const registerUser = async (
-  prevState: { error?: string } | undefined,
   formData: FormData
 ): Promise<RegisterResult> => {
-  const name = formData?.get('name') as string;
-  const email = formData?.get('email') as string;
-  const password = formData?.get('password') as string;
+  const name = formData.get('name') as string;
+  const email = formData.get('email') as string;
+  const password = formData.get('password') as string;
 
   if (!email || !password) {
-    return { error: "Email and password required." };
+    return { error: "Email and password required.", user: { id: null, email: "", role: null}, success: false };
   }
 
   const existingUser = await prisma.user.findUnique({ where: { email } });
-  if (existingUser) { return { error: "User already exists" }; }
+  if (existingUser) { return { error: "User already exists", user: { id: null, email: "", role: null}, success: false }; }
 
   const hashedPwd = await hash(password, 10);
 
