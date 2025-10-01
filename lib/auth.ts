@@ -4,14 +4,15 @@ import { compare } from "bcryptjs";
 import prisma from './prisma';
 import NextAuth, { type User } from 'next-auth';
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
+export const authOptions = {
+  adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
       name: 'Credentials',
       credentials: {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' }
-      },
+      } as const,
       async authorize(credentials: Partial<Record<"email" | "password", unknown>>): Promise<User | null> {
         if (!credentials?.email || !credentials?.password) {
           return null;
@@ -23,7 +24,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         if (!user) return null;
 
-        const isValid = compare(credentials?.password as string, user?.password as string);
+        const isValid = await compare(credentials?.password as string, user?.password as string);
 
         if (!isValid) return null;
         
@@ -37,13 +38,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     })
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user }: any) {
       if (user) {
         token.role = (user as any).role;
       }
       return token;
     },
-    async session({ session, token }) {
+    async session({ session, token }: any) {
       if (session?.user) {
         (session?.user as any).role = token.role;
       }
@@ -52,4 +53,4 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   session: { strategy: 'jwt' },
   secret: process.env.NEXTAUTH_SECRET
-});
+}
