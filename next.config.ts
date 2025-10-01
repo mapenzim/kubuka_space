@@ -1,13 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  experimental: {
-    turbo: {
-      resolveAlias: {
-        "@prisma/client/index-browser": false,
-      },
-    },
-  },
+  /** next configs */
 };
 
 export default nextConfig;
