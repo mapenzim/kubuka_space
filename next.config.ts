@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   experimental: {
     turbo: {
       resolveAlias: {
-        "./prisma/client/index-browser": false,
+        "@prisma/client/index-browser": false,
       },
     },
   },
