@@ -1,5 +1,5 @@
 import { createContext, ReactNode, useContext } from "react";
-import { auth } from "~/lib/auth";
+import { auth } from "~/app/api/auth/[...nextauth]/route";
 
 type Props = {
   children?: ReactNode;

@@ -1,7 +1,7 @@
 "use client";
 
 import { PowerIcon } from "@heroicons/react/24/outline";
-import { signOut } from "~/lib/auth";
+import { signOut } from "~/app/api/auth/[...nextauth]/route";
 
 export function Logout()  {
 

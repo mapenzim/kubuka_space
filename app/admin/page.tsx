@@ -1,8 +1,8 @@
+import { getSession } from "next-auth/react";
 import { redirect } from "next/navigation";
-import { auth } from "~/lib/auth";
 
 export default async function AdminPage() {
-  const session = await auth();
+  const session = await getSession();
 
   if (!session) { redirect("/authentication"); }
 

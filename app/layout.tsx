@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ContextProvider } from "~/context/provider";
 import { NavigationBar } from "~/components/ui/head";
 import Footer from "~/components/ui/footer";
 import { meta_config } from "./meta_config";
-import { auth } from "~/lib/auth";
+import { auth } from "./api/auth/[...nextauth]/route";
 
-const geistSans = Geist({
+/*const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
@@ -15,7 +14,7 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
-});
+});*/
 
 export const metadata: Metadata = {
   title: meta_config.appTitle,
@@ -32,7 +31,7 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className="scroll-smooth">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`antialiased`}
       >
         <ContextProvider>
           <NavigationBar user={session?.user} />

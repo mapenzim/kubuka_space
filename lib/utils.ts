@@ -4,8 +4,8 @@ import {
   englishRecommendedTransformers,
 } from "obscenity";
 import { Role, User } from "./generated/prisma/client";
-import { auth } from "./auth";
 import { redirect } from "next/navigation";
+import { auth } from "~/app/api/auth/[...nextauth]/route";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export function cn(...classes: any[]) {
