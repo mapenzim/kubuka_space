@@ -3,14 +3,8 @@ import {
   englishDataset,
   englishRecommendedTransformers,
 } from "obscenity";
-import { Role, User } from "./generated/prisma/client";
-import { redirect } from "next/navigation";
-import { auth } from "~/app/api/auth/[...nextauth]/route";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-export function cn(...classes: any[]) {
-  return classes.filter(Boolean).join(' ');
-};
+import type { User } from "@prisma/client";
 
 export function formatName(fullName: User["name"] | undefined): string {
   if (!fullName) return "Anonymous User";
@@ -26,21 +20,4 @@ const matcher = new RegExpMatcher({
 
 export function containsProfanity(text: string): boolean {
   return matcher.hasMatch(text);
-}
-
-export async function requireAnyRole(roles: Role[]) {
-  const session = await auth();
-
-  if (!session) {
-    const { headers } = await import("next/headers");
-
-    const currentUrl = (await headers()).get("referer") || "/";
-    redirect(`authentication?callbackUrl=${encodeURIComponent(currentUrl)}`);
-  }
-
-  if (!roles.includes((session.user as any).role)) {
-    redirect("/not-authorized");
-  }
-
-  return session;
 }

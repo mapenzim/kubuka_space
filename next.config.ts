@@ -1,13 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /** next configs */
-  webpack: (config) => {
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      ".prisma/client/index-browser": false,
-    };
-    return config;
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "avatars.githubusercontent.com",
+      },
+    ],
   },
 };
 
