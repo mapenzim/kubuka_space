@@ -1,15 +1,15 @@
 import { unstable_noStore as noStore } from "next/cache";
-import Image from "next/image";
-import Link from "next/link";
+// import Image from "next/image";
+// import Link from "next/link";
 
-import { auth } from "@/auth";
-import { SignInButton, SignOutButton } from "@/components/auth";
-import prisma from "@/lib/prisma";
-import { formatName } from "@/lib/utils";
+// import { SignInButton, SignOutButton } from "@/components/auth";
+import Image from "next/image";
+/*import { formatName } from "@/lib/utils";
 
 import type { User } from "@prisma/client";
 import type { Session } from "next-auth";
 
+/*
 function UserMenu({ user }: { user: NonNullable<Session["user"]> }) {
   return (
     <div className="relative group">
@@ -90,19 +90,20 @@ function UserCard({ user }: { user: User }) {
     </Link>
   );
 }
+*/
 
 export default async function Home() {
   noStore();
 
-  const session = await auth();
+  // const session = await auth();
   // limit to 100 users and cache for 60 seconds.
-  const users = await prisma.user.findMany({
+  /*const users = await prisma.user.findMany({
     take: 100,
     cacheStrategy: {
       ttl: 60,
       swr: 60,
     },
-  });
+  });*/
 
   return (
       <section className="flex flex-col gap-6">
@@ -120,7 +121,7 @@ export default async function Home() {
               </div>
             </div>
             <div>
-              <img
+              <Image
                 src="https://images.unsplash.com/photo-1731690415686-e68f78e2b5bd?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
                 className="rounded"
                 alt=""
