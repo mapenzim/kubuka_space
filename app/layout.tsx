@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { meta_config } from "./meta_config";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Superblog",
-  description: "Superblog is a blog platform for the modern age.",
+  title: meta_config.appTitle,
+  description: meta_config.appDescription,
 };
 
 export default function RootLayout({
