@@ -1,3 +1,4 @@
+import { WrenchIcon } from "lucide-react";
 import Image from "next/image";
 
 export default async function Home() {
@@ -8,18 +9,21 @@ export default async function Home() {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:items-center md:gap-8">
             <div>
               <div className="max-w-prose md:max-w-none">
-                <h4 className="text-lg font-bold text-red-700">
-                  Maintenance Mode
-                </h4>
-                <h2 className="text-2xl font-semibold text-gray-900 sm:text-3xl">Kubuka Space PBC</h2>
-                <p className="mt-4 text-gray-700">
+                <h2 className="text-2xl font-semibold text-gray-900 sm:text-3xl flex w-w-full text-justify">Kubuka Space PBC</h2>
+                <div className="flex flex-row justify-start space-x-4 mt-2">
+                  <WrenchIcon className="animate-bounce" />
+                  <h4 className="text-lg font-bold text-red-700">
+                    Maintenance Mode
+                  </h4>
+                </div>
+                <p className="mt-4 text-gray-700 text-justify">
                   The website is still under maintenance. Kubuka will come back stronger in a moment. 
                 </p>
               </div>
             </div>
             <div>
               <Image
-                src="https://images.unsplash.com/photo-1731690415686-e68f78e2b5bd?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                src="/images/kubuka-logo.png"
                 className="rounded"
                 alt=""
                 width={100}

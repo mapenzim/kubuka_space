@@ -4,7 +4,9 @@ import {
   englishRecommendedTransformers,
 } from "obscenity";
 
-import type { User } from "@prisma/client";
+import type { Role, User } from "@prisma/client";
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
 
 export function formatName(fullName: User["name"] | undefined): string {
   if (!fullName) return "Anonymous User";
@@ -20,4 +22,21 @@ const matcher = new RegExpMatcher({
 
 export function containsProfanity(text: string): boolean {
   return matcher.hasMatch(text);
+}
+
+export async function requireAnyRole(roles: Role[]) {
+  const session = await auth();
+
+  if (!session) {
+    const { headers } = await import("next/headers");
+
+    const currentUrl = (await headers()).get("referer") || "/";
+    redirect(`authentication?callbackUrl=${encodeURIComponent(currentUrl)}`);
+  }
+
+  if (!roles.includes((session.user as any).role)) {
+    redirect("/not-authorized");
+  }
+
+  return session;
 }

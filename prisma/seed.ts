@@ -1,4 +1,5 @@
 import { PrismaClient, Prisma } from '@prisma/client'
+import { hash } from 'crypto';
 
 const prisma = new PrismaClient()
 
@@ -6,6 +7,7 @@ const userData: Prisma.UserCreateInput[] = [
   {
     name: 'Alice',
     email: 'alice@prisma.io',
+    password: hash("sha1", "alice"),
     posts: {
       create: [
         {
@@ -22,7 +24,8 @@ const userData: Prisma.UserCreateInput[] = [
   },
   {
     name: 'Bob',
-    email: 'bob@prisma.io',
+    email: 'bob@prisma.io',    
+    password: hash("sha1", "bob"),
     posts: {
       create: [
         {
@@ -41,4 +44,4 @@ export async function main() {
   }
 }
 
-main()
+main();
