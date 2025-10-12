@@ -27,7 +27,7 @@ export default async function Home() {
                   </h4>
                 </div>
                 <CountdownTimer targetDate="2025-10-31T23:59:59" />
-                <p className="mt-8 text-gray-700 text-justify">
+                <p className="mt-16 text-gray-700 text-justify">
                   Kubuka is still undergoing maintenance. <br />
                   See you soonest. <br /><br />
                   Admin
