@@ -1,3 +1,4 @@
+import Countdown from "@/components/timeItem";
 import { WrenchIcon } from "lucide-react";
 import Image from "next/image";
 
@@ -15,6 +16,9 @@ export default async function Home() {
                   <h4 className="text-lg font-bold text-red-700">
                     Maintenance Mode
                   </h4>
+                </div>
+                <div className="flex bg-gray-800 w-fit py-1 px-3 rounded-md">
+                  <Countdown />
                 </div>
                 <p className="mt-4 text-gray-700 text-justify">
                   The website is still under maintenance. Kubuka will come back stronger in a moment. 

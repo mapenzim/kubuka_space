@@ -6,8 +6,8 @@
 
 generator client {
   provider = "prisma-client-js"
-  runtime  = env("PRISMA_RUNTIME") // node (local) or vercel-edge (vercel)
-  output   = env("PRISMA_OUTPUT")  // custom for local, empty for vercel
+  // output   = env("PRISMA_OUTPUT")  // custom for local, empty for vercel
+  engineType = "library"
 }
 
 datasource db {
@@ -78,4 +78,6 @@ enum Role {
   ADMIN
   USER
   SUPERUSER
+  EDITOR
+  ADVERTISER
 }

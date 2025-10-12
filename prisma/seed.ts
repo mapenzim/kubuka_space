@@ -1,36 +1,34 @@
 import { PrismaClient, Prisma } from '@prisma/client'
-import { hash } from 'crypto';
+import { hashSync } from 'bcryptjs';
 
 const prisma = new PrismaClient()
 
 const userData: Prisma.UserCreateInput[] = [
   {
-    name: 'Alice',
-    email: 'alice@prisma.io',
-    password: hash("sha1", "alice"),
+    name: 'Kubuka Space',
+    email: 'kubukahub@gmail.com',
+    password: hashSync("hubtwabuka", 10),
+    role: "SUPERUSER",
     posts: {
       create: [
         {
-          title: 'Join the Prisma Discord',
-          content: 'https://pris.ly/discord',
+          title: 'Welcome to Kubuka HUb',
+          content: 'This hub is for the people who want to create content for the Binga Community. Feel free to connect to our channels for more',
           published: true,
-        },
-        {
-          title: 'Prisma on YouTube',
-          content: 'https://pris.ly/youtube',
         },
       ],
     },
   },
   {
-    name: 'Bob',
-    email: 'bob@prisma.io',    
-    password: hash("sha1", "bob"),
+    name: 'Mapenzi Mudimba',
+    email: 'hazelman@live.com',    
+    password: hashSync("mapenzim", 10),
+    role: "ADMIN",
     posts: {
       create: [
         {
-          title: 'Follow Prisma on Twitter',
-          content: 'https://www.twitter.com/prisma',
+          title: 'Follow Kubuka for more information',
+          content: 'Kubuka is a community initiative to make sure the content we serve is visible throughout the universe. Follow us for more.',
           published: true,
         },
       ],

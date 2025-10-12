@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import Image from "next/image";
 import Link from "next/link";
 import { formatName } from "@/lib/utils";
+import { Key, ReactElement, JSXElementConstructor, ReactNode, ReactPortal } from "react";
 
 export default async function UserProfile({
   params,
@@ -29,7 +30,7 @@ export default async function UserProfile({
   const isOwnProfile = session?.user?.email === user.email;
   const posts = isOwnProfile
     ? user.posts
-    : user.posts.filter((post) => post.published);
+    : user.posts.filter((post: { published: any; }) => post.published);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
@@ -123,7 +124,7 @@ export default async function UserProfile({
             </div>
           ) : (
             <div className="grid gap-4">
-              {posts.map((post) => (
+              {posts.map((post: { id: Key | null | undefined; title: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; published: any; content: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; }) => (
                 <Link
                   key={post.id}
                   href={`/posts/${post.id}`}

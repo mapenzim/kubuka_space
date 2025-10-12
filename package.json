@@ -6,14 +6,15 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "postinstall": "prisma generate --no-engine"
+    "lint": "next lint"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.7.4",
     "@headlessui/react": "^2.2.9",
-    "@prisma/client": "6.3.0",
+    "@prisma/client": "6.17.1",
     "@prisma/extension-accelerate": "^1.2.1",
+    "bcryptjs": "^3.0.2",
+    "dotenv": "^17.2.3",
     "lucide-react": "^0.544.0",
     "next": "15.1.5",
     "next-auth": "^5.0.0-beta.25",
@@ -29,12 +30,10 @@
     "eslint": "9.18.0",
     "eslint-config-next": "15.1.5",
     "postcss": "8.5.1",
-    "prisma": "6.3.0",
+    "prisma": "6.17.1",
     "tailwindcss": "3.4.17",
     "tsx": "4.19.2",
     "typescript": "5.7.3"
   },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
-  }
+  "packageManager": "pnpm@10.18.2+sha512.9fb969fa749b3ade6035e0f109f0b8a60b5d08a1a87fdf72e337da90dcc93336e2280ca4e44f2358a649b83c17959e9993e777c2080879f3801e6f0d999ad3dd"
 }

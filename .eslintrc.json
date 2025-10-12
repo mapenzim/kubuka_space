@@ -1,0 +1,10 @@
+{
+  "overrides": [
+    {
+      "files": ["lib/generated/prisma/default.js"],
+      "rules": {
+        "@typescript-eslint/no-require-imports": "off"
+      }
+    }
+  ]
+}
