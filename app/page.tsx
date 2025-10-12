@@ -1,4 +1,4 @@
-import Countdown from "@/components/timeItem";
+import CountdownTimer from "@/components/countdown";
 import { WrenchIcon } from "lucide-react";
 import Image from "next/image";
 
@@ -10,29 +10,30 @@ export default async function Home() {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:items-center md:gap-8">
             <div>
               <div className="max-w-prose md:max-w-none">
-                <h2 className="text-2xl font-semibold text-gray-900 sm:text-3xl flex w-w-full text-justify">Kubuka Space PBC</h2>
-                <div className="flex flex-row justify-start space-x-4 mt-2">
+                <div className="flex w-full items-center justify-between">
+                  <h2 className="text-2xl font-semibold text-gray-900 sm:text-3xl flex w-w-full text-justify">Kubuka Space PBC</h2>
+                  <Image
+                    src="/images/kubuka-logo.png"
+                    className="rounded"
+                    alt=""
+                    width={100}
+                    height={100}
+                  />
+                </div>
+                <div className="flex flex-row justify-start space-x-4 mt-8">
                   <WrenchIcon className="animate-bounce" />
                   <h4 className="text-lg font-bold text-red-700">
                     Maintenance Mode
                   </h4>
                 </div>
-                <div className="flex bg-gray-800 w-fit py-1 px-3 rounded-md">
-                  <Countdown />
-                </div>
+                <CountdownTimer targetDate="2025-10-31T23:59:59" />
                 <p className="mt-4 text-gray-700 text-justify">
-                  The website is still under maintenance. Kubuka will come back stronger in a moment. 
+                  Kubuka is still undergoing maintenance. <br />
+                  See you soonest. <br /><br />
+                  Admin
                 </p>
+                <p className="text-indigo-800 font-semibold">&copy;{new Date().getFullYear()} - Kubuka Space PBC</p>
               </div>
-            </div>
-            <div>
-              <Image
-                src="/images/kubuka-logo.png"
-                className="rounded"
-                alt=""
-                width={100}
-                height={100}
-              />
             </div>
           </div>
         </div>
