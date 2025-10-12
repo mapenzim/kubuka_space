@@ -38,7 +38,7 @@ export default function CountdownTimer({ targetDate }: CountdownTimerProps) {
   }
 
   return (
-    <div className="flex flex-wrap justify-center gap-8">
+    <div className="flex flex-wrap justify-center gap-8" suppressHydrationWarning={true}>
       <GlowingCircle label="Days" value={timeLeft.days} max={365} color="from-blue-500 to-cyan-400" />
       <GlowingCircle label="Hours" value={timeLeft.hours} max={24} color="from-purple-500 to-pink-400" />
       <GlowingCircle label="Minutes" value={timeLeft.minutes} max={60} color="from-green-500 to-lime-400" />

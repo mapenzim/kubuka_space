@@ -32,7 +32,7 @@ export default async function Home() {
                   See you soonest. <br /><br />
                   Admin
                 </p>
-                <p className="text-indigo-800 font-semibold">&copy;{new Date().getFullYear()} - Kubuka Space PBC</p>
+                <p className="text-indigo-800 font-semibold" suppressHydrationWarning={true}>&copy;{new Date().getFullYear()} - Kubuka Space PBC</p>
               </div>
             </div>
           </div>
