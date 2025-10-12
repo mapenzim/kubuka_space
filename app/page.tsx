@@ -20,14 +20,14 @@ export default async function Home() {
                     height={100}
                   />
                 </div>
-                <div className="flex flex-row justify-start space-x-4 mt-8">
+                <div className="flex flex-row justify-start space-x-4 my-8">
                   <WrenchIcon className="animate-bounce" />
                   <h4 className="text-lg font-bold text-red-700">
                     Maintenance Mode
                   </h4>
                 </div>
                 <CountdownTimer targetDate="2025-10-31T23:59:59" />
-                <p className="mt-4 text-gray-700 text-justify">
+                <p className="mt-8 text-gray-700 text-justify">
                   Kubuka is still undergoing maintenance. <br />
                   See you soonest. <br /><br />
                   Admin
