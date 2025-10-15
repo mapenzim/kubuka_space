@@ -10,7 +10,10 @@ export async function POST(req: Request) {
   });
 
   const b = getBroadcaster();
-  b.publish({ type: "user", payload: user });
+  b.publish({
+    type: "user", payload: user,
+    channel: ""
+  });
 
   return new Response(JSON.stringify(user), { status: 201 });
 }
