@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { meta_config } from "./meta_config";
+import { PropsType } from "@/lib/utils";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,11 +19,7 @@ export const metadata: Metadata = {
   description: meta_config.appDescription,
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: PropsType) {
   return (
     <html lang="en" suppressHydrationWarning={true} >
       <body

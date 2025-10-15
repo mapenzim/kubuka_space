@@ -7,9 +7,17 @@ interface CountdownTimerProps {
   targetDate: string; // e.g., "2025-12-31T23:59:59"
 }
 
+function getDaysInAMonth(date: Date): number {
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  return new Date(year, month + 1, 0).getDate();
+}
+
 export default function CountdownTimer({ targetDate }: CountdownTimerProps) {
   const calculateTimeLeft = () => {
     const difference = +new Date(targetDate) - +new Date();
+    const date = Date.now().toPrecision(6);
+
     if (difference <= 0) return null;
     return {
       days: Math.floor(difference / (1000 * 60 * 60 * 24)),

@@ -26,6 +26,7 @@ model User {
   posts         Post[]
   accounts      Account[]
   sessions      Session[]
+  notifications Notification[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -80,4 +81,14 @@ enum Role {
   SUPERUSER
   EDITOR
   ADVERTISER
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  title     String
+  body      String
+  read      Boolean  @default(false)
+  user      User?    @relation(fields: [userId], references: [id])
+  userId    Int?
+  createdAt DateTime @default(now())
 }

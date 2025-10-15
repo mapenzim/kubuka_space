@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   RegExpMatcher,
   englishDataset,
@@ -8,6 +7,7 @@ import {
 import type { Role, User } from "@prisma/client";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
+import { ReactNode } from "react";
 
 export function formatName(fullName: User["name"] | undefined): string {
   if (!fullName) return "Anonymous User";
@@ -41,3 +41,7 @@ export async function requireAnyRole(roles: Role[]) {
 
   return session;
 }
+
+export type PropsType = {
+  children?: ReactNode;
+};

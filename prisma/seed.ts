@@ -1,13 +1,13 @@
 import { PrismaClient, Prisma } from '@prisma/client'
-import { hashSync } from 'bcryptjs';
+import { hash } from 'bcryptjs';
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
 const userData: Prisma.UserCreateInput[] = [
   {
     name: 'Kubuka Space',
     email: 'kubukahub@gmail.com',
-    password: hashSync("hubtwabuka", 10),
+    password: await hash("hubtwabuka", 10),
     role: "SUPERUSER",
     posts: {
       create: [
@@ -22,7 +22,7 @@ const userData: Prisma.UserCreateInput[] = [
   {
     name: 'Mapenzi Mudimba',
     email: 'hazelman@live.com',    
-    password: hashSync("mapenzim", 10),
+    password: await hash("mapenzim", 10),
     role: "ADMIN",
     posts: {
       create: [
