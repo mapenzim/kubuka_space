@@ -7,20 +7,22 @@ interface CountdownTimerProps {
   targetDate: string; // e.g., "2025-12-31T23:59:59"
 }
 
-function getDaysInAMonth(date: Date): number {
-  const year = date.getFullYear();
-  const month = date.getMonth();
+function getDaysInAMonth(): number {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
   return new Date(year, month + 1, 0).getDate();
 }
 
 export default function CountdownTimer({ targetDate }: CountdownTimerProps) {
+  const days = getDaysInAMonth();
+
   const calculateTimeLeft = () => {
     const difference = +new Date(targetDate) - +new Date();
-    const date = Date.now().toPrecision(6);
 
     if (difference <= 0) return null;
     return {
-      days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+      days: Math.floor(difference / (1000 * 60 * 60 * 24) % days),
       hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
       minutes: Math.floor((difference / 1000 / 60) % 60),
       seconds: Math.floor((difference / 1000) % 60),
@@ -47,7 +49,7 @@ export default function CountdownTimer({ targetDate }: CountdownTimerProps) {
 
   return (
     <div className="flex flex-wrap justify-center gap-8" suppressHydrationWarning={true}>
-      <GlowingCircle label="Days" value={timeLeft.days} max={365} color="from-blue-500 to-cyan-400" />
+      <GlowingCircle label="Days" value={timeLeft.days} max={days} color="from-blue-500 to-cyan-400" />
       <GlowingCircle label="Hours" value={timeLeft.hours} max={24} color="from-purple-500 to-pink-400" />
       <GlowingCircle label="Minutes" value={timeLeft.minutes} max={60} color="from-green-500 to-lime-400" />
       <GlowingCircle label="Seconds" value={timeLeft.seconds} max={60} color="from-yellow-500 to-orange-400" />
@@ -88,6 +90,7 @@ function GlowingCircle({
             exit={{ opacity: 0, y: 10, scale: 0.9 }}
             transition={{ duration: 0.3 }}
             className="text-3xl font-bold text-white"
+            suppressHydrationWarning={true}
           >
             {String(value).padStart(2, "0")}
           </motion.span>
