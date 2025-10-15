@@ -7,7 +7,10 @@ export async function POST(req: Request) {
 
   // publish
   const broadcaster = getBroadcaster();
-  broadcaster.publish({ type: "post", payload: post });
+  broadcaster.publish({
+    type: "post", payload: post,
+    channel: ""
+  });
 
   return new Response(JSON.stringify(post), { status: 201 });
 }

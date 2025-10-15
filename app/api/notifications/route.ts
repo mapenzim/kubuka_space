@@ -23,7 +23,10 @@ export async function POST(req: Request) {
   // publish to an in-memory broadcaster (see next file)
   try {
     const broadcaster = getBroadcaster();
-    if (broadcaster) broadcaster.publish({ type: "notification", payload: note });
+    if (broadcaster) broadcaster.publish({
+      type: "notification", payload: note,
+      channel: ""
+    });
   } catch (_) {}
 
   return new Response(JSON.stringify(note), { status: 201 });
