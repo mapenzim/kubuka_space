@@ -17,6 +17,7 @@ export async function createPost(formData: FormData) {
   broadcaster.publish({
     type: "post:created",
     payload: post,
+    channel: ""
   });
 
   return post;
