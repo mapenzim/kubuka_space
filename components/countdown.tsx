@@ -42,7 +42,7 @@ export default function CountdownTimer({ targetDate }: CountdownTimerProps) {
         animate={{ scale: [1, 1.2, 1] }}
         transition={{ duration: 1.5, repeat: Infinity }}
       >
-        🎉 Time to load the website!
+        🎉 Loading Kubuka content, just a moment.
       </motion.div>
     );
   }
@@ -71,7 +71,7 @@ function GlowingCircle({
   const percentage = (value / max) * 100;
 
   return (
-    <div className="relative flex flex-col items-center justify-center">
+    <div className="relative flex flex-col items-center justify-center mt-32">
       {/* Animated rotating gradient ring */}
       <motion.div
         className={`absolute w-36 h-36 rounded-full bg-gradient-to-tr ${color} blur-lg opacity-60`}
@@ -90,7 +90,6 @@ function GlowingCircle({
             exit={{ opacity: 0, y: 10, scale: 0.9 }}
             transition={{ duration: 0.3 }}
             className="text-3xl font-bold text-white"
-            suppressHydrationWarning={true}
           >
             {String(value).padStart(2, "0")}
           </motion.span>
@@ -102,6 +101,7 @@ function GlowingCircle({
           style={{
             clipPath: `inset(${100 - percentage}% 0 0 0)`,
           }}
+          suppressHydrationWarning={true}
         />
       </div>
 

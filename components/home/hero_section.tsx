@@ -11,15 +11,15 @@ const HeroSection = () => {
           <source src="/vids/bg-vid.mp4" type="video/mp4" />
         </video>
       </div>
-      <div className="absolute flex flex-col w-full max-w-2xl h-full mx-auto mt-32">
+      <div className="absolute flex flex-col w-full max-w-2xl h-full mx-auto mt-64">
         <Fading delay={0.7} direction="down" fullWidth={null} padding={null}>
-          <div className="inline-block items-center space-y-5 sm:px-4 text-center justify-center text-slate-400">
-          <h1 className="text-5xl">Kubuka Space PBC</h1>
-          <p className="text-xs">Scouting the hidden genius. We can give your business or idea some energy to reach the stratosphere.</p>
+          <div className="inline-block items-center space-y-5 sm:px-4 justify-center text-slate-400">
+            <h1 className="text-3xl md:text-[62px] text-center">Kubuka Space PBC</h1>
+            <p className="md:text-xs text-[10px] text-center">Scouting the hidden genius. We can give your business or idea some energy to reach the stratosphere.</p>
           </div>
         </Fading>
+        {/* <CountdownTimer targetDate="2025-10-31T23:59:59" /> */}
       </div>
-        <CountdownTimer targetDate="2025-10-31T23:59:59" />
     </div>
   );
 }
