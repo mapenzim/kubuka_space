@@ -43,9 +43,9 @@ export async function middleware(req: NextRequest) {
         include: { permissions: true },
       });
 
-      const allowedPaths = role?.permissions.map((p) => p.path) || [];
+      const allowedPaths = role?.permissions.map((p: { path: any; }) => p.path) || [];
 
-      const hasAccess = allowedPaths.some((path) => pathname.startsWith(path));
+      const hasAccess = allowedPaths.some((path: string) => pathname.startsWith(path));
 
       if (!hasAccess) {
         return NextResponse.redirect(new URL("/not-authorized", req.url));
