@@ -108,13 +108,13 @@ export default function Footer() {
                 </span>
                 <ul role="list" className="my-2 lg:my-0 list-inside">
                   <li>
-                    <a className="text-gray-700 hover:text-gray-900 font-[400px] block pb-2 text-sm"
+                    <Link className="text-gray-700 hover:text-gray-900 font-[400px] block pb-2 text-sm"
                       href="#about-us">About Us
-                    </a>
+                    </Link>
                   </li>
                   <li>
                     <Link className="text-gray-700 hover:text-gray-900 font-[400px] block pb-2 text-sm"
-                      href="/blog">Blog
+                      href="/posts">Blog
                     </Link>
                   </li>
                   <li>
@@ -123,9 +123,9 @@ export default function Footer() {
                     </Link>
                   </li>
                   <li>
-                    <a className="text-gray-700 hover:text-gray-900 font-[400px] block pb-2 text-sm"
+                    <Link className="text-gray-700 hover:text-gray-900 font-[400px] block pb-2 text-sm"
                       href="#contact-us">Contact Us
-                    </a>
+                    </Link>
                   </li>
 
                 </ul>
@@ -137,7 +137,7 @@ export default function Footer() {
                 <ul role="list" className="my-2 lg:my-0 list-inside">
                   <li>
                     <a className="text-gray-700 hover:text-gray-900 font-[400px] block pb-2 text-sm"
-                      href="#">MIT License
+                      href="#license">License
                     </a>
                   </li>
                   <li>

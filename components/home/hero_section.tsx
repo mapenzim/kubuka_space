@@ -1,4 +1,3 @@
-import CountdownTimer from "../countdown";
 import Fading from "../fade";
 
 const HeroSection = () => {
@@ -18,7 +17,6 @@ const HeroSection = () => {
             <p className="md:text-xs text-[10px] text-center">Scouting the hidden genius. We can give your business or idea some energy to reach the stratosphere.</p>
           </div>
         </Fading>
-        {/* <CountdownTimer targetDate="2025-10-31T23:59:59" /> */}
       </div>
     </div>
   );

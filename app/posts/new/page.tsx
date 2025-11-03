@@ -6,7 +6,7 @@ export default async function NewPostPage() {
   const session = await auth();
 
   if (!session?.user) {
-    redirect("/");
+    redirect("/signin");
   }
 
   return (
