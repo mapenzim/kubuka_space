@@ -26,7 +26,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         // if (!valid) return null;
         // return minimal object
-        return { id: String(user.id), name: user.name, email: user.email, role: user.role };
+        return { id: String(user.id), name: user.name, email: user.email, role: user.role, roleId: user.roleId };
       }
     })
   ],
