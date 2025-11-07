@@ -30,14 +30,14 @@ export async function middleware(req: NextRequest) {
     }
 
     // Get user role from token
-    const userRole = token.role;
+    const userRole = token.role as string;
 
     if (!userRole) {
       return NextResponse.redirect(new URL("/not-authorized", req.url));
     }
 
     try {
-      // Fetch all allowed paths for this role
+      // Fetch all allowed paths for this role 
       const role = await prisma.role.findUnique({
         where: { name: userRole },
         include: { permissions: true },
