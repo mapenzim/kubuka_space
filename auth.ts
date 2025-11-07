@@ -12,7 +12,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       credentials: { email: {label:"Email", type:"text"}, password: {label:"Password", type:"password"} },
       async authorize(credentials) {
         if (!credentials) return null;
-        const user = await prisma.user.findUnique({ where: { email: String(credentials.email) } });
+        const user = await prisma.user.findUnique({ 
+          where: { email: String(credentials.email) },
+          include: { role: true },
+        });
         console.log("User: ", user);
         
         if (!user) throw new Error("No user found with that email");
@@ -36,8 +39,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       } else {
         // optionally refresh from DB if needed
         if (!token.role && token.sub) {
-          const dbUser = await prisma.user.findUnique({ where: { id: Number(token.sub) } });
-          if (dbUser) token.role = dbUser.role;
+          const dbUser = await prisma.user.findUnique({ 
+            where: { id: Number(token.sub) },
+            include: { role: true },
+          });
+          if (dbUser) token.role = dbUser?.role;
         }
       }
       return token;
