@@ -11,7 +11,7 @@ const NavigationBar = async () => {
         <Link href={'/'} className="text-gray-100 font-semibold text-xl hover:text-gray-300">
           Kubuka Hub
         </Link>
-        {session 
+        {session?.user
           ? <SignOutButton /> 
           : <Link 
               href="/authentication"
