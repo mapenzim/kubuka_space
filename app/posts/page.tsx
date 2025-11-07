@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import prisma from "@/lib/prisma";
 import Link from "next/link";
 import { formatName } from "@/lib/utils";
@@ -14,7 +16,7 @@ export default async function Posts() {
     orderBy: {
       createdAt: "desc",
     }
-  });
+  }); 
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">

@@ -5,6 +5,8 @@ import Link from "next/link";
 import { formatName } from "@/lib/utils";
 import { auth } from "@/auth";
 
+export const dynamic = "force-dynamic";
+
 export default async function Post({
   params,
 }: {
