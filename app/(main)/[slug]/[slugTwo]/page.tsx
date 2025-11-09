@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-export default async function Notfound() {
+export default function Page() {
   const router = useRouter();
 
   return (
@@ -28,7 +28,7 @@ export default async function Notfound() {
               <div className="relative grid gap-6 bg-white px-5 py-6 sm:gap-8 sm:p-8">
                 <h3 className="text-sm tracking-wide font-medium text-gray-500 uppercase">Popular Pages</h3>
                 <Link
-                  href='/posts'
+                  href='/blog'
                   className="-m-3 p-3 flex items-start rounded-lg hover:bg-gray-50 border-b-2 border-gray-100"
                 >
                   <div className="ml-4">

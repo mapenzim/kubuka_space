@@ -90,8 +90,8 @@ async function main() {
     },
     {
       name: "Super Admin",
-      email: "superadmin@example.com",
-      password: await hash("super123", 10),
+      email: "superadmin@kubuka.space",
+      password: await hash("superkubuka", 10),
       role: { connect: { id: superRole.id } },
     },
   ];
@@ -106,6 +106,37 @@ async function main() {
   }
 
   console.log("✅ Users & their roles seeded.");
+
+  // --- 5 Define merchandise
+  const offers = ['installtion', 'tutorial', 'one year support', 'source code', 'call-in help', 'code samples', 'dependency upgrades', 'personalized authentication strategy'];
+
+  const merchandise = [
+    {
+      title: "starter",
+      price: 160,
+      body: offers.slice(0,3).toString()
+    },
+    {
+      title: "personal",
+      price: 220,
+      body: offers.slice(0, 7).toString()
+    },
+    {
+      title: "business",
+      price: 480,
+      body: offers.toString()
+    },
+  ];
+
+  for (const mc of merchandise) {
+    await prisma.merchandise.upsert({
+      where: { title: mc.title },
+      update: {},
+      create: mc
+    });
+  }
+  
+  console.log("✅ Merchandise seeded.");
 }
 
 main()

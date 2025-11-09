@@ -8,7 +8,9 @@ const AuthenticationPage = async () => {
   if (session) return redirect('/');
   
   return (
-    <Authentication />
+    <div className="pt-8">
+      <Authentication />
+    </div>
   );
 }
 

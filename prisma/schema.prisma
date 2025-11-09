@@ -26,10 +26,10 @@ model User {
 }
 
 model Role {
-  id          Int       @id @default(autoincrement())
   name        String       @unique
+  id          Int          @id @default(autoincrement())
   permissions Permission[]
-  users        User[]
+  users       User[]
 }
 
 model Account {
@@ -83,8 +83,16 @@ model Notification {
 }
 
 model Permission {
-  id     Int @id @default(autoincrement())
   path   String
+  id     Int    @id @default(autoincrement())
   roleId Int
   role   Role   @relation(fields: [roleId], references: [id])
+}
+
+model Merchandise {
+  id        Int       @id @default(autoincrement())
+  title     String    @unique
+  price     Float
+  body      String
+  createdAt DateTime  @default(now())
 }

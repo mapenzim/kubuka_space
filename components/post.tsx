@@ -3,8 +3,8 @@
 import Form from "next/form";
 import Link from "next/link";
 import { useFormStatus } from "react-dom";
-import { publishPost, saveDraft } from "@/app/actions";
 import { Post } from "@prisma/client";
+import { publishPost, saveDraft } from "@/app/actions/postActions";
 
 function SubmitButton({ isPublished }: { isPublished?: boolean }) {
   const { pending } = useFormStatus();

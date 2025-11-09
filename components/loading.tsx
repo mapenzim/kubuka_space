@@ -1,9 +1,9 @@
-import { ClockFading, SettingsIcon } from "lucide-react";
+import { SettingsIcon } from "lucide-react";
 
 export default function Loading() {
   return (
-    <div className="animate-spin">
-      <SettingsIcon />
+    <div className="">
+      <SettingsIcon className="animate-spin" />
     </div>
   );
 }
