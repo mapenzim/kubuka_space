@@ -70,7 +70,7 @@ export default async function Post({
                   </div>
                 )}
                 <Link
-                  href={`/users/${post.authorId}`}
+                  href={`/authors/${post.authorId}`}
                   className="text-gray-600 hover:text-gray-900 transition-colors"
                 >
                   By {formatName(post.author.name)}
@@ -90,7 +90,7 @@ export default async function Post({
 
           <div className="border-t border-gray-100 mt-12 pt-6">
             <Link
-              href={`/users/${post.authorId}`}
+              href={`/authors/${post.authorId}`}
               className="text-gray-500 hover:text-gray-700 transition-colors"
             >
               ← Back to author&apos;s profile

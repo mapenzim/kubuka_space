@@ -16,7 +16,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           where: { email: String(credentials.email) },
           include: { role: true },
         });
-        console.log("User: ", user);
         
         if (!user) throw new Error("No user found with that email");
         //if (!user) return null;

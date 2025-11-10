@@ -52,7 +52,7 @@ export async function middleware(req: NextRequest) {
       }
     } catch (err) {
       console.error("Middleware role check failed:", err);
-      return NextResponse.redirect(new URL("/error", req.url));
+      return NextResponse.redirect(new URL("/not-authorized", req.url));
     }
 
   }
@@ -63,9 +63,9 @@ export async function middleware(req: NextRequest) {
       // You can customize where they go (e.g., role-based)
       const redirectUrl =
         token.role === "ADMIN"
-          ? "/admin"
+          ? "/dashboard"
           : token.role === "EDITOR"
-          ? "/admin/posts"
+          ? "/dashboard/posts"
           : "/dashboard"; // default user route
 
       return NextResponse.redirect(new URL(redirectUrl, req.url));

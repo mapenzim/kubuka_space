@@ -96,3 +96,12 @@ model Merchandise {
   body      String
   createdAt DateTime  @default(now())
 }
+
+model Privatemessage {
+  id        Int       @id @default(autoincrement())
+  names     String
+  email     String
+  message   String
+  read      Boolean   @default(false)
+  createdAt DateTime  @default(now())
+}

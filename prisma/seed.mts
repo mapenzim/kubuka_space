@@ -11,6 +11,7 @@ async function main() {
     {
       name: "ADMIN",
       permissions: [
+        { path: "/" },
         { path: "/dashboard" },
         { path: "/api/admin" },
       ],
@@ -18,6 +19,7 @@ async function main() {
     {
       name: "EDITOR",
       permissions: [
+        { path: "/" },
         { path: "/dashboard/posts" },
         { path: "/dashboard/comments" },
       ],
@@ -25,6 +27,7 @@ async function main() {
     {
       name: "SUPERUSER",
       permissions: [
+        { path: "/" },
         { path: "/dashboard" },
         { path: "/api/admin" },
         { path: "/api/secure" },

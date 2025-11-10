@@ -1,6 +1,5 @@
 import { auth } from "@/auth";
 import Link from "next/link";
-import { SignOutButton } from "../auth";
 import { ListEnd, StoreIcon } from "lucide-react";
 import { SignoutButton } from "./sign_out";
 

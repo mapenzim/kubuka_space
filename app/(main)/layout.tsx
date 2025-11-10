@@ -4,7 +4,7 @@ import { PropsType } from "@/lib/utils";
 
 export default async function Layout({ children }: PropsType){
   return (
-    <main className="w-full items-end justify-center">
+    <main className="w-full items-center justify-center">
       <NavigationBar />
       { children }
       <Footer />

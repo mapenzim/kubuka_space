@@ -1,19 +1,9 @@
-import PageLoading from "@/components/page-loading";
 import { PropsType } from "@/lib/utils";
-import { Suspense } from "react";
 
 export default async function Layout({ children }: PropsType){
   return (
-    <div className="w-full overflow-auto">
-      <div className="min-h-screen items-center justify-center pt-8">
-        <div className="relative">
-          <div className="md:w-6/12 mx-auto px-2 md:px-0">
-            <Suspense fallback={<PageLoading />}>
-              {children}
-            </Suspense>
-          </div>
-        </div>
-      </div>
-    </div>
+    <section className="w-full min-h-screen overflow-y-auto items-center justify-center">
+      {children}
+    </section>
   );
 }

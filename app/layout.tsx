@@ -5,6 +5,8 @@ import { GeistMono } from 'geist/font/mono';
 import "./globals.css";
 import { meta_config } from "./meta_config";
 import { PropsType } from "@/lib/utils";
+import { Toaster } from "sonner";
+import { SessionProvider } from "next-auth/react";
 
 export const metadata: Metadata = {
   title: meta_config.appTitle,
@@ -15,9 +17,12 @@ export default function RootLayout({ children }: PropsType) {
   return (
     <html lang="en" suppressHydrationWarning={true} className="scroll-smooth" >
       <body
-        className={`${GeistSans.className} ${GeistMono.className} antialiased`}
+        className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}
       >
-        {children}
+        <SessionProvider>
+          {children}
+          <Toaster position="bottom-right" richColors />
+        </SessionProvider>
       </body>
     </html>
   );
