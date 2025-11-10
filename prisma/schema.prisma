@@ -23,6 +23,8 @@ model User {
   posts         Post[]
   sessions      Session[]
   role          Role?          @relation(fields: [roleId], references: [id])
+
+  cartItems Cart[]
 }
 
 model Role {
@@ -95,6 +97,8 @@ model Merchandise {
   price     Float
   body      String
   createdAt DateTime  @default(now())
+
+  cartItems Cart[]
 }
 
 model Privatemessage {
@@ -104,4 +108,17 @@ model Privatemessage {
   message   String
   read      Boolean   @default(false)
   createdAt DateTime  @default(now())
+}
+
+model Cart {
+  id            String      @id @default(cuid())
+  user          User        @relation(fields: [userId], references: [id])
+  userId        Int
+  merchandise   Merchandise @relation(fields: [merchandiseId], references: [id])
+  merchandiseId Int
+  quantity      Int         @default(1)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([userId, merchandiseId]) // one entry per user per item
 }

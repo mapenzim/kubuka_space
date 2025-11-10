@@ -1,6 +1,6 @@
 "use client";
 
-import { createPrivateMessage } from "@/app/actions/mainActions";
+import { createPrivateMessage } from "@/app/actions/mainActions.server";
 import Fading from "@/components/fade";
 import Loading from "@/components/loading";
 import { FormEvent, useState } from "react";

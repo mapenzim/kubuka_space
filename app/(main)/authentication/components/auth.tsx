@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { motion, useAnimationControls } from "framer-motion";
 import { EyeIcon, EyeOff } from "lucide-react";
 import { toast } from "sonner";
-import { createUser, resetPasswordAction, changePasswordAction } from "@/app/actions/authActions";
+import { createUser, resetPasswordAction, changePasswordAction } from "@/app/actions/authActions.server";
 import Divider from "@/components/divider";
 import Fading from "@/components/fade";
 import Loading from "@/components/loading";

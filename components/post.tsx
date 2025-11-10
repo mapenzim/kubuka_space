@@ -4,7 +4,7 @@ import Form from "next/form";
 import Link from "next/link";
 import { useFormStatus } from "react-dom";
 import { Post } from "@prisma/client";
-import { publishPost, saveDraft } from "@/app/actions/postActions";
+import { publishPost, saveDraft } from "@/app/actions/postActions.server";
 
 function SubmitButton({ isPublished }: { isPublished?: boolean }) {
   const { pending } = useFormStatus();
