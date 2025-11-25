@@ -2,7 +2,9 @@ import CheckoutForm from "@/components/cart/components/checkout_form";
 import prisma from "@/lib/prisma";
 import { notFound } from "next/navigation";
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 interface Props {
   params: { id: string };
