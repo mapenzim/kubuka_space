@@ -5,7 +5,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -14,15 +13,18 @@ model User {
   email         String         @unique
   emailVerified DateTime?
   image         String?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
   password      String
   roleId        Int?
+  bio           String?
+  skills        String?
+  social        String?
   accounts      Account[]
   notifications Notification[]
   posts         Post[]
   sessions      Session[]
   role          Role?          @relation(fields: [roleId], references: [id])
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
   cartItems Cart[]
 }
@@ -111,12 +113,13 @@ model Privatemessage {
 }
 
 model Cart {
-  id            String      @id @default(cuid())
+  id            Int         @id @default(autoincrement())
   user          User        @relation(fields: [userId], references: [id])
   userId        Int
   merchandise   Merchandise @relation(fields: [merchandiseId], references: [id])
   merchandiseId Int
   quantity      Int         @default(1)
+  checkedOut    Boolean     @default(false)
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 

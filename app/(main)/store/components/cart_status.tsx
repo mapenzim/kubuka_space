@@ -4,33 +4,46 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 
-// Import server action (Next.js automatically treats async functions as server-only)
-import { getCartCount } from "@/app/actions/cartActions.server";
+import { getCartCount, getUserCart } from "@/app/actions/cartActions.server";
+import Link from "next/link";
+import { CheckoutLink } from "./link_to_checkout";
 
 export default function CartStatus() {
   const { data: session } = useSession();
   const [count, setCount] = useState<number | null>(null);
+  const [cartId, setCartId] = useState<number | null>(null);
 
-  const fetchCartCount = async () => {
+  const fetchData = async () => {
     if (!session?.user?.id) return;
 
     try {
-      const cartCount = await getCartCount(Number(session.user.id));
+      const userId = Number(session.user.id);
+
+      const cartCount = await getCartCount(userId);
       setCount(cartCount);
+
+      const cart = await getUserCart(userId);   // ⬅️ fetch cart item
+      setCartId(cart?.id ?? null);
     } catch (err: any) {
-      toast.error(err.message || "Failed to fetch cart count");
+      toast.error(err.message || "Failed to load cart info");
     }
   };
 
   useEffect(() => {
-    fetchCartCount();
+    fetchData();
   }, [session]);
 
   if (!session) return null;
 
   return (
     <div className="text-sm font-semibold text-gray-700">
-      Cart: {count ?? 0}
+      {cartId ? (
+        <CheckoutLink params={{ id: String(cartId) }}>
+          Cart: {count ?? 0}
+        </CheckoutLink>
+      ) : (
+        <span>Cart: {count ?? 0}</span>
+      )}
     </div>
   );
 }

@@ -2,7 +2,7 @@ import { PropsType } from "@/lib/utils";
 
 export default function Layout({ children }: PropsType) {
   return (
-    <section className="w-full min-h-screen overflow-y-auto items-center justify-center pt-8">
+    <section className="w-full min-h-screen overflow-y-auto items-center justify-center">
       {children}
     </section>
   );

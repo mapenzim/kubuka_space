@@ -31,10 +31,10 @@ export default async function Posts() {
           </Link>
         </div>
         <div className="space-y-4">
-          {posts.map((post: { id: Key | null | undefined; title: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; author: { name: any; }; }) => (
+          {posts.map((post: { id: Key | null | undefined; title: string; author: { name: any; }; }) => (
             <Link
               key={post.id}
-              href={`/posts/${post.id}`}
+              href={`/posts/${post.id}?title=${post?.title?.split(" ").join("-").toLowerCase()}`}
               className="block transition-transform hover:scale-[1.01]"
             >
               <article className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">

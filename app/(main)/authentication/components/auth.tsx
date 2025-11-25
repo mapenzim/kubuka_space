@@ -81,6 +81,7 @@ const Authentication = () => {
         });
         if (res?.error) return toast.error("Invalid credentials");
         toast.success("Logged in successfully!");
+        router.refresh();
         router.push(callbackUrl);
         return;
       }

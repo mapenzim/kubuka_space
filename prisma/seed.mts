@@ -13,7 +13,7 @@ async function main() {
       permissions: [
         { path: "/" },
         { path: "/dashboard" },
-        { path: "/api/admin" },
+        { path: "/profile" },
       ],
     },
     {

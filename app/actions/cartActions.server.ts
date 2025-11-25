@@ -33,3 +33,10 @@ export async function getCartCount(userId: number): Promise<number> {
   });
   return count;
 }
+
+export async function getUserCart(userId: number) {
+  return await prisma.cart.findFirst({
+    where: { userId },
+    select: { id: true }, 
+  });
+}

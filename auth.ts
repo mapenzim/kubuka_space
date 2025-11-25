@@ -14,7 +14,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (!credentials) return null;
         const user = await prisma.user.findUnique({ 
           where: { email: String(credentials.email) },
-          include: { role: true },
+          include: { role: true, cartItems: true },
         });
         
         if (!user) throw new Error("No user found with that email");
@@ -25,7 +25,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         // if (!valid) return null;
         // return minimal object
-        return { id: String(user.id), name: user.name, email: user.email, role: user.role, roleId: user.roleId };
+        return { id: String(user.id), name: user.name, email: user.email, role: user.role, roleId: user.roleId, cartItems: user?.cartItems };
       }
     })
   ],
@@ -35,14 +35,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (user) {
         token.role = (user as any).role.name;
         token.id = (user as any).id ?? token.sub;
+        token.cartItems = (user as any).cartItems;
       } else {
         // optionally refresh from DB if needed
         if (!token.role && token.sub) {
           const dbUser = await prisma.user.findUnique({ 
             where: { id: Number(token.sub) },
-            include: { role: true },
+            include: { role: true, cartItems: true },
           });
-          if (dbUser) token.role = dbUser?.role;
+          if (dbUser) {token.role = dbUser?.role; token.cartItems = dbUser.cartItems}
         }
       }
       return token;
@@ -51,6 +52,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       // attach role and id to session.user
       (session.user as any).role = token.role;
       (session.user as any).id = token.id;
+      (session.user as any).cartItems = token.cartItems;
       return session;
     },
   },
