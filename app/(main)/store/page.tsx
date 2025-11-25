@@ -1,6 +1,6 @@
 import prisma from "@/lib/prisma";
-import CartStatus from "./components/cart_status";
-import MerchandiseCard from "./components/merchandise_card";
+import CartStatus from "../../../components/cart/components/cart_status";
+import MerchandiseCard from "../../../components/cart/components/merchandise_card";
 
 export const dynamic = "force-dynamic";
 

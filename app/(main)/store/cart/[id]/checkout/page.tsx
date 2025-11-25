@@ -1,6 +1,6 @@
+import CheckoutForm from "@/components/cart/components/checkout_form";
 import prisma from "@/lib/prisma";
 import { notFound } from "next/navigation";
-import CheckoutForm from "../../../components/checkout_form";
 
 export const dynamic = "force-dynamic";
 
