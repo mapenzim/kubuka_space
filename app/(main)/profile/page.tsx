@@ -28,7 +28,7 @@ const ProfilePage = async () => {
                 <h1 className="text-xl font-bold">
                   {user?.name}
                 </h1>
-                <p className="text-gray-700">{user?.role}</p>
+                <p className="text-gray-700">{user?.email}</p>
                 <div className="mt-6 flex flex-wrap gap-4 justify-center">
                   <Link 
                     href={"#"}
