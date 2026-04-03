@@ -8,7 +8,7 @@ const AuthenticationPage = async () => {
   if (session?.user) return redirect('/');
   
   return (
-    <div className="flex items-center justify-center w-full h-screen pt-8">
+    <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-indigo-900 via-sky-800 to-indigo-700">
       <Authentication />
     </div>
   );

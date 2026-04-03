@@ -28,7 +28,7 @@ export default async function Post({
   const isAuthor = session?.user?.email === post.author.email;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-linear-to-b from-gray-50 to-white">
       <div className="max-w-4xl mx-auto px-4 py-16">
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
           <article>

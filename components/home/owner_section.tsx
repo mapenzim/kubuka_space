@@ -53,7 +53,7 @@ const owners = [
     position: "Co-Founder - Web Master",
     image: "mape",
     phone: '+263 77 715 1673',
-    email: 'hazelman@live.com',
+    email: 'mudimbam@outlook.com',
     imgDescription: "Mapenzi",
     bio: "Trained in informatics, data science and metadata algorithms. Business start-uper, Strategic thinker and go getter. This site's design, coding, and implementation in his mandate. Web frameworks, IoT, Cloud Computing, Coding, and hobbying.",
     children: [
@@ -81,7 +81,7 @@ const OwnerSection = () => {
   return (
     <section
       id="about-us"
-      className="min-h-screen w-full px-4 pt-16 pb-24 bg-gradient-to-r from-fuchsia-50 via-indigo-100 to-purple-200"
+      className="min-h-screen w-full px-4 pt-16 pb-24 bg-linear-to-r from-fuchsia-50 via-indigo-100 to-purple-200"
     >
       <div className="mx-auto px-4">
         <div className="flex flex-wrap justify-center text-center mb-16">
@@ -102,7 +102,7 @@ const OwnerSection = () => {
                   <Image
                     alt="..."
                     src={`/images/${owner.image}.png`}
-                    className="shadow-lg rounded-full max-w-full mx-auto"
+                    className="shadow-lg rounded-full max-w-full mx-auto w-auto h-auto"
                     style={{ maxWidth: "120px" }}
                     width={100}
                     height={100}

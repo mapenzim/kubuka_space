@@ -10,7 +10,7 @@ export const IntroSection = () => {
         <div className="max-w-5xl justify-center mx-auto flex flex-col md:flex-row -mt-48">
           <div className="lg:pt-12 pt-6 w-full md:w-4/12 px-4 text-center">
             <Fading delay={0.4} direction="up" fullWidth={null} padding={null}>
-              <div className="relative flex flex-col min-w-0 break-words bg-gradient-to-br from-teal-200 via-lime-300 to-green-300 w-full mb-8 shadow-lg rounded-lg">
+              <div className="relative flex flex-col min-w-0 wrap-break-word bg-linear-to-br from-teal-200 via-lime-300 to-green-300 w-full mb-8 shadow-lg rounded-lg">
                 <div className="px-4 py-5 flex-auto text-slate-600">
                   <div className="text-white p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-red-400">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
@@ -28,7 +28,7 @@ export const IntroSection = () => {
           </div>
           <div className="w-full md:w-4/12 px-4 text-center">
             <Fading delay={0.6} direction="up" fullWidth={null} padding={null}>
-              <div className="relative flex flex-col min-w-0 break-words bg-gradient-to-t from-teal-200 via-lime-300 to-green-300 w-full mb-8 shadow-lg rounded-lg">
+              <div className="relative flex flex-col min-w-0 wrap-break-word bg-linear-to-t from-teal-200 via-lime-300 to-green-300 w-full mb-8 shadow-lg rounded-lg">
                 <div className="px-4 py-5 flex-auto text-slate-600">
                   <div className="text-white p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-blue-400">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
@@ -48,7 +48,7 @@ export const IntroSection = () => {
           </div>
           <div className="pt-6 w-full md:w-4/12 px-4 text-center">
             <Fading delay={0.8} direction="up" fullWidth={null} padding={null}>
-              <div className="relative flex flex-col min-w-0 break-words bg-gradient-to-bl from-teal-200 via-lime-300 to-green-300 w-full mb-8 shadow-lg rounded-lg">
+              <div className="relative flex flex-col min-w-0 wrap-break-word bg-linear-to-bl from-teal-200 via-lime-300 to-green-300 w-full mb-8 shadow-lg rounded-lg">
                 <div className="px-4 py-5 flex-auto text-slate-600">
                   <div className="text-white p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-green-400">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
@@ -76,10 +76,10 @@ export const IntroSection = () => {
             <h3 className="text-3xl mb-2 font-semibold leading-normal">
               Find us
             </h3>
-            <p className="text-lg font-[200] leading-relaxed my-4 text-gray-600">
+            <p className="text-lg font-extralight leading-relaxed my-4 text-gray-600">
               Each transaction you perform with us is treated with excellence. There is nothing more which will bind our organisation to yours than that first interaction.
             </p>
-            <p className="text-lg font-[200] leading-relaxed mt-0 mb-4 text-gray-600">
+            <p className="text-lg font-extralight leading-relaxed mt-0 mb-4 text-gray-600">
               We will bring you more results to the table to match your expectations. When we exceed them we won&apos;t ask you for a refund or a top-up, that is because we value the business relationship.
             </p>
             <Link
@@ -91,7 +91,7 @@ export const IntroSection = () => {
           </div>
 
           <div className="w-full md:w-4/12 px-4 mx-auto lg:mt-0 mt-16">
-            <div className="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded-lg bg-pink-600">
+            <div className="relative flex flex-col min-w-0 wrap-break-word w-full mb-6 shadow-lg rounded-lg bg-pink-600">
               <Image
                 alt="..."
                 src="/images/Bermuda.svg"

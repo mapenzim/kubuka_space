@@ -1,3 +1,11 @@
+enum OrderStatus {
+  pending
+  paid
+  shipped
+  delivered
+  cancelled
+}
+
 generator client {
   provider   = "prisma-client-js"
   engineType = "library"
@@ -27,6 +35,13 @@ model User {
   updatedAt     DateTime       @updatedAt
 
   cartItems Cart[]
+
+  @@index([email])
+  orders Order[]
+  logs Log[]
+  settings Settings[]
+  shippingAddresses ShippingAddress[]
+  wishlists Wishlist[]
 }
 
 model Role {
@@ -73,7 +88,10 @@ model Post {
   authorId  Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  author    User     @relation(fields: [authorId], references: [id])
+  deletedAt DateTime?
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
 }
 
 model Notification {
@@ -83,7 +101,9 @@ model Notification {
   read      Boolean  @default(false)
   userId    Int?
   createdAt DateTime @default(now())
-  user      User?    @relation(fields: [userId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([read])
 }
 
 model Permission {
@@ -96,11 +116,14 @@ model Permission {
 model Merchandise {
   id        Int       @id @default(autoincrement())
   title     String    @unique
-  price     Float
+  price     Decimal   @db.Decimal(10, 2)
   body      String
   createdAt DateTime  @default(now())
+  deletedAt DateTime?
 
   cartItems Cart[]
+
+  wishlists Wishlist[]
 }
 
 model Privatemessage {
@@ -110,18 +133,117 @@ model Privatemessage {
   message   String
   read      Boolean   @default(false)
   createdAt DateTime  @default(now())
+  deletedAt DateTime?
 }
 
 model Cart {
   id            Int         @id @default(autoincrement())
-  user          User        @relation(fields: [userId], references: [id])
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId        Int
-  merchandise   Merchandise @relation(fields: [merchandiseId], references: [id])
+  merchandise   Merchandise @relation(fields: [merchandiseId], references: [id], onDelete: Cascade)
   merchandiseId Int
   quantity      Int         @default(1)
   checkedOut    Boolean     @default(false)
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+  deletedAt     DateTime?
 
   @@unique([userId, merchandiseId]) // one entry per user per item
+  orders Order[]
+  @@index([createdAt])
+}
+
+model Order {
+  id            Int         @id @default(autoincrement())
+  user          User        @relation(fields: [userId], references: [id])
+  userId        Int
+  items         Cart[]      // link to cart items checked out
+  totalAmount   Decimal     @db.Decimal(10,2)
+  status        String      @default("pending") // pending, paid, shipped, delivered
+  paymentRef    String?     // reference from payment gateway
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  archived      Boolean     @default(false)
+  archivedAt    DateTime?
+
+  @@index([createdAt])
+  @@index([status])
+  orderItems OrderItem[]
+  shippingAddresses ShippingAddress[]
+  payments Payment[]
+}
+
+model Log {
+  id        Int      @id @default(autoincrement())
+  action    String   // e.g. "USER_ROLE_CHANGE", "ORDER_PLACED"
+  userId    Int?
+  user      User?    @relation(fields: [userId], references: [id])
+  details   Json?
+  createdAt DateTime @default(now())
+  archived  Boolean  @default(false)
+  archivedAt DateTime?
+
+  @@index([action, createdAt])
+}
+
+model Settings {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  theme     String   @default("light") // light/dark
+  language  String   @default("en")
+  notifyByEmail Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OrderItem {
+  id            Int         @id @default(autoincrement())
+  order         Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId       Int
+  merchandiseId Int
+  title         String      // snapshot of product title
+  price         Decimal     @db.Decimal(10,2) // snapshot of price at purchase
+  quantity      Int
+}
+
+model Wishlist {
+  id        Int       @id @default(autoincrement())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  merchandise Merchandise @relation(fields: [merchandiseId], references: [id], onDelete: Cascade)
+  merchandiseId Int
+  createdAt DateTime  @default(now())
+
+  @@unique([userId, merchandiseId]) // prevent duplicates
+}
+
+model Payment {
+  id          Int      @id @default(autoincrement())
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId     Int
+  amount      Decimal  @db.Decimal(10,2)
+  method      String   // e.g. "stripe", "paynow", "ecocash"
+  status      String   @default("initiated") // initiated, successful, failed, refunded
+  transactionRef String? // gateway reference
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status])
+}
+
+model ShippingAddress {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  order     Order?   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId   Int?
+  fullName  String
+  street    String
+  city      String
+  state     String?
+  postalCode String?
+  country   String
+  phone     String?
+  createdAt DateTime @default(now())
 }

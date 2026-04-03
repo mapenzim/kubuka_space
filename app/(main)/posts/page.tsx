@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import prisma from "@/lib/prisma";
 import Link from "next/link";
 import { formatName } from "@/lib/utils";
-import { Key, ReactElement, JSXElementConstructor, ReactNode, ReactPortal } from "react";
+import { Key } from "react";
 
 export default async function Posts() {
   const posts = await prisma.post.findMany({
@@ -19,7 +19,7 @@ export default async function Posts() {
   }); 
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-linear-to-b from-gray-50 to-white">
       <div className="max-w-4xl mx-auto px-4 py-16">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900">Posts</h1>
@@ -34,7 +34,7 @@ export default async function Posts() {
           {posts.map((post: { id: Key | null | undefined; title: string; author: { name: any; }; }) => (
             <Link
               key={post.id}
-              href={`/posts/${post.id}?title=${post?.title?.split(" ").join("-").toLowerCase()}`}
+              href={`/posts/${String(post.id)}?title=${post?.title?.split(" ").join("-").toLowerCase()}`}
               className="block transition-transform hover:scale-[1.01]"
             >
               <article className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">

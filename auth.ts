@@ -8,7 +8,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
-      name: "Credentials",
+      name: "credentials",
       credentials: { email: {label:"Email", type:"text"}, password: {label:"Password", type:"password"} },
       async authorize(credentials) {
         if (!credentials) return null;
@@ -25,36 +25,42 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         // if (!valid) return null;
         // return minimal object
-        return { id: String(user.id), name: user.name, email: user.email, role: user.role, roleId: user.roleId, cartItems: user?.cartItems };
+        return {    
+          id: String(user.id),
+          name: user.name || "Anonymous",
+          email: user.email,
+          role: user.role?.name ?? "USER",
+          roleId: user.roleId,
+          cartItems: user.cartItems,
+
+        };
       }
     })
   ],
   callbacks: {
     async jwt({ token, user }) {
-      // on sign in, user will exist
       if (user) {
-        token.role = (user as any).role.name;
-        token.id = (user as any).id ?? token.sub;
-        token.cartItems = (user as any).cartItems;
-      } else {
-        // optionally refresh from DB if needed
-        if (!token.role && token.sub) {
-          const dbUser = await prisma.user.findUnique({ 
-            where: { id: Number(token.sub) },
-            include: { role: true, cartItems: true },
-          });
-          if (dbUser) {token.role = dbUser?.role; token.cartItems = dbUser.cartItems}
+        token.id = user.id;
+        token.role = user?.role; 
+        token.cartItems = user.cartItems;
+      } else if (!token.role && token.sub) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: Number(token.sub) },
+          include: { role: true, cartItems: true },
+        });
+        if (dbUser) {
+          token.role = dbUser.role?.name ?? "USER"; // ✅ flatten again
+          token.cartItems = dbUser.cartItems;
         }
       }
       return token;
     },
     async session({ session, token }) {
-      // attach role and id to session.user
-      (session.user as any).role = token.role;
-      (session.user as any).id = token.id;
-      (session.user as any).cartItems = token.cartItems;
+      session.user.id = token.id as string;
+      session.user.role = token.role as string; // always a string now
+      session.user.cartItems = token.cartItems as string[];
       return session;
-    },
+    }
   },
   session: { strategy: "jwt" },
   pages: { signIn: "/authentication" },

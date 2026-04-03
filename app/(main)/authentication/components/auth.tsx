@@ -3,13 +3,14 @@
 import { useEffect, useState, FormEvent } from "react";
 import { signIn, useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { motion, useAnimationControls } from "framer-motion";
-import { EyeIcon, EyeOff } from "lucide-react";
+import { AnimatePresence, motion, useAnimationControls } from "framer-motion";
+import { AtSignIcon, CircleEllipsisIcon, EyeIcon, EyeOff, User2Icon } from "lucide-react";
 import { toast } from "sonner";
 import { createUser, resetPasswordAction, changePasswordAction } from "@/app/actions/authActions.server";
 import Divider from "@/components/divider";
 import Fading from "@/components/fade";
 import Loading from "@/components/loading";
+import Image from "next/image";
 
 export const VARIANTS = {
   login: "LOGIN",
@@ -30,11 +31,6 @@ const Authentication = () => {
   const callbackUrl = searchParams.get("callbackUrl") || "/";
   const controls = useAnimationControls();
 
-  const isLogin = variant === VARIANTS.login;
-  const isRegister = variant === VARIANTS.register;
-  const isReset = variant === VARIANTS.reset;
-  const isChange = variant === VARIANTS.change;
-
   const changeVariant = async (next: string) => {
     await controls.start({ x: -500, opacity: 0, transition: { duration: 0.4 } });
     setVariant(next);
@@ -45,11 +41,9 @@ const Authentication = () => {
     if (status === "authenticated") {
       const role = (session?.user as any)?.role;
       const redirect =
-        role === "ADMIN"
-          ? "/admin"
-          : role === "EDITOR"
-          ? "/admin/posts"
-          : "/dashboard";
+        role === "ADMIN" ? "/admin" :
+        role === "EDITOR" ? "/admin/posts" :
+        callbackUrl;
       router.replace(redirect);
     }
   }, [status, session, router]);
@@ -62,8 +56,7 @@ const Authentication = () => {
     setIsLoading(true);
 
     try {
-      // RESET PASSWORD
-      if (isReset) {
+      if (variant === VARIANTS.reset) {
         const res = await resetPasswordAction(form.get("email") as string);
         if ("error" in res) return toast.error(res.error.message);
         toast.success("Reset link sent!");
@@ -72,8 +65,7 @@ const Authentication = () => {
         return;
       }
 
-      // LOGIN
-      if (isLogin) {
+      if (variant === VARIANTS.login) {
         const res = await signIn("credentials", {
           redirect: false,
           email: form.get("email"),
@@ -82,12 +74,11 @@ const Authentication = () => {
         if (res?.error) return toast.error("Invalid credentials");
         toast.success("Logged in successfully!");
         router.refresh();
-        router.push(callbackUrl);
+        //router.push(callbackUrl);
         return;
       }
 
-      // REGISTER
-      if (isRegister) {
+      if (variant === VARIANTS.register) {
         const password = form.get("password") as string;
         const confirm = form.get("confirmPassword") as string;
         if (password !== confirm) return toast.error("Passwords do not match");
@@ -99,8 +90,7 @@ const Authentication = () => {
         return;
       }
 
-      // CHANGE PASSWORD
-      if (isChange) {
+      if (variant === VARIANTS.change) {
         const res = await changePasswordAction(token, form.get("password") as string);
         if ("error" in res) return toast.error(res.error.message);
         toast.success("Password changed successfully!");
@@ -113,108 +103,144 @@ const Authentication = () => {
   };
 
   return (
-    <motion.div initial={{ opacity: 1, x: 0 }} animate={controls}>
-      <Fading direction="top" delay={0.8} fullWidth padding={0}>
-        <Divider>
-          {(isLogin && VARIANTS.login) ||
-            (isRegister && VARIANTS.register) ||
-            (isReset && VARIANTS.reset) ||
-            (isChange && VARIANTS.change)}
-        </Divider>
-      </Fading>
+    <AnimatePresence mode="wait">
+      <motion.div 
+        key={variant}
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -40 }}
+        transition={{ duration: 0.4 }}
+        className="w-full max-w-md rounded-xl bg-white/90 shadow-xl p-6 backdrop-blur-sm"
+    
+      >
+        <Image 
+          src="/images/Kubuka_Logo.png"
+          alt="Logo"
+          width={100}
+          height={100}
+        />
+        <Fading direction="top" delay={0.8} fullWidth padding={0}>
+          <Divider>{variant}</Divider>
+        </Fading>
 
-      <form onSubmit={onSubmitHandler}>
-        <fieldset disabled={isLoading} className="opacity-90">
-          <Fading direction="left" delay={0.6} fullWidth padding={0}>
-            <div className="relative flex flex-col items-end mt-2">
-              {isRegister && (
-                <input
-                  type="text"
-                  name="name"
-                  placeholder="Name"
-                  className="w-full mb-4 p-2 border rounded"
-                />
-              )}
+        <form onSubmit={onSubmitHandler} className="relative">
+          <fieldset disabled={isLoading} className="opacity-90">
+            {/* Inputs */}
+            {/* ...same as your code but with improved accessibility */}
+            <Fading direction="left" delay={0.6} fullWidth padding={0}>
+              <div className="relative flex flex-col items-end mt-2">
+                {variant === VARIANTS.register && (
+                  <div className="relative w-full mb-4">
+                    <input
+                      type="text"
+                      name="name"
+                      placeholder="Name"
+                      autoComplete="name"
+                      className="w-full rounded-md border border-gray-300 bg-gray-50 p-2 pl-10 pr-10 text-gray-900 focus:border-sky-500 focus:ring-sky-500"
+                    />
+                    <User2Icon className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                  </div>
+                )}
 
-              {(isLogin || isRegister || isReset) && (
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="Email"
-                  className="w-full mb-4 p-2 border rounded"
-                />
-              )}
+                {(variant === VARIANTS.login || variant === VARIANTS.register || variant === VARIANTS.reset) && (
+                  <div className="relative w-full mb-4">
+                    <input
+                      type="text"
+                      name="email"
+                      placeholder="Email"
+                      autoComplete="email"
+                      className="w-full rounded-md border border-gray-300 bg-gray-50 p-2 pl-10 pr-10 text-gray-900 focus:border-sky-500 focus:ring-sky-500"
+                    />
+                    <AtSignIcon className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                  </div>
+                )}
 
-              {(isLogin || isRegister) && (
-                <div className="relative w-full">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    name="password"
-                    placeholder="Password"
-                    className="w-full mb-4 p-2 border rounded"
-                  />
-                  <span
-                    className="absolute right-2 top-2 text-sm text-blue-600 cursor-pointer"
-                    onClick={() => setShowPassword((p) => !p)}
-                  >
-                    {showPassword ? <EyeOff /> : <EyeIcon />}
-                  </span>
+                {(variant === VARIANTS.login || variant === VARIANTS.register) && (
+                  <div className="relative w-full mb-4">
+                    {/* Leading icon */}
+                    <CircleEllipsisIcon
+                      className="absolute left-3 top-3 h-5 w-5 text-gray-400"
+                      aria-hidden="true"
+                    />
+
+                    {/* Password input */}
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      placeholder="Password"
+                      autoComplete="current-password"
+                      className="w-full rounded-md border border-gray-300 bg-gray-50 p-2 pl-10 pr-10 text-gray-900 focus:border-sky-500 focus:ring-sky-500"
+                    />
+
+                    {/* Toggle icon */}
+                    <button
+                      type="button"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      className="absolute right-3 top-3 text-gray-500 hover:text-sky-600 focus:outline-none"
+                      onClick={() => setShowPassword((p) => !p)}
+                    >
+                      {showPassword ? <EyeOff /> : <EyeIcon />}
+                    </button>
+                  </div>
+                )}
+
+                {variant === VARIANTS.register && (
+                  <div className="relative w-full mb-4">
+                    {/* Leading icon */}
+                    <CircleEllipsisIcon
+                      className="absolute left-3 top-3 h-5 w-5 text-gray-400"
+                      aria-hidden="true"
+                    />
+
+                    {/* Password input */}
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      name="confirmPassword"
+                      placeholder="Confirm Password"
+                      autoComplete="current-confirm-password"
+                      className="w-full rounded-md border border-gray-300 bg-gray-50 p-2 pl-10 pr-10 text-gray-900 focus:border-sky-500 focus:ring-sky-500"
+                    />
+                  </div>
+                )}
+                <div className="my-3 flex flex-col justify-between text-sm text-sky-600">
+                  {variant === VARIANTS.login && (
+                    <>
+                      <button type="button" onClick={() => changeVariant(VARIANTS.reset)} className="hover:underline">
+                        Forgot password?
+                      </button>
+                      <button type="button" onClick={() => changeVariant(VARIANTS.register)} className="hover:underline">
+                        Create account
+                      </button>
+                    </>
+                  )}
+                  {variant !== VARIANTS.login && (
+                    <button type="button" onClick={() => changeVariant(VARIANTS.login)} className="hover:underline">
+                      Back to Login
+                    </button>
+                  )}
                 </div>
-              )}
 
-              {isRegister && (
-                <input
-                  type={showPassword ? "text" : "password"}
-                  name="confirmPassword"
-                  placeholder="Confirm Password"
-                  className="w-full mb-4 p-2 border rounded"
-                />
-              )}
+              </div>
+            </Fading>
 
-              {isLogin ? (
-                <>
-                  <span
-                    className="-mr-3 w-max cursor-pointer p-3"
-                    onClick={() => changeVariant(VARIANTS.reset)}
-                  >
-                    <span className="text-sm text-blue-600">Forgot password?</span>
-                  </span>
-                  <span
-                    className="-mr-3 w-max cursor-pointer p-3"
-                    onClick={() => changeVariant(VARIANTS.register)}
-                  >
-                    <span className="text-sm text-blue-600">Don't have an account?</span>
-                  </span>
-                </>
-              ) : (
-                <div className="relative flex flex-col items-end">
-                  <span
-                    className="-mr-3 w-max cursor-pointer p-3"
-                    onClick={() => changeVariant(VARIANTS.login)}
-                  >
-                    <span className="text-sm text-blue-600">Back to Login?</span>
-                  </span>
-                </div>
-              )}
-            </div>
-          </Fading>
+            <Fading delay={0.8} direction="left" fullWidth padding={0}>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full rounded-md bg-linear-to-r from-sky-500 to-indigo-500 px-4 py-2 text-white font-semibold shadow hover:from-sky-600 hover:to-indigo-600 focus:ring-2 focus:ring-sky-400 flex items-center justify-center gap-2"
 
-          <Fading delay={0.8} direction="left" fullWidth padding={0}>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="bg-sky-500 text-white hover:bg-sky-600 focus:bg-sky-600 px-3 py-1 rounded-md flex flex-row gap-2"
-            >
-              {isLoading && <Loading />}
-              {(isLogin && VARIANTS.login) ||
-                (isRegister && VARIANTS.register) ||
-                (isReset && VARIANTS.reset) ||
-                (isChange && VARIANTS.change)}
-            </button>
-          </Fading>
-        </fieldset>
-      </form>
-    </motion.div>
+              >
+                {isLoading && <Loading />}
+                {(variant === VARIANTS.login && VARIANTS.login) ||
+                  (variant === VARIANTS.register && VARIANTS.register) ||
+                  (variant === VARIANTS.reset && VARIANTS.reset) ||
+                  (variant === VARIANTS.change && VARIANTS.change)}
+              </button>
+            </Fading>
+          </fieldset>
+        </form>
+      </motion.div>
+    </AnimatePresence>
   );
 };
 

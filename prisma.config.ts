@@ -1,11 +1,12 @@
 import "dotenv/config";
 import path from "node:path";
-import type { PrismaConfig } from "prisma";
+import { defineConfig } from "@prisma/config";
 
-export default {
+export default defineConfig({
   schema: path.join("prisma", "schema.prisma"),
 
   datasource: {
+    // Migrate still needs a plain URL
     url: process.env.DATABASE_URL!,
   },
 
@@ -21,4 +22,4 @@ export default {
   typedSql: {
     path: path.join("prisma", "queries"),
   },
-} satisfies PrismaConfig;
+});

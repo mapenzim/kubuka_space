@@ -3,10 +3,15 @@ import { hash } from "bcryptjs";
 
 const prisma = new PrismaClient();
 
+// 🔐 Helper for password hashing
+async function securePassword(password: string) {
+  return await hash(password, 10);
+}
+
 async function main() {
   console.log("🌱 Seeding database...");
 
-  // --- 1️⃣ Create roles and permissions ---
+  // --- 1️⃣ Roles & Permissions ---
   const rolesData = [
     {
       name: "ADMIN",
@@ -35,20 +40,22 @@ async function main() {
     },
   ];
 
-  for (const role of rolesData) {
-    await prisma.role.upsert({
-      where: { name: role.name },
-      update: {},
-      create: {
-        name: role.name,
-        permissions: { create: role.permissions },
-      },
-    });
-  }
+  await prisma.$transaction(async (tx) => {
+    for (const role of rolesData) {
+      await tx.role.upsert({
+        where: { name: role.name },
+        update: {},
+        create: {
+          name: role.name,
+          permissions: { create: role.permissions },
+        },
+      });
+    }
+  });
 
   console.log("✅ Roles & permissions seeded.");
 
-  // --- 2️⃣ Get roles for assignment ---
+  // --- 2️⃣ Fetch roles ---
   const adminRole = await prisma.role.findUnique({ where: { name: "ADMIN" } });
   const editorRole = await prisma.role.findUnique({ where: { name: "EDITOR" } });
   const superRole = await prisma.role.findUnique({ where: { name: "SUPERUSER" } });
@@ -57,12 +64,12 @@ async function main() {
     throw new Error("❌ Missing one or more roles.");
   }
 
-  // --- 3️⃣ Define users with role connections ---
+  // --- 3️⃣ Users ---
   const userData: Prisma.UserCreateInput[] = [
     {
       name: "Kubuka Space",
       email: "kubukahub@gmail.com",
-      password: await hash("hubtwabuka", 10),
+      password: await securePassword("hubtwabuka"),
       role: { connect: { id: editorRole.id } },
       posts: {
         create: [
@@ -78,7 +85,7 @@ async function main() {
     {
       name: "Mapenzi Mudimba",
       email: "hazelman@live.com",
-      password: await hash("mapenzim", 10),
+      password: await securePassword("mapenzim"),
       role: { connect: { id: adminRole.id } },
       posts: {
         create: [
@@ -94,12 +101,11 @@ async function main() {
     {
       name: "Super Admin",
       email: "superadmin@kubuka.space",
-      password: await hash("superkubuka", 10),
+      password: await securePassword("superkubuka"),
       role: { connect: { id: superRole.id } },
     },
   ];
 
-  // --- 4️⃣ Upsert users safely ---
   for (const u of userData) {
     await prisma.user.upsert({
       where: { email: u.email },
@@ -108,26 +114,35 @@ async function main() {
     });
   }
 
-  console.log("✅ Users & their roles seeded.");
+  console.log("✅ Users seeded.");
 
-  // --- 5 Define merchandise
-  const offers = ['installtion', 'tutorial', 'one year support', 'source code', 'call-in help', 'code samples', 'dependency upgrades', 'personalized authentication strategy'];
+  // --- 4️⃣ Merchandise ---
+  const offers = [
+    "installation",
+    "tutorial",
+    "one year support",
+    "source code",
+    "call-in help",
+    "code samples",
+    "dependency upgrades",
+    "personalized authentication strategy",
+  ];
 
   const merchandise = [
     {
       title: "starter",
       price: 160,
-      body: offers.slice(0,3).toString()
+      body: JSON.stringify(offers.slice(0, 3)),
     },
     {
       title: "personal",
       price: 220,
-      body: offers.slice(0, 7).toString()
+      body: JSON.stringify(offers.slice(0, 7)),
     },
     {
       title: "business",
       price: 480,
-      body: offers.toString()
+      body: JSON.stringify(offers),
     },
   ];
 
@@ -135,11 +150,94 @@ async function main() {
     await prisma.merchandise.upsert({
       where: { title: mc.title },
       update: {},
-      create: mc
+      create: mc,
     });
   }
-  
+
   console.log("✅ Merchandise seeded.");
+
+  // --- 5️⃣ Settings ---
+  const users = await prisma.user.findMany();
+  for (const user of users) {
+    await prisma.settings.upsert({
+      where: { userId: user.id },
+      update: {},
+      create: {
+        userId: user.id,
+        theme: "light",
+        language: "en",
+        notifyByEmail: true,
+      },
+    });
+  }
+
+  console.log("✅ Settings seeded.");
+
+  // --- 6️⃣ Wishlist ---
+  const starter = await prisma.merchandise.findUnique({ where: { title: "starter" } });
+  if (starter) {
+    await prisma.wishlist.create({
+      data: {
+        user: { connect: { email: "kubukahub@gmail.com" } },
+        merchandise: { connect: { id: starter.id } },
+      },
+    });
+  }
+
+  console.log("✅ Wishlist seeded.");
+
+  // --- 7️⃣ Order + Payment + ShippingAddress ---
+  const order = await prisma.order.create({
+    data: {
+      user: { connect: { email: "hazelman@live.com" } },
+      totalAmount: 160,
+      status: "paid",
+      orderItems: {
+        create: [
+          {
+            merchandiseId: starter?.id ?? 1,
+            title: "starter",
+            price: 160,
+            quantity: 1,
+          },
+        ],
+      },
+    },
+  });
+
+  await prisma.payment.create({
+    data: {
+      orderId: order.id,
+      amount: 160,
+      method: "paynow",
+      status: "successful",
+      transactionRef: "TX123456",
+    },
+  });
+
+  await prisma.shippingAddress.create({
+    data: {
+      user: { connect: { email: "hazelman@live.com" } },
+      order: { connect: { id: order.id } },
+      fullName: "Mapenzi Mudimba",
+      street: "123 Kubuka Street",
+      city: "Binga",
+      country: "Zimbabwe",
+      phone: "+263771234567",
+    },
+  });
+
+  console.log("✅ Orders, payments, and shipping addresses seeded.");
+
+  // --- 8️⃣ Log entry ---
+  await prisma.log.create({
+    data: {
+      action: "SEED_INIT",
+      details: { message: "Initial seed completed" },
+    },
+  });
+
+  console.log("✅ Log entry created.");
 }
 
 main()

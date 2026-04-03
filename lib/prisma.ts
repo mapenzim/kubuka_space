@@ -1,62 +1,52 @@
 import { PrismaClient as PrismaNodeClient } from "@prisma/client";
 import { PrismaClient as PrismaEdgeClient } from "@prisma/client/edge";
 import { PrismaPg } from "@prisma/adapter-pg";
-import pkg from "pg";
+import { withAccelerate } from "@prisma/extension-accelerate";
+import pkg, { Pool } from "pg";
 
-const { Pool } = pkg;
+const { Pool: PgPool } = pkg;
 
 const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaNodeClient | undefined;
-  pool: any;
+  prisma?: PrismaNodeClient;
+  pool?: Pool;
 };
 
 const isProduction = process.env.NODE_ENV === "production";
 const connectionString =
   process.env.DATABASE_URL || process.env.PRISMA_DATABASE_URL;
 
-// 🧩 Create pool for dev only (Node runtime)
-if (!isProduction && !globalForPrisma.pool) {
-  const pool = new Pool({
-    connectionString,
-  });
-
-  globalForPrisma.pool = pool;
-
-  // Health check
-  pool
-    .connect()
-    .then((client: any) => {
-      console.log("✅ PostgreSQL connected successfully.");
-      client.release();
-    })
-    .catch((err: any) => {
-      console.error("❌ PostgreSQL connection failed:", err.message);
-    });
-
-  const cleanup = async () => {
-    console.log("🧹 Closing PostgreSQL pool...");
-    await pool.end();
-    process.exit(0);
-  };
-
-  process.on("SIGINT", cleanup);
-  process.on("SIGTERM", cleanup);
-}
-
 let prisma: PrismaNodeClient;
 
-// 🏭 Production = Accelerate (Edge-safe)
+// 🏭 Production = Edge client with Accelerate
 if (isProduction) {
-  prisma = new PrismaEdgeClient({
-    accelerateUrl: process.env.ACCELERATE_URL!,
-  }) as unknown as PrismaNodeClient;
-}
+  prisma = new PrismaEdgeClient().$extends(withAccelerate()) as unknown as PrismaNodeClient;
+} else {
+  // 🧩 Dev = pg.Pool + PrismaPg adapter
+  if (!globalForPrisma.pool) {
+    const pool = new PgPool({ connectionString });
+    globalForPrisma.pool = pool;
 
-// 🧱 Development = PostgreSQL adapter via pg.Pool
-else {
+    pool.connect()
+      .then(client => {
+        console.log("✅ PostgreSQL connected successfully.");
+        client.release();
+      })
+      .catch(err => {
+        console.error("❌ PostgreSQL connection failed:", err.message);
+      });
+
+    const cleanup = async () => {
+      console.log("🧹 Closing PostgreSQL pool...");
+      await pool.end();
+      process.exit(0);
+    };
+
+    process.on("SIGINT", cleanup);
+    process.on("SIGTERM", cleanup);
+  }
+
   if (!globalForPrisma.prisma) {
-    const adapter = new PrismaPg(globalForPrisma.pool);
-
+    const adapter = new PrismaPg(globalForPrisma.pool! as any);
     globalForPrisma.prisma = new PrismaNodeClient({
       adapter,
       log: ["query", "error", "warn"],

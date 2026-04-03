@@ -6,23 +6,26 @@ import "./globals.css";
 import { meta_config } from "./meta_config";
 import { PropsType } from "@/lib/utils";
 import { Toaster } from "sonner";
-import { SessionProvider } from "next-auth/react";
+import Provider from "@/context/provider";
+import { auth } from "@/auth";
 
 export const metadata: Metadata = {
   title: meta_config.appTitle,
   description: meta_config.appDescription,
 };
 
-export default function RootLayout({ children }: PropsType) {
+export default async function RootLayout({ children }: PropsType) {
+  const session = await auth();
+
   return (
-    <html lang="en" suppressHydrationWarning={true} className="scroll-smooth" >
+    <html lang="en" suppressHydrationWarning={true} className="scroll-smooth" data-scroll-behavior="smooth" >
       <body
         className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}
       >
-        <SessionProvider>
+        <Provider session={session}>
           {children}
           <Toaster position="bottom-right" richColors />
-        </SessionProvider>
+        </Provider>
       </body>
     </html>
   );
