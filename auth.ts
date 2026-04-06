@@ -18,12 +18,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         });
         
         if (!user) throw new Error("No user found with that email");
-        //if (!user) return null;
 
         const valid = await compare(String(credentials.password), user.password);
         if (!valid) throw new Error("Invalid password");
 
-        // if (!valid) return null;
         // return minimal object
         return {    
           id: String(user.id),
@@ -45,11 +43,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.cartItems = user.cartItems;
       } else if (!token.role && token.sub) {
         const dbUser = await prisma.user.findUnique({
-          where: { id: Number(token.sub) },
+          where: { id: token.sub },
           include: { role: true, cartItems: true },
         });
         if (dbUser) {
-          token.role = dbUser.role?.name ?? "USER"; // ✅ flatten again
+          token.role = dbUser.role?.name ?? "USER";
           token.cartItems = dbUser.cartItems;
         }
       }
@@ -57,7 +55,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
     async session({ session, token }) {
       session.user.id = token.id as string;
-      session.user.role = token.role as string; // always a string now
+      session.user.role = token.role as string; 
       session.user.cartItems = token.cartItems as string[];
       return session;
     }

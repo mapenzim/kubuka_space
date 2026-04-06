@@ -1,49 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
-import { toast } from "sonner";
-
-import { getCartCount, getUserCart } from "@/app/actions/cartActions.server";
+import { ShoppingCartIcon } from "lucide-react";
+import { useCart } from "@/context/cartContext";
 import Link from "next/link";
-import { CheckoutLink } from "./link_to_checkout";
 
 export default function CartStatus() {
-  const { data: session } = useSession();
-  const [count, setCount] = useState<number | null>(null);
-  const [cartId, setCartId] = useState<number | null>(null);
-
-  const fetchData = async () => {
-    if (!session?.user?.id) return;
-
-    try {
-      const userId = Number(session.user.id);
-
-      const cartCount = await getCartCount(userId);
-      setCount(cartCount);
-
-      const cart = await getUserCart(userId);   // ⬅️ fetch cart item
-      setCartId(cart?.id ?? null);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to load cart info");
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, [session]);
-
-  if (!session) return null;
+  const { cartCount, cartId } = useCart();
 
   return (
-    <div className="text-sm font-semibold text-gray-700">
-      {cartId ? (
-        <CheckoutLink params={{ id: String(cartId) }}>
-          Cart: {count ?? 0}
-        </CheckoutLink>
-      ) : (
-        <span>Cart: {count ?? 0}</span>
-      )}
+    <div>
+      {cartCount > 0
+        ? 
+          <Link href={`/store/cart/${cartId}`} className="relative">
+            <div className="relative">
+              <ShoppingCartIcon className="w-6 h-6 text-gray-200" aria-hidden="true" />
+              <div className="absolute -top-1 right-1 flex size-3 items-center justify-center rounded-full bg-transparent">
+                <p className="text-xs text-red-500 font-bold">{cartCount}</p>
+              </div>
+            </div>
+          </Link>
+        : <ShoppingCartIcon className="w-6 h-6 text-gray-200" aria-hidden="true" />
+      }
     </div>
   );
 }

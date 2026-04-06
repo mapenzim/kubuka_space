@@ -15,7 +15,7 @@ export default async function EditPost({
   }
 
   const post = await prisma.post.findUnique({
-    where: { id: parseInt(id) },
+    where: { id: id },
     include: { author: true },
   });
 

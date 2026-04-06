@@ -1,31 +1,43 @@
+import { DISCOUNT, VAT } from "@/lib/utils";
+import { auth } from "@/auth";
 import CheckoutForm from "@/components/cart/components/checkout_form";
 import prisma from "@/lib/prisma";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
-export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
 
 interface Props {
-  params: { id: string };
+  params: {
+    id: string;
+  };
 }
 
-export default async function CheckoutPage({ params }: Props) {
-  const cartId = Number(params.id);
+function validateCartId(id: string): string {
+  if (!id || typeof id !== "string") {
+    notFound();
+  }
+  return id;
+}
 
-  if (!cartId || isNaN(cartId)) return notFound();
+export default async function Page({ params }: Props) {
+  const cartId = validateCartId(params.id);
+  const session = await auth();
 
-  // Fetch cart + items
-  const cart = await prisma.cart.findUnique({
-    where: { id: cartId },
+  // 🔐 Require auth
+  if (!session?.user) {
+    redirect(`/authentication?callbackUrl=/store/cart/${cartId}/checkout`);
+  }
+
+  // ✅ Fetch cart correctly
+  const cart = await prisma.cart.findFirst({
+    where: {
+      id: cartId,
+      userId: session.user.id,
+    },
     include: {
-      merchandise: {
+      cartItems: {
         include: {
-          cartItems: {
-            include: {
-              merchandise: true
-            }
-          },
+          merchandise: true,
         },
       },
     },
@@ -33,55 +45,83 @@ export default async function CheckoutPage({ params }: Props) {
 
   if (!cart) return notFound();
 
-  const total = cart.merchandise.cartItems.reduce(
-    (sum, item) => sum + item.quantity * item.merchandise.price,
-    0
-  );
+  // 🧮 Totals
+  const subtotal = cart.cartItems.reduce((sum, item) => {
+    const quantity = Number(item.quantity) || 0;
+    const price = Number(item.merchandise?.price) || 0;
+    return sum + quantity * price;
+  }, 0);
+
+  const vat = subtotal * Number(VAT || 0);
+  const discount = Number(DISCOUNT || 0);
+  const total = Math.max(0, subtotal + vat - discount);
+
+  const isEmpty = cart.cartItems.length === 0;
+
+  if (isEmpty) {
+    redirect("/store/cart"); // no checkout for empty carts
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 px-6 py-16 flex justify-center">
       <div className="w-full max-w-3xl bg-white p-8 rounded-2xl shadow-lg">
 
-        <h1 className="text-3xl font-semibold mb-6">Checkout</h1>
-
-        {/* Cart Summary */}
+        {/* 🧾 Order Summary */}
         <div className="mb-8">
-          <h2 className="text-xl font-medium mb-3">Order Summary</h2>
+          <h2 className="text-lg font-semibold mb-4">Order Summary</h2>
+
           <div className="divide-y border rounded-xl bg-gray-50">
-            {cart.merchandise.cartItems.map((item) => (
+            {cart.cartItems.map((item) => (
               <div
                 key={item.id}
                 className="p-4 flex justify-between items-center"
               >
                 <div>
                   <p className="font-medium">
-                    Order  number: {item.id}
+                    Item #{item.id.slice(-6).toUpperCase()}
                   </p>
                   <p className="text-sm text-gray-500">
                     Qty: {item.quantity}
                   </p>
                 </div>
 
-                <p className="font-semibold">
-                  ${(item.merchandise.price * item.quantity).toFixed(2)}
-                </p>
+                <div className="text-right">
+                  <p className="font-medium capitalize">
+                    {item.merchandise?.title}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    ${Number(item.merchandise?.price || 0).toFixed(2)}
+                  </p>
+                </div>
               </div>
             ))}
-          </div>
 
-          <div className="flex justify-between items-center mt-4 text-lg font-semibold">
-            <p>Total</p>
-            <p>${total.toFixed(2)}</p>
+            {/* Totals */}
+            <div className="p-4 space-y-1 text-sm">
+              <div className="flex justify-between">
+                <span>Subtotal</span>
+                <span>${subtotal.toFixed(2)}</span>
+              </div>
+
+              <div className="flex justify-between">
+                <span>VAT</span>
+                <span>${vat.toFixed(2)}</span>
+              </div>
+
+              <div className="flex justify-between">
+                <span>Discount</span>
+                <span>- ${discount.toFixed(2)}</span>
+              </div>
+
+              <div className="flex justify-between font-semibold text-base pt-2 border-t">
+                <span>Total</span>
+                <span>${total.toFixed(2)}</span>
+              </div>
+            </div>
           </div>
-          <button 
-            type="button"
-            className="flex rounded-md px-2 py-1 bg-indigo-400 text-orange-600 items-center justify-end"
-          >
-            cancel order
-          </button>
         </div>
 
-        {/* Checkout Form */}
+        {/* 💳 Checkout */}
         <CheckoutForm cartId={cart.id} total={total} />
 
       </div>

@@ -8,7 +8,7 @@ import { publishPost, saveDraft } from "@/app/actions/postActions.server";
 
 function SubmitButton({ isPublished }: { isPublished?: boolean }) {
   const { pending } = useFormStatus();
-
+ 
   return (
     <div className="flex gap-4">
       <button

@@ -12,7 +12,7 @@ export default defineConfig({
 
   migrations: {
     path: path.join("prisma", "migrations"),
-    seed: "tsx prisma/seed.mts",
+    seed: "tsx prisma/seed.ts",
   },
 
   views: {

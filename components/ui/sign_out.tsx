@@ -20,7 +20,7 @@ export function SignoutButton({ children, close }: { children?: React.ReactNode;
       >
         <button
           type="submit"
-          className="flex items-center gap-x-2 w-full rounded-lg px-3 py-2 text-left text-gray-900 hover:bg-gray-100"
+          className="flex items-center gap-x-2 w-full rounded-lg px-3 py-2 text-left text-gray-900 hover:bg-gray-100 cursor-pointer"
         >
           <LogOutIcon className="w-4 h-4 text-gray-600" aria-hidden="true" />
           { children ?? "Sign out"}

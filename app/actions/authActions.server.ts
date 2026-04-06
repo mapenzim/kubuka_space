@@ -1,6 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
+import { ulidId } from "@/lib/server-utils";
 import { hash } from "bcryptjs";
 import { revalidatePath } from "next/cache";
 
@@ -30,7 +31,7 @@ export async function createUser(form: FormData): Promise<CreateUserResult> {
 
     const hashed = await hash(password, 10);
     await prisma.user.create({
-      data: { name, email, password: hashed },
+      data: { id: ulidId(), name, email, password: hashed },
     });
 
     return { success: true };

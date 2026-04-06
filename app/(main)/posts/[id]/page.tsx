@@ -15,7 +15,7 @@ export default async function Post({
   const session = await auth();
   const { id } = await params;
   const post = await prisma.post.findUnique({
-    where: { id: parseInt(id) },
+    where: { id: id },
     include: {
       author: true,
     },
@@ -30,73 +30,62 @@ export default async function Post({
   return (
     <div className="min-h-screen bg-linear-to-b from-gray-50 to-white">
       <div className="max-w-4xl mx-auto px-4 py-16">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
-          <article>
-            <header className="mb-8">
-              <div className="flex items-center justify-between mb-6">
-                <h1 className="text-4xl font-bold text-gray-900">
-                  {post.title}
-                </h1>
+        <article className="rounded-xl bg-white p-4 ring-3 ring-indigo-50 sm:p-6 lg:p-8">
+          <div className="flex items-start sm:gap-8">
+            <div className="hidden sm:grid sm:size-20 sm:shrink-0 sm:place-content-center sm:rounded-full sm:border-2 sm:border-indigo-500" aria-hidden="true">
+              <Image
+                src="/images/kubuka-logo.png"
+                alt={formatName(post.author.name ?? "User")}
+                width={100}
+                height={100}
+                className="rounded-full"
+              />
+            </div>
+
+            <div>
+              <div className="w-full items-start justify-start space-x-4">
+                <strong className="rounded-sm border border-indigo-500 bg-indigo-500 px-3 py-1.5 text-[10px] font-medium text-white">
+                  {post.published ? "Published" : "Draft"}
+                </strong>
                 {isAuthor && (
                   <Link
                     href={`/posts/${post.id}/edit`}
-                    className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                    className="rounded-sm border border-indigo-500 bg-indigo-500 px-3 py-1.5 text-[10px] font-medium text-white transition-colors hover:bg-indigo-600"
                   >
                     Edit Post
                   </Link>
                 )}
               </div>
 
-              {!post.published && (
-                <div className="mb-6 bg-yellow-50 text-yellow-800 px-4 py-2 rounded-md text-sm">
-                  This post is currently a draft
-                </div>
-              )}
+              <h3 className="mt-4 text-lg font-medium sm:text-xl">
+                <a href="#" className="hover:underline"> {post.title} </a>
+              </h3>
 
-              <div className="flex items-center gap-3">
-                {post.author.image ? (
-                  <Image
-                    src={post.author.image}
-                    alt={formatName(post.author.name)}
-                    width={40}
-                    height={40}
-                    className="rounded-full"
-                  />
-                ) : (
-                  <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                    <span className="text-gray-500 text-sm font-medium">
-                      {(post.author.name || "User").charAt(0)}
-                    </span>
-                  </div>
-                )}
-                <Link
-                  href={`/authors/${post.authorId}`}
-                  className="text-gray-600 hover:text-gray-900 transition-colors"
-                >
-                  By {formatName(post.author.name)}
-                </Link>
+              <p className="mt-1 text-sm text-gray-700">
+                {post.content}
+              </p>
+
+              <div className="mt-4 sm:flex sm:items-center sm:gap-2">
+                <div className="flex items-center gap-1 text-gray-500">
+                  <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+
+                  <p className="text-xs font-medium">48:32 minutes</p>
+                </div>
+
+                <span className="hidden sm:block" aria-hidden="true">·</span>
+
+                <p className="mt-2 text-xs font-medium text-gray-500 sm:mt-0">
+                  Featuring -{" "}
+                  <Link href={`/authors/${post.authorId}`} className="underline hover:text-gray-700"> 
+                    {formatName(post.author.name ?? "User")}
+                  </Link>
+                </p>
               </div>
-            </header>
-
-            {post.content && (
-              <>
-                <div className="h-px bg-gray-100 mb-8" />
-                <div className="prose prose-gray max-w-none">
-                  {post.content}
-                </div>
-              </>
-            )}
-          </article>
-
-          <div className="border-t border-gray-100 mt-12 pt-6">
-            <Link
-              href={`/authors/${post.authorId}`}
-              className="text-gray-500 hover:text-gray-700 transition-colors"
-            >
-              ← Back to author&apos;s profile
-            </Link>
+            </div>
           </div>
-        </div>
+        </article>
       </div>
     </div>
   );

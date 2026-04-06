@@ -3,6 +3,7 @@
 import prisma from "@/lib/prisma";
 import { getBroadcaster } from "@/lib/broadcaster";
 import { hash } from "bcryptjs";
+import { ulidId } from "@/lib/server-utils";
 
 export async function createUser(formData: FormData) {
   const name = formData.get("name") as string;
@@ -12,7 +13,7 @@ export async function createUser(formData: FormData) {
   const hashd = await hash(password, 10);
 
   const user = await prisma.user.create({
-    data: { name, email, password: hashd },
+    data: { id: ulidId(), name, email, password: hashd },
   });
 
   const broadcaster = getBroadcaster();

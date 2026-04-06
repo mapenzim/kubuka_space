@@ -9,7 +9,7 @@ export default function Error({ error, reset }: any) {
   },[error]);
 
   return (
-    <section className="flex w-full h-screen items-center justify-center">
+    <section className="flex w-full h-screen items-center justify-center p-16">
       <div className="space-y-4">
         <h2 className="text-lg font-bold">Error</h2>
         <p className="text-sm text-pink-600/60">{error?.message}</p>

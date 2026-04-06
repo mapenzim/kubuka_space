@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 
 import prisma from "@/lib/prisma";
 import { getBroadcaster } from "@/lib/broadcaster";
+import { ulidId } from "@/lib/server-utils";
 
 export async function createPost(formData: FormData) {
   const title = formData.get("title") as string;
@@ -14,15 +15,12 @@ export async function createPost(formData: FormData) {
   const authorId = formData.get('authorId') as string;
 
   const post = await prisma.post.create({
-    data: { title, content, authorId: Number(authorId) },
-  });
-
-  // 🔥 Broadcast the new post to all connected SSE clients
-  const broadcaster = getBroadcaster();
-  broadcaster.publish({
-    type: "post:created",
-    payload: post,
-    channel: ""
+    data: { 
+      id: ulidId(), 
+      title, 
+      content, 
+      authorId: authorId 
+    },
   });
 
   return post;
@@ -48,7 +46,7 @@ export async function publishPost(formData: FormData) {
 
   const post = await prisma.post.upsert({
     where: {
-      id: parseInt(postId ?? "-1"),
+      id: postId || "",
       author: {
         email: session.user.email!,
       },
@@ -59,6 +57,7 @@ export async function publishPost(formData: FormData) {
       published: true,
     },
     create: {
+      id: ulidId(),
       title: title.trim(),
       content: content?.trim(),
       published: true,
@@ -68,6 +67,14 @@ export async function publishPost(formData: FormData) {
         },
       },
     },
+  });
+
+  // 🔥 Broadcast the new post to all connected SSE clients
+  const broadcaster = getBroadcaster();
+  broadcaster.publish({
+    type: "post:created",
+    payload: post,
+    channel: ""
   });
 
   revalidatePath(`/posts/${post.id}`);
@@ -95,7 +102,7 @@ export async function saveDraft(formData: FormData) {
 
   const post = await prisma.post.upsert({
     where: {
-      id: parseInt(postId ?? "-1"),
+      id: postId ?? "",
       author: {
         email: session.user.email!,
       },
@@ -106,6 +113,7 @@ export async function saveDraft(formData: FormData) {
       published: false,
     },
     create: {
+      id: ulidId(),
       title: title.trim(),
       content: content?.trim(),
       published: false,

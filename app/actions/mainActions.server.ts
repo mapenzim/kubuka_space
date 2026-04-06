@@ -2,6 +2,7 @@
 
 import { getBroadcaster } from "@/lib/broadcaster";
 import prisma from "@/lib/prisma";
+import { ulidId } from "@/lib/server-utils";
 import { containsProfanity } from "@/lib/utils";
 
 type CreateMessageResult =
@@ -19,6 +20,7 @@ export async function createPrivateMessage(form: FormData): Promise<CreateMessag
 
   const pvt_message = await prisma.privatemessage.create({
     data: {
+      id: ulidId(),
       names: names.trim(),
       email: email,
       message: message.trim()

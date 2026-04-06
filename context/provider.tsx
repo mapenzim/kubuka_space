@@ -1,9 +1,20 @@
 import { SessionProvider } from "next-auth/react";
+import { CartProvider } from "./cartContext";
 
-export default function Provider({ children, session }: { children: React.ReactNode; session: any }) {
+interface CartItem {
+  id: string;
+  merchandise: { title: string; price: number };
+  quantity: number;
+}
+
+export default function Provider(
+  { children, session, initialCart }: { children: React.ReactNode; session: any; initialCart: CartItem[] }
+) {
   return (
     <SessionProvider session={session}>
-      { children }
+      <CartProvider initialCart={initialCart}>
+        {children}
+      </CartProvider>
     </SessionProvider>
   );
 }

@@ -110,7 +110,7 @@ const Authentication = () => {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -40 }}
         transition={{ duration: 0.4 }}
-        className="w-full max-w-md rounded-xl bg-white/90 shadow-xl p-6 backdrop-blur-sm"
+        className="w-full max-w-md rounded-xl bg-white/90 shadow-xl pl-6 pr-6 pb-6 backdrop-blur-sm"
     
       >
         <Image 

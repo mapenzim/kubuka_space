@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { ListEnd, StoreIcon } from "lucide-react";
+import { ListEnd, ShoppingCartIcon, StoreIcon } from "lucide-react";
 import { Popover, PopoverButton, PopoverPanel } from "@headlessui/react";
 import { SignoutButton } from "./sign_out";
 import { useSession } from "next-auth/react";
+import CartStatus from "../cart/components/cart_status";
 
 const NavigationBar = () => {
   const { data: session } = useSession();
@@ -38,9 +39,12 @@ const NavigationBar = () => {
           </Link>
         </div>
 
+        <div className="flex gap-8">
+          <CartStatus />
+
         {user ? (
           <Popover>
-            <PopoverButton className="block text-sm font-semibold text-white hover:text-white focus:outline-none">
+            <PopoverButton className="block text-sm font-semibold text-white hover:text-white focus:outline-none cursor-pointer">
               {user.name}
             </PopoverButton>
             <PopoverPanel
@@ -81,6 +85,7 @@ const NavigationBar = () => {
             Sign in
           </Link>
         )}
+        </div>
       </div>
     </nav>
   );

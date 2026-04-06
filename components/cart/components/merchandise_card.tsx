@@ -1,43 +1,22 @@
 "use client";
 
 import { GemIcon } from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
-import { addToCartAction } from "@/app/actions/cartActions.server";
-import { useSession } from "next-auth/react";
+import Loading from "@/components/loading";
+import { useCart } from "@/context/cartContext";
 
 type Props = {
   item: {
-    id: number;
+    id: string;
     title: string;
     body: string;
     price: number;
   };
-  onCartUpdate?: () => void; // callback to notify parent of cart change
 };
 
-export default function MerchandiseCard({ item, onCartUpdate }: Props) {
-  const [loading, setLoading] = useState(false);
-  const { data: session } = useSession();
+export default function MerchandiseCard({ item }: Props) {
+  const { cartLoading, addItem } = useCart(); // to trigger re-render on cart updates
 
   const col = item.body?.split(",") || [];
-
-  const handleAddToCart = async () => {
-    if (!session) return toast.error("You must be logged in");
-
-    setLoading(true);
-    try {
-      const res = await addToCartAction(item.id, session?.user?.id as string);
-      if ("error" in res) return toast.error(res.error.message);
-      toast.success(`${item.title} added to cart`);
-
-      if (onCartUpdate) onCartUpdate(); // notify parent to refresh cart count
-    } catch (err: any) {
-      toast.error(err.message || "Failed to add to cart");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="flex flex-col min-h-[60vh] justify-between p-4 bg-slate-500 text-gray-100 rounded-lg">
@@ -48,18 +27,18 @@ export default function MerchandiseCard({ item, onCartUpdate }: Props) {
       <ul className="list-outside ml-4">
         {col.map((str, index) => (
           <li key={index} className="list-disc text-xs capitalize">
-            {str.trim()}
+            {str}
           </li>
         ))}
       </ul>
-      <p className="text-sm font-semibold">${item.price}.00</p>
-      <button
-        onClick={handleAddToCart}
-        disabled={loading}
-        className="mt-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md"
-      >
-        {loading ? "Adding..." : "Add to Cart"}
-      </button>
+      <p className="text-sm font-semibold">${item.price.toFixed(2)}</p>
+        <button
+          disabled={cartLoading}
+          className="mt-2 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded-md flex items-center justify-center gap-2"
+          onClick={() => addItem(item)}
+        >
+          {cartLoading ? <Loading /> : "Add to Cart"}
+        </button>
     </div>
   );
 }

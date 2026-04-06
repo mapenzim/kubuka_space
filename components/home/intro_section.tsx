@@ -60,7 +60,7 @@ export const IntroSection = () => {
                     Verified Company
                   </h6>
                   <p className="mt-2 mb-4 text-justify">
-                    Our company is formally registered, which means all transactions we perform are fully compliant with the law.
+                    Our company is formally registered, all transactions we perform are fully compliant with the law.
                   </p>
                 </div>
               </div>

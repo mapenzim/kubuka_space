@@ -1,7 +1,8 @@
-import { PrismaClient, Prisma } from "@prisma/client";
+import prisma from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { hash } from "bcryptjs";
+import { ulidId as ulid } from "@/lib/server-utils";
 
-const prisma = new PrismaClient();
 
 // 🔐 Helper for password hashing
 async function securePassword(password: string) {
@@ -46,8 +47,9 @@ async function main() {
         where: { name: role.name },
         update: {},
         create: {
+          id: ulid(),
           name: role.name,
-          permissions: { create: role.permissions },
+          permissions: { create: role.permissions.map((p) => ({ ...p, id: ulid() })) },
         },
       });
     }
@@ -67,6 +69,7 @@ async function main() {
   // --- 3️⃣ Users ---
   const userData: Prisma.UserCreateInput[] = [
     {
+      id: ulid(),
       name: "Kubuka Space",
       email: "kubukahub@gmail.com",
       password: await securePassword("hubtwabuka"),
@@ -74,6 +77,7 @@ async function main() {
       posts: {
         create: [
           {
+            id: ulid(),
             title: "Welcome to Kubuka Hub",
             content:
               "This hub is for the people who want to create content for the Binga Community. Feel free to connect to our channels for more.",
@@ -83,6 +87,7 @@ async function main() {
       },
     },
     {
+      id: ulid(),
       name: "Mapenzi Mudimba",
       email: "hazelman@live.com",
       password: await securePassword("mapenzim"),
@@ -90,6 +95,7 @@ async function main() {
       posts: {
         create: [
           {
+            id: ulid(),
             title: "Follow Kubuka for more information",
             content:
               "Kubuka is a community initiative to make sure the content we serve is visible throughout the universe. Follow us for more.",
@@ -99,6 +105,7 @@ async function main() {
       },
     },
     {
+      id: ulid(),
       name: "Super Admin",
       email: "superadmin@kubuka.space",
       password: await securePassword("superkubuka"),
@@ -130,26 +137,32 @@ async function main() {
 
   const merchandise = [
     {
+      id: ulid(),
       title: "starter",
       price: 160,
-      body: JSON.stringify(offers.slice(0, 3)),
+      body: offers.slice(0, 3).join(", "),
     },
     {
+      id: ulid(),
       title: "personal",
       price: 220,
-      body: JSON.stringify(offers.slice(0, 7)),
+      body: offers.slice(0, 7).join(", "),
     },
     {
+      id: ulid(),
       title: "business",
       price: 480,
-      body: JSON.stringify(offers),
+      body: offers.join(", "),
     },
   ];
 
   for (const mc of merchandise) {
     await prisma.merchandise.upsert({
       where: { title: mc.title },
-      update: {},
+      update: {
+        price: mc.price,
+        body: mc.body,
+      },
       create: mc,
     });
   }
@@ -163,6 +176,7 @@ async function main() {
       where: { userId: user.id },
       update: {},
       create: {
+        id: ulid(),
         userId: user.id,
         theme: "light",
         language: "en",
@@ -178,6 +192,7 @@ async function main() {
   if (starter) {
     await prisma.wishlist.create({
       data: {
+        id: ulid(),
         user: { connect: { email: "kubukahub@gmail.com" } },
         merchandise: { connect: { id: starter.id } },
       },
@@ -189,13 +204,15 @@ async function main() {
   // --- 7️⃣ Order + Payment + ShippingAddress ---
   const order = await prisma.order.create({
     data: {
+      id: ulid(),
       user: { connect: { email: "hazelman@live.com" } },
       totalAmount: 160,
       status: "paid",
       orderItems: {
         create: [
           {
-            merchandiseId: starter?.id ?? 1,
+            id: ulid(),
+            merchandiseId: starter?.id || "",
             title: "starter",
             price: 160,
             quantity: 1,
@@ -207,6 +224,7 @@ async function main() {
 
   await prisma.payment.create({
     data: {
+      id: ulid(),
       orderId: order.id,
       amount: 160,
       method: "paynow",
@@ -217,6 +235,7 @@ async function main() {
 
   await prisma.shippingAddress.create({
     data: {
+      id: ulid(),
       user: { connect: { email: "hazelman@live.com" } },
       order: { connect: { id: order.id } },
       fullName: "Mapenzi Mudimba",
@@ -232,6 +251,7 @@ async function main() {
   // --- 8️⃣ Log entry ---
   await prisma.log.create({
     data: {
+      id: ulid(),
       action: "SEED_INIT",
       details: { message: "Initial seed completed" },
     },
