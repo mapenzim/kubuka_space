@@ -15,7 +15,7 @@ export default async function UserProfile({
   const session = await auth();
 
   const user = await prisma.user.findUnique({
-    where: { id: parseInt(id) },
+    where: { id },
     include: {
       posts: {
         orderBy: { id: "desc" },
@@ -33,14 +33,14 @@ export default async function UserProfile({
     : user.posts.filter((post: { published: any; }) => post.published);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-linear-to-b from-gray-50 to-white">
       <div className="max-w-4xl mx-auto px-4 py-16">
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 mb-8">
           <div className="flex items-center gap-6">
             {user.image ? (
               <Image
                 src={user.image}
-                alt={formatName(user.name)}
+                alt={formatName(user.name ?? "User")}
                 width={80}
                 height={80}
                 className="rounded-full"
@@ -54,7 +54,7 @@ export default async function UserProfile({
             )}
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                {formatName(user.name)}
+                {formatName(user.name ?? "User")}
               </h1>
               <Link
                 href="/"
@@ -124,7 +124,7 @@ export default async function UserProfile({
             </div>
           ) : (
             <div className="grid gap-4">
-              {posts.map((post: { id: Key | null | undefined; title: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; published: any; content: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; }) => (
+              {posts.map((post: { id: string; title: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; published: any; content: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; }) => (
                 <Link
                   key={post.id}
                   href={`/posts/${post.id}`}

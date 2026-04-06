@@ -1,5 +1,4 @@
 import { auth } from "@/auth";
-import { SignoutButton } from "@/components/ui/sign_out";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -7,7 +6,7 @@ import { redirect } from "next/navigation";
 const ProfilePage = async () => {
   const session = await auth();
 
-  const user = session?.user;
+  const user = session?.user; 
 
   if (!session?.user) return redirect("/authentication");
   
@@ -37,7 +36,6 @@ const ProfilePage = async () => {
                   {/*<button type="button" className="bg-orange-500 hover:bg-red-400 text-gray-700 py-2 px-4 rounded">
                     Delete
                   </button>*/}
-                  <SignoutButton />
                 </div>
               </div>
               <hr className="my-6 border-t border-gray-300" />

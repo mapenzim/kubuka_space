@@ -1,12 +1,15 @@
 import prisma from "@/lib/prisma";
 import { hash } from "bcryptjs";
 import { getBroadcaster } from "@/lib/broadcaster";
+import { ulidId } from "@/lib/server-utils";
+
+export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   const { name, email, password, role } = await req.json();
   const hashed = await hash(password, 10);
   const user = await prisma.user.create({
-    data: { name, email, password: hashed, role: role ?? undefined },
+    data: { id: ulidId(), name, email, password: hashed, role: role ?? undefined },
   });
 
   const b = getBroadcaster();

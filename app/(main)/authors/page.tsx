@@ -32,7 +32,7 @@ export default async function Authors() {
                   {author.email}
                 </h2>
                 <div className="text-sm text-gray-500">
-                  by {formatName(author.name)}
+                  by {formatName(author.name ?? "User")}
                 </div>
               </article>
             </Link>

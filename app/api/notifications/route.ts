@@ -1,5 +1,8 @@
 import { getBroadcaster } from "@/lib/broadcaster";
 import prisma from "@/lib/prisma";
+import { ulidId } from "@/lib/server-utils";
+
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   const notifications = await prisma.notification.findMany({
@@ -14,9 +17,10 @@ export async function POST(req: Request) {
   const { title, body: content, userId } = body;
   const note = await prisma.notification.create({
     data: {
+      id: ulidId(),
       title,
       body: content,
-      userId: userId ? Number(userId) : null,
+      userId: userId ?? null,
     },
   });
 

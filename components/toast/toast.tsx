@@ -24,7 +24,7 @@ function Toast(props: ToastProps) {
   const { title, description, button, id } = props;
 
   return (
-    <div className="flex rounded-lg bg-white shadow-lg ring-1 ring-black/5 w-full md:max-w-[364px] items-center p-4">
+    <div className="flex rounded-lg bg-white shadow-lg ring-1 ring-black/5 w-full md:max-w-91 items-center p-4">
       <div className="flex flex-1 items-center">
         <div className="w-full">
           <p className="text-sm font-medium text-gray-900">{title}</p>
@@ -49,7 +49,7 @@ function Toast(props: ToastProps) {
 export default function Headless() {
   return (
     <button
-      className="relative flex h-10 flex-shrink-0 items-center justify-center gap-2 overflow-hidden rounded-full bg-white px-4 text-sm font-medium shadow-sm transition-all hover:bg-[#FAFAFA] dark:bg-[#161615] dark:hover:bg-[#1A1A19] dark:text-white"
+      className="relative flex h-10 shrink-0 items-center justify-center gap-2 overflow-hidden rounded-full bg-white px-4 text-sm font-medium shadow-sm transition-all hover:bg-[#FAFAFA] dark:bg-[#161615] dark:hover:bg-[#1A1A19] dark:text-white"
       onClick={() => {
         toast({
           title: 'This is a headless toast',

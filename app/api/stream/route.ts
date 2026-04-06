@@ -1,5 +1,5 @@
 import { getBroadcaster } from "@/lib/broadcaster";
-
+export const dynamic = "force-dynamic";
 function encode(str: string) {
   return new TextEncoder().encode(str);
 }

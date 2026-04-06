@@ -7,6 +7,8 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { ulid } from "ulid";
 
+export const dynamic = "force-dynamic";
+
 export async function requireAnyRole(roles: Role[]) {
   const session = await auth();
 
@@ -22,5 +24,6 @@ export async function requireAnyRole(roles: Role[]) {
 
   return session;
 }
+
 /** * * @returns random string */ 
 export const ulidId = () => ulid();

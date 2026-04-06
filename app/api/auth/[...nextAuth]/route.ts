@@ -1,4 +1,5 @@
 import { handlers } from "@/auth";
-export const runtime = "nodejs"; // instead of "edge"
+
+export const dynamic = "force-dynamic";
 
 export const { GET, POST } = handlers;

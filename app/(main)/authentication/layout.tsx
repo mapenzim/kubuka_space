@@ -1,6 +1,6 @@
-import { PropsType } from "@/lib/utils";
+import { ReactNode } from "react";
 
-export default async function Layout({ children }: PropsType){
+export default async function Layout({ children }: { children: ReactNode }) {
   return (
     <div className="w-full overflow-auto">
       <div className="min-h-screen items-center justify-center">

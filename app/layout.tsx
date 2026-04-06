@@ -10,6 +10,7 @@ import Provider from "@/context/provider";
 import { auth } from "@/auth";
 import { ReactNode } from "react";
 import prisma from "@/lib/prisma";
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 export const metadata: Metadata = {
   title: meta_config.appTitle,
@@ -45,6 +46,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           </Theme>
           <Toaster position="bottom-right" richColors />
         </Provider>
+        <SpeedInsights />
       </body>
     </html>
   );

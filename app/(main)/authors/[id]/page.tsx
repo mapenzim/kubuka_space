@@ -40,7 +40,7 @@ export default async function UserProfile({
             {user.image ? (
               <Image
                 src={user.image}
-                alt={formatName(user.name)}
+                alt={formatName(user.name ?? "User")}
                 width={80}
                 height={80}
                 className="rounded-full"
@@ -54,7 +54,7 @@ export default async function UserProfile({
             )}
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                {formatName(user.name)}
+                {formatName(user.name ?? "User")}
               </h1>
               <Link
                 href="/authors"

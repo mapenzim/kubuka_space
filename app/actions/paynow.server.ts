@@ -52,7 +52,7 @@ export async function initiateEcoCashPayment(orderId: string) {
         method: "ECOCASH",
         status: "PENDING",
         pollUrl: response.pollUrl,
-        reference: response.pollUrl,
+        transactionRef: response.pollUrl,
         expiresAt,
       },
     });

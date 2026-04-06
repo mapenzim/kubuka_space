@@ -6,6 +6,8 @@ import pkg from "pg";
 
 const { Pool } = pkg;
 
+export const dynamic = "force-dynamic";
+
 const globalForPrisma = globalThis as unknown as {
   pool?: InstanceType<typeof Pool>;
   prisma?: PrismaClient;

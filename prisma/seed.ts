@@ -208,7 +208,7 @@ async function main() {
       user: { connect: { email: "hazelman@live.com" } },
       totalAmount: 160,
       status: "paid",
-      orderItems: {
+      items: {
         create: [
           {
             id: ulid(),
@@ -228,7 +228,7 @@ async function main() {
       orderId: order.id,
       amount: 160,
       method: "paynow",
-      status: "successful",
+      status: "PAID",
       transactionRef: "TX123456",
     },
   });
@@ -236,7 +236,6 @@ async function main() {
   await prisma.shippingAddress.create({
     data: {
       id: ulid(),
-      user: { connect: { email: "hazelman@live.com" } },
       order: { connect: { id: order.id } },
       fullName: "Mapenzi Mudimba",
       street: "123 Kubuka Street",

@@ -1,6 +1,6 @@
-import { PropsType } from '@/lib/utils';
+import { ReactNode } from "react";
 
-const Divider = ({ children }: PropsType) => {
+const Divider = ({ children }: { children: ReactNode }) => {
   return (
     <div role="hidden" className="mb-8">
       <span className="flex items-center">
