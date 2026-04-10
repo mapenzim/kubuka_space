@@ -49,19 +49,22 @@ async function main() {
     },
   ];
 
-  await prisma.$transaction(async (tx) => {
-    for (const role of rolesData) {
-      await tx.role.upsert({
-        where: { name: role.name },
-        update: {},
-        create: {
-          id: ulid(),
-          name: role.name,
-          permissions: { create: role.permissions.map((p) => ({ ...p, id: ulid() })) },
+  for (const role of rolesData) {
+    await prisma.role.upsert({
+      where: { name: role.name },
+      update: {},
+      create: {
+        id: ulid(),
+        name: role.name,
+        permissions: {
+          create: role.permissions.map((p) => ({
+            ...p,
+            id: ulid(),
+          })),
         },
-      });
-    }
-  });
+      },
+    });
+  }
 
   console.log("✅ Roles & permissions seeded.");
 
