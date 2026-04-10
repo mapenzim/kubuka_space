@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "pnpm prisma generate && pnpm prisma db seed && next build",
+    "build": "pnpm prisma generate && prisma migrate deploy && pnpm prisma db seed && next build",
     "start": "next start",
     "lint": "next lint",
     "prisma:generate": "prisma generate",

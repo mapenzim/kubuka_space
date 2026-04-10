@@ -1,7 +1,6 @@
 import "dotenv/config";
-import { Prisma, PrismaClient } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { hash } from "bcryptjs";
-import { PrismaPg } from "@prisma/adapter-pg";
 import { ulid } from "ulid";
 import prisma from "@/lib/prisma";
 
