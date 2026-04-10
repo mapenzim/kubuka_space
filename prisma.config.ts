@@ -7,7 +7,7 @@ export default defineConfig({
 
   datasource: {
     // Migrate still needs a plain URL
-    url: process.env.DATABASE_URL!,
+    url: process.env.ACCELERATE_URL_DATABASE_URL!,
   },
 
   migrations: {
