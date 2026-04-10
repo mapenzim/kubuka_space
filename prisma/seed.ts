@@ -1,8 +1,12 @@
-import prisma from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
+import "dotenv/config";
+import { Prisma, PrismaClient } from "@prisma/client";
 import { hash } from "bcryptjs";
-import { ulidId as ulid } from "@/lib/server-utils";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { ulid } from "ulid";
 
+const prisma = new PrismaClient({
+  adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL })
+});
 
 // 🔐 Helper for password hashing
 async function securePassword(password: string) {
@@ -187,65 +191,9 @@ async function main() {
 
   console.log("✅ Settings seeded.");
 
-  // --- 6️⃣ Wishlist ---
-  const starter = await prisma.merchandise.findUnique({ where: { title: "starter" } });
-  if (starter) {
-    await prisma.wishlist.create({
-      data: {
-        id: ulid(),
-        user: { connect: { email: "kubukahub@gmail.com" } },
-        merchandise: { connect: { id: starter.id } },
-      },
-    });
-  }
+  // --- 6️⃣ implemented later ---
 
-  console.log("✅ Wishlist seeded.");
-
-  // --- 7️⃣ Order + Payment + ShippingAddress ---
-  const order = await prisma.order.create({
-    data: {
-      id: ulid(),
-      user: { connect: { email: "hazelman@live.com" } },
-      totalAmount: 160,
-      status: "paid",
-      items: {
-        create: [
-          {
-            id: ulid(),
-            merchandiseId: starter?.id || "",
-            title: "starter",
-            price: 160,
-            quantity: 1,
-          },
-        ],
-      },
-    },
-  });
-
-  await prisma.payment.create({
-    data: {
-      id: ulid(),
-      orderId: order.id,
-      amount: 160,
-      method: "paynow",
-      status: "PAID",
-      transactionRef: "TX123456",
-    },
-  });
-
-  await prisma.shippingAddress.create({
-    data: {
-      id: ulid(),
-      order: { connect: { id: order.id } },
-      fullName: "Mapenzi Mudimba",
-      street: "123 Kubuka Street",
-      city: "Binga",
-      country: "Zimbabwe",
-      phone: "+263771234567",
-    },
-  });
-
-  console.log("✅ Orders, payments, and shipping addresses seeded.");
+  // --- 7️⃣ implemented later ---
 
   // --- 8️⃣ Log entry ---
   await prisma.log.create({
