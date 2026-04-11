@@ -19,8 +19,8 @@ export const IntroSection = () => {
 
                   </div>
                   <h6 className="text-xl font-semibold">Innovative Startup</h6>
-                  <p className="mt-2 mb-4 text-justify">
-                    Our products are suitable for creating a a product that fits your portfolio to meet your needs.
+                  <p className="mt-2 mb-4 text-justify text-xs">
+                    Our products are designed to seamlessly integrate into your portfolio, helping you build solutions that truly meet your needs. Whether you&apos;re expanding your offerings or tailoring a product to fit a specific vision, we provide the flexibility and reliability to make it happen.
                   </p>
                 </div>
               </div>
@@ -39,8 +39,8 @@ export const IntroSection = () => {
                   <h6 className="text-xl font-semibold">
                     Making Ideas
                   </h6>
-                  <p className="mt-2 mb-4 text-justify">
-                    We can generate ideas for your organisation and lint them to suite your business environment.
+                  <p className="mt-2 mb-4 text-justify text-xs">
+                    We generate tailored ideas for your organization and align them with your business environment, ensuring solutions that truly fit your goals and aspirations. Our approach is to understand your unique challenges and opportunities, allowing us to create innovative strategies that drive success and growth for your business.
                   </p>
                 </div>
               </div>
@@ -59,8 +59,8 @@ export const IntroSection = () => {
                   <h6 className="text-xl font-semibold">
                     Verified Company
                   </h6>
-                  <p className="mt-2 mb-4 text-justify">
-                    Our company is formally registered, all transactions we perform are fully compliant with the law.
+                  <p className="mt-2 mb-4 text-justify text-xs">
+                    We operate with transparency and integrity, giving you the confidence that your business is in safe hands. We are committed to maintaining the highest standards of professionalism and accountability in all our dealings, ensuring that your partnership with us is built on trust and reliability.
                   </p>
                 </div>
               </div>
@@ -77,10 +77,10 @@ export const IntroSection = () => {
               Find us
             </h3>
             <p className="text-lg font-extralight leading-relaxed my-4 text-gray-600">
-              Each transaction you perform with us is treated with excellence. There is nothing more which will bind our organisation to yours than that first interaction.
+              Each transaction you make with us is handled with excellence. That first interaction is the foundation of a lasting partnership between our organization and yours.
             </p>
             <p className="text-lg font-extralight leading-relaxed mt-0 mb-4 text-gray-600">
-              We will bring you more results to the table to match your expectations. When we exceed them we won&apos;t ask you for a refund or a top-up, that is because we value the business relationship.
+              We consistently deliver results that meet your expectations — and when we exceed them, we don&apos;t ask for a refund or a top-up. Why? Because we value the relationship more than the transaction.
             </p>
             <Link
               href="/store"
@@ -119,7 +119,7 @@ export const IntroSection = () => {
                   Top Notch Services
                 </h4>
                 <p className="text-md font-light mt-2 text-white">
-                  Our ideal is to interact with our business partners as if interacting with friends. We won&apos;t leave you to ponder what we are doing behind your back, but we&apos;ll walk with you all the way through in your product development.
+                  Our ideal is to engage with our business partners the way we would with friends. We believe in openness and collaboration — you&rsquo;ll never be left wondering what happens behind the scenes. Instead, we walk alongside you throughout the entire product development journey, ensuring clarity, trust, and shared success.
                 </p>
               </blockquote>
             </div>

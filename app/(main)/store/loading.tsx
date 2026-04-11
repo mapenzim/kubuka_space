@@ -2,8 +2,16 @@ import Loader from "@/components/loading/loader";
 
 export default function Loading() {
   return (
-    <section className="fixed w-full h-screen flex items-center justify-center bg-gray-300 opacity-75 z-50">
-      <Loader page="Merchant Store" />
-    </section>
+    <div className="fixed inset-0 z-9999 flex items-center justify-center">
+      
+      {/* 🔲 Backdrop */}
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+
+      {/* ⚡ Loader (kept fully visible) */}
+      <div className="relative z-10">
+        <Loader page={undefined} />
+      </div>
+
+    </div>
   );
 }

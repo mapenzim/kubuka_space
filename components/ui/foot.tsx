@@ -113,18 +113,28 @@ export default function Footer() {
                     </Link>
                   </li>
                   <li>
-                    <Link className="text-gray-700 hover:text-gray-900 font-[400px] block pb-2 text-sm"
-                      href="/posts">Blog
+                    <Link 
+                      className="text-gray-700 hover:text-gray-900 font-[400px] block pb-2 text-sm"
+                      href="/posts"
+                      scroll={true}
+                    >
+                        Blog
                     </Link>
                   </li>
                   <li>
                     <Link className="text-gray-700 hover:text-gray-900 font-[400px] block pb-2 text-sm"
-                      href="/store"> Products
+                      href="/store"
+                      scroll={true}
+                    >
+                      Products
                     </Link>
                   </li>
                   <li>
                     <Link className="text-gray-700 hover:text-gray-900 font-[400px] block pb-2 text-sm"
-                      href="#contact-us">Contact Us
+                      href="#contact-us"
+                      scroll={false}
+                    >
+                      Contact Us
                     </Link>
                   </li>
 
@@ -167,13 +177,6 @@ export default function Footer() {
               </div>
             </div>
           </div>
-          <a
-            href="#"
-            className="absolute float-right z-20 inset-e-16 bottom-32 text-indigo-500 border border-indigo-300 rounded-lg p-4 animate-bounce"
-          >
-            &uarr;
-            Top
-          </a>
         </div>
         <hr className="my-6 border-gray-400" />
         <div className="flex flex-wrap items-center md:justify-between justify-center">

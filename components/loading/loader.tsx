@@ -2,14 +2,14 @@
 
 import { SettingsIcon } from "lucide-react";
 
-export default function Loader({page}: {page: string | undefined}) {
-
+export default function Loader({ page }: { page?: string }) {
   return (
-    <section className="flex w-full h-screen items-center justify-center">
-      <div className="flex gap-2">
-        <SettingsIcon className="animate-spin" />
-        <h2 className="text-lg font-bold">Please wait, loading '{page}'</h2>
-      </div>
-    </section>
+    <div className="flex items-center gap-3">
+      <SettingsIcon className="animate-spin w-5 h-5 text-green-500" />
+
+      <p className="text-sm sm:text-base font-medium text-gray-700 ">
+        {page ? `Loading ${page}...` : "Loading..."}
+      </p>
+    </div>
   );
 }

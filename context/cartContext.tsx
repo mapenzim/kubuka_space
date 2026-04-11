@@ -146,7 +146,20 @@ export function CartProvider({
   // ---------------------------
   const removeItem = async (id: string) => {
     setCart((prev) => prev.filter((item) => item.id !== id));
+    // LocalStorage update
 
+    const storedCart = localStorage.getItem("tempCart");
+    if (storedCart) {
+      try {
+        const parsed = JSON.parse(storedCart);
+        const updated = parsed.filter((item: any) => item.id !== id);
+        localStorage.setItem("tempCart", JSON.stringify(updated));
+      } catch (err) {
+        console.error("Failed to parse localStorage cart", err);
+      }
+    }
+
+    // Database deletion (skip if guest)
     if (isGuest) return;
 
     const res = await deleteCartItem(id);

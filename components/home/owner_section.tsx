@@ -71,7 +71,7 @@ const owners = [
       },
       {
         name: "github",
-        url: "https://github.com/HilmaM",
+        url: "https://github.com/mapenzim",
       }
     ]
   },

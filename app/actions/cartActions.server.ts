@@ -3,6 +3,7 @@
 import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import { ulidId } from "@/lib/server-utils";
+import { revalidatePath } from "next/dist/server/web/spec-extension/revalidate";
 
 type AddToCartResult =
   | { success: true }
@@ -115,11 +116,14 @@ export async function updateCartQuantity(itemId: string, quantity: number) {
 }
 
 export async function deleteCartItem(itemId: string) {
-  await prisma.cartItem.delete({
-    where: { id: itemId },
-  });
-
-  return { success: true };
+  try {
+    await prisma.cartItem.delete({ where: { id: itemId } });
+    // trigger revalidation so UI updates
+    revalidatePath("/cart");
+    return { success: true };
+  } catch (error) {
+    return { error: "Failed to delete item" };
+  }
 }
 
 export async function checkoutAction(formData: FormData) {

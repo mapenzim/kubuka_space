@@ -1,11 +1,11 @@
 import Footer from "@/components/ui/foot";
-import { NavigationBar } from "@/components/ui/head";
+import NavigationApp from "@/components/ui/nav";
 import { ReactNode } from "react";
 
 export default async function MainLayout({ children }: { children: ReactNode }){
   return (
     <>
-      <NavigationBar />
+      <NavigationApp />
       <main className="w-full items-center justify-center">
         { children }
       </main>

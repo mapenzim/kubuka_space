@@ -12,6 +12,8 @@ import { ReactNode } from "react";
 import prisma from "@/lib/prisma";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
+import ScrollToTopButton from "@/components/scroltotop";
+import AppCookieConsent from "@/components/policies/cookie_conset";
 
 export const metadata: Metadata = {
   title: meta_config.appTitle,
@@ -52,6 +54,8 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           </Theme>
           <Toaster position="bottom-right" richColors />
         </Provider>
+        <ScrollToTopButton />
+        <AppCookieConsent />
         <SpeedInsights />
         <Analytics />
       </body>

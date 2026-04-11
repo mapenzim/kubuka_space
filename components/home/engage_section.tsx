@@ -29,7 +29,7 @@ const EngageSection = () => {
               We help you achieve more
             </h2>
             <p className="text-lg leading-relaxed mt-4 mb-4 text-gray-500">
-              Having a busy schedule, we are here to help. We can take away most of the stressful jobs by building you a site which will handle most of your business transactions.
+              We take the stress out of your day by giving you a product that streamlines your operations and handles most of your business transactions. With our solutions, you can focus on growth while your site takes care of the heavy lifting.
             </p>
           </div>
         </div>
