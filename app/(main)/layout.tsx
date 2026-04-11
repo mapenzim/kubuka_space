@@ -4,10 +4,12 @@ import { ReactNode } from "react";
 
 export default async function MainLayout({ children }: { children: ReactNode }){
   return (
-    <main className="w-full items-center justify-center">
+    <>
       <NavigationBar />
-      { children }
+      <main className="w-full items-center justify-center">
+        { children }
+      </main>
       <Footer />
-    </main>
+    </>
   );
 }

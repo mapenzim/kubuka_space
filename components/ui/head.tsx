@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ListEnd, ShoppingCartIcon, StoreIcon } from "lucide-react";
+import { ListEnd, StoreIcon } from "lucide-react";
 import { Popover, PopoverButton, PopoverPanel } from "@headlessui/react";
 import { SignoutButton } from "./sign_out";
 import { useSession } from "next-auth/react";

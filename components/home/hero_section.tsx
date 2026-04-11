@@ -51,9 +51,9 @@ const HeroSection = () => {
       </div>
 
       {/* Content */}
-      <div className="absolute flex flex-col w-full max-w-2xl h-full mx-auto mt-64">
+      <div className="absolute flex flex-col max-w-2xl h-full mx-auto mt-64">
         <Fading delay={0.7} direction="down" fullWidth={null} padding={null}>
-          <div className="inline-block items-center space-y-5 sm:px-4 justify-center text-slate-400">
+          <div className="inline-block items-center space-y-3 sm:px-4 justify-center text-slate-400">
             <h1 className="text-3xl md:text-[62px] text-center">
               Kubuka Space PBC
             </h1>

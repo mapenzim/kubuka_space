@@ -28,7 +28,12 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   });
 
   return (
-    <html lang="en" suppressHydrationWarning={true} className="scroll-smooth" data-scroll-behavior="smooth" >
+    <html 
+      lang="en" 
+      suppressHydrationWarning={true} 
+      className="scroll-smooth" 
+      data-scroll-behavior="smooth" 
+    >
       <body
         className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}
       >

@@ -1,6 +1,5 @@
 "use server";
 
-import { getBroadcaster } from "@/lib/broadcaster";
 import prisma from "@/lib/prisma";
 import { ulidId } from "@/lib/server-utils";
 import { containsProfanity } from "@/lib/utils";
@@ -9,31 +8,91 @@ type CreateMessageResult =
   | { success: true }
   | { error: { message: string } };
 
-export async function createPrivateMessage(form: FormData): Promise<CreateMessageResult> {
-  const names = form.get("names") as string;
-  const email = form.get("email") as string;
-  const message = form.get("message") as string;
+export async function createPrivateMessage(
+  form: FormData
+): Promise<CreateMessageResult> {
+  try {
+    const names = String(form.get("names") || "").trim();
+    const email = String(form.get("email") || "").trim();
+    const message = String(form.get("message") || "").trim();
 
-  if (containsProfanity(message)) {
-    return { error: { message: "Contains profaity" } };
-  }
-
-  const pvt_message = await prisma.privatemessage.create({
-    data: {
-      id: ulidId(),
-      names: names.trim(),
-      email: email,
-      message: message.trim()
+    // Honeypot
+    if (form.get("company")) {
+      return { error: { message: "Spam detected." } };
     }
-  });
 
-  // 🔥 Broadcast the new post to all connected SSE clients
-  const broadcaster = getBroadcaster();
-  broadcaster.publish({
-    type: "privatemessage:sent",
-    payload: "private message",
-    channel: ""
-  });
+    // CAPTCHA verify
+    const captchaToken = form.get("captchaToken");
 
-  return { success: true };
+    const verifyRes = await fetch(
+      "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          secret: process.env.TURNSTILE_SECRET_KEY_MESSAGE_FORM!,
+          response: String(captchaToken),
+        }),
+      }
+    );
+
+    const data = await verifyRes.json();
+
+    if (!data.success) {
+      return { error: { message: "Captcha failed." } };
+    }
+
+    // ✅ Validation
+    if (!names || !email || !message) {
+      return { error: { message: "All fields are required." } };
+    }
+
+    if (message.length < 10) {
+      return { error: { message: "Message too short." } };
+    }
+
+    if (containsProfanity(message)) {
+      return { error: { message: "Message contains profanity." } };
+    }
+
+    // ✅ Create message
+    await prisma.privatemessage.create({
+      data: {
+        id: ulidId(),
+        names,
+        email,
+        message,
+      },
+    });
+
+    return { success: true };
+  } catch (err) {
+    console.error("Create message error:", err);
+    return { error: { message: "Failed to send message." } };
+  }
+}
+
+export async function getMessages() {
+  return prisma.privatemessage.findMany({
+    where: {
+      deletedAt: null,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+}
+
+export async function markMessageAsRead(id: string) {
+  await prisma.privatemessage.update({
+    where: { id },
+    data: { read: true },
+  });
+}
+
+export async function deleteMessage(id: string) {
+  await prisma.privatemessage.update({
+    where: { id },
+    data: { deletedAt: new Date() },
+  });
 }

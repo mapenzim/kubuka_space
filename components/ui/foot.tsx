@@ -132,19 +132,35 @@ export default function Footer() {
               </div>
               <div className="w-full lg:w-4/12 px-4">
                 <span className="block uppercase text-gray-600 text-sm font-bold mb-2">
-                  Licences
+                  Policies
                 </span>
-                <ul role="list" className="my-2 lg:my-0 list-inside">
+                <ul role="list" className="my-2 lg:my-0 list-inside space-y-1.5">
+                  { /** Licenses and agreements */ }
                   <li>
-                    <a className="text-gray-700 hover:text-gray-900 font-[400px] block pb-2 text-sm"
-                      href="#license">License
-                    </a>
+                    <Link 
+                      className="text-gray-700 hover:text-gray-900 font-[400px] block text-sm"
+                      href="#license"
+                    >
+                      License
+                    </Link>
                   </li>
                   <li>
-                    {/** Policy missing */}
+                    {/** Terms of use */}
+                    <Link 
+                      href={"#tos"}
+                      className="text-gray-700 hover:text-gray-900 font-[400px] block text-sm"
+                    >
+                      Terms of use
+                    </Link>
                   </li>
                   <li>
-                    {/** Policy missing */}
+                    {/** Cookie Policy */}
+                    <Link 
+                      href={"#cookie"}
+                      className="text-gray-700 hover:text-gray-900 font-[400px] block text-sm"
+                    >
+                      Cookie Policy
+                    </Link>
                   </li>
                 </ul>
 
@@ -153,7 +169,7 @@ export default function Footer() {
           </div>
           <a
             href="#"
-            className="absolute float-right z-20 end-16 bottom-32 text-indigo-500 border border-indigo-300 rounded-lg p-4 animate-bounce"
+            className="absolute float-right z-20 inset-e-16 bottom-32 text-indigo-500 border border-indigo-300 rounded-lg p-4 animate-bounce"
           >
             &uarr;
             Top
