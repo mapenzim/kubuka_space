@@ -118,7 +118,7 @@ const MessageForm = () => {
             <div className="col-span-6">
               <Turnstile
                 key={turnstileKey}
-                sitekey={process.env.TURNSTILE_SITE_KEY_MESSAGE_FORM!}
+                sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_MESSAGE_FORM!}
                 onVerify={(token) => setCaptchaToken(token)}
                 onExpire={() => setCaptchaToken(null)}
               />
