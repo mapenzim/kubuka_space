@@ -3,7 +3,7 @@
 import prisma from "@/lib/prisma";
 import { ulidId } from "@/lib/server-utils";
 import { hash } from "bcryptjs";
-import { revalidatePath } from "next/cache";
+import { revalidatePath } from "next/cache"; 
 
 type CreateUserResult =
   | { success: true }
@@ -14,6 +14,32 @@ export async function createUser(form: FormData): Promise<CreateUserResult> {
   const email = form.get("email") as string;
   const password = form.get("password") as string;
   const confirm = form.get("confirmPassword") as string;
+
+  // Honeypot
+  if (form.get("company")) {
+    return { error: { message: "Spam detected." } };
+  }
+
+  // CAPTCHA verify
+  const captchaToken = form.get("captchaToken");
+
+  const verifyRes = await fetch(
+    "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        secret: process.env.TURNSTILE_SECRET_KEY_SIGNUP_FORM!,
+        response: String(captchaToken),
+      }),
+    }
+  );
+
+  const data = await verifyRes.json();
+
+  if (!data.success) {
+    return { error: { message: "Captcha failed." } };
+  }
 
   if (!name || !email || !password || !confirm) {
     return { error: { message: "All fields are required" } };

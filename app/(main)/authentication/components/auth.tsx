@@ -56,11 +56,11 @@ const Authentication = () => {
   const onSubmitHandler = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    /*/ 🚫 Block if captcha not completed
+    // 🚫 Block if captcha not completed
     if (!captchaToken) {
       toast.error("Please complete the captcha.");
       return;
-    }*/
+    }
 
     const form = new FormData(e.currentTarget);
     setIsLoading(true);
@@ -221,12 +221,12 @@ const Authentication = () => {
                   </div>
                 )}
                 <div className="my-3 flex flex-col justify-between text-sm text-sky-600 dark:text-gray-400">
-                  {/*<Turnstile
+                  <Turnstile
                     key={turnstileKey}
-                    sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_MESSAGE_FORM!}
+                    sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_SIGNUP_FORM!}
                     onVerify={(token) => setCaptchaToken(token)}
                     onExpire={() => setCaptchaToken(null)}
-                  />*/}
+                  />
                   {variant === VARIANTS.login && (
                     <>
                       <button type="button" onClick={() => changeVariant(VARIANTS.reset)} className="hover:underline">
