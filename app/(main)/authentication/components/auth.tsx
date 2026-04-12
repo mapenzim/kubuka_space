@@ -95,8 +95,14 @@ const Authentication = () => {
 
         const res = await createUser(form);
         if ("error" in res) return toast.error(res.error.message);
+
         toast.success("User created successfully!");
         e.currentTarget.reset();
+        
+        // 🔄 Reset Turnstile widget by forcing re-render
+        setTurnstileKey((prev) => prev + 1);
+        setCaptchaToken(null);
+        
         return;
       }
 
@@ -221,12 +227,15 @@ const Authentication = () => {
                   </div>
                 )}
                 <div className="my-3 flex flex-col justify-between text-sm text-sky-600 dark:text-gray-400">
-                  <Turnstile
-                    key={turnstileKey}
-                    sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_SIGNUP_FORM!}
-                    onVerify={(token) => setCaptchaToken(token)}
-                    onExpire={() => setCaptchaToken(null)}
-                  />
+                  {/** check for captcha verification during signup */}
+                  {variant === VARIANTS.register && !captchaToken && (
+                    <Turnstile
+                      key={turnstileKey}
+                      sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_SIGNUP_FORM!}
+                      onVerify={(token) => setCaptchaToken(token)}
+                      onExpire={() => setCaptchaToken(null)}
+                    />
+                  )}
                   {variant === VARIANTS.login && (
                     <>
                       <button type="button" onClick={() => changeVariant(VARIANTS.reset)} className="hover:underline">
