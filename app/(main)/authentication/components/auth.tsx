@@ -56,12 +56,6 @@ const Authentication = () => {
   const onSubmitHandler = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // 🚫 Block if captcha not completed
-    if (!captchaToken) {
-      toast.error("Please complete the captcha.");
-      return;
-    }
-
     const form = new FormData(e.currentTarget);
     setIsLoading(true);
 
@@ -89,6 +83,13 @@ const Authentication = () => {
       }
 
       if (variant === VARIANTS.register) {
+
+        // 🚫 Block if captcha not completed
+        if (!captchaToken) {
+          toast.error("Please complete the captcha.");
+          return;
+        }
+
         const password = form.get("password") as string;
         const confirm = form.get("confirmPassword") as string;
         if (password !== confirm) return toast.error("Passwords do not match");
@@ -102,7 +103,7 @@ const Authentication = () => {
         // 🔄 Reset Turnstile widget by forcing re-render
         setTurnstileKey((prev) => prev + 1);
         setCaptchaToken(null);
-        
+
         return;
       }
 
