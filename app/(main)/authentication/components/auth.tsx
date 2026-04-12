@@ -11,6 +11,7 @@ import Divider from "@/components/divider";
 import Fading from "@/components/fade";
 import Loading from "@/components/loading";
 import Image from "next/image";
+import Turnstile from "react-turnstile";
 
 export const VARIANTS = {
   login: "LOGIN",
@@ -23,6 +24,8 @@ const Authentication = () => {
   const [variant, setVariant] = useState(VARIANTS.login);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [turnstileKey, setTurnstileKey] = useState(0);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -52,6 +55,13 @@ const Authentication = () => {
 
   const onSubmitHandler = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    /*/ 🚫 Block if captcha not completed
+    if (!captchaToken) {
+      toast.error("Please complete the captcha.");
+      return;
+    }*/
+
     const form = new FormData(e.currentTarget);
     setIsLoading(true);
 
@@ -74,8 +84,8 @@ const Authentication = () => {
         if (res?.error) return toast.error("Invalid credentials");
         toast.success("Logged in successfully!");
         router.refresh();
-        //router.push(callbackUrl);
-        return;
+        router.push(callbackUrl);
+        //return;
       }
 
       if (variant === VARIANTS.register) {
@@ -110,7 +120,7 @@ const Authentication = () => {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -40 }}
         transition={{ duration: 0.4 }}
-        className="w-full max-w-md rounded-xl bg-white/90 shadow-xl pl-6 pr-6 pb-6 backdrop-blur-sm"
+        className="w-full max-w-md rounded-xl bg-white/90 dark:bg-gray-800 shadow-xl pl-6 pr-6 pb-6 backdrop-blur-sm"
     
       >
         <Image 
@@ -126,7 +136,15 @@ const Authentication = () => {
         <form onSubmit={onSubmitHandler} className="relative">
           <fieldset disabled={isLoading} className="opacity-90">
             {/* Inputs */}
-            {/* ...same as your code but with improved accessibility */}
+            {/* 🧠 Honeypot (hidden spam trap) */}
+            <input
+              type="text"
+              name="company"
+              className="hidden"
+              autoComplete="off"
+              tabIndex={-1}
+            />
+            {/* ...same as your code but with improved accessibility */} 
             <Fading direction="left" delay={0.6} fullWidth padding={0}>
               <div className="relative flex flex-col items-end mt-2">
                 {variant === VARIANTS.register && (
@@ -136,7 +154,7 @@ const Authentication = () => {
                       name="name"
                       placeholder="Name"
                       autoComplete="name"
-                      className="w-full rounded-md border border-gray-300 bg-gray-50 p-2 pl-10 pr-10 text-gray-900 focus:border-sky-500 focus:ring-sky-500"
+                      className="w-full rounded-md border border-gray-300 bg-gray-50 dark:bg-gray-600 dark:border-gray-500 p-2 pl-10 pr-10 text-gray-900 focus:border-sky-500 focus:ring-sky-500 dark:text-gray-200"
                     />
                     <User2Icon className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                   </div>
@@ -149,7 +167,7 @@ const Authentication = () => {
                       name="email"
                       placeholder="Email"
                       autoComplete="email"
-                      className="w-full rounded-md border border-gray-300 bg-gray-50 p-2 pl-10 pr-10 text-gray-900 focus:border-sky-500 focus:ring-sky-500"
+                      className="w-full rounded-md border border-gray-300 bg-gray-50 p-2 pl-10 pr-10 text-gray-900 focus:border-sky-500 focus:ring-sky-500 dark:bg-gray-600 dark:border-gray-500 dark:text-gray-200"
                     />
                     <AtSignIcon className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                   </div>
@@ -169,7 +187,7 @@ const Authentication = () => {
                       name="password"
                       placeholder="Password"
                       autoComplete="current-password"
-                      className="w-full rounded-md border border-gray-300 bg-gray-50 p-2 pl-10 pr-10 text-gray-900 focus:border-sky-500 focus:ring-sky-500"
+                      className="w-full rounded-md border border-gray-300 bg-gray-50 p-2 pl-10 pr-10 text-gray-900 focus:border-sky-500 focus:ring-sky-500 dark:bg-gray-600 dark:border-gray-500 dark:text-gray-200"
                     />
 
                     {/* Toggle icon */}
@@ -198,11 +216,17 @@ const Authentication = () => {
                       name="confirmPassword"
                       placeholder="Confirm Password"
                       autoComplete="current-confirm-password"
-                      className="w-full rounded-md border border-gray-300 bg-gray-50 p-2 pl-10 pr-10 text-gray-900 focus:border-sky-500 focus:ring-sky-500"
+                      className="w-full rounded-md border border-gray-300 bg-gray-50 p-2 pl-10 pr-10 text-gray-900 focus:border-sky-500 focus:ring-sky-500 dark:bg-gray-600 dark:border-gray-500 dark:text-gray-200"
                     />
                   </div>
                 )}
-                <div className="my-3 flex flex-col justify-between text-sm text-sky-600">
+                <div className="my-3 flex flex-col justify-between text-sm text-sky-600 dark:text-gray-400">
+                  {/*<Turnstile
+                    key={turnstileKey}
+                    sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_MESSAGE_FORM!}
+                    onVerify={(token) => setCaptchaToken(token)}
+                    onExpire={() => setCaptchaToken(null)}
+                  />*/}
                   {variant === VARIANTS.login && (
                     <>
                       <button type="button" onClick={() => changeVariant(VARIANTS.reset)} className="hover:underline">
@@ -227,7 +251,7 @@ const Authentication = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full rounded-md bg-linear-to-r from-sky-500 to-indigo-500 px-4 py-2 text-white font-semibold shadow hover:from-sky-600 hover:to-indigo-600 focus:ring-2 focus:ring-sky-400 flex items-center justify-center gap-2"
+                className="w-full rounded-md bg-linear-to-r from-sky-500 to-indigo-500 px-4 py-2 text-white font-semibold shadow hover:from-sky-600 hover:to-indigo-600 focus:ring-2 focus:ring-sky-400 flex items-center justify-center gap-2 dark:from-gray-400 dark:to-zinc-600 dark:text-gray-800 dark:hover:from-gray-500 dark:hover:to-zinc-700 dark:focus:ring-gray-400"
 
               >
                 {isLoading && <Loading />}

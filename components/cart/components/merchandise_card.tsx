@@ -19,7 +19,7 @@ export default function MerchandiseCard({ item }: Props) {
   const col = item.body?.split(",") || [];
 
   return (
-    <div className="flex flex-col min-h-[60vh] justify-between p-4 bg-slate-500 text-gray-100 rounded-lg">
+    <div className="flex flex-col min-h-[60vh] justify-between p-4 bg-slate-500 text-gray-100 dark:bg-zinc-700 dark:text-gray-300 rounded-lg">
       <div className="flex items-start justify-start gap-x-8">
         <GemIcon className="h-6 w-6" />
         <h3 className="text-xl font-semibold uppercase">{item.title}</h3>
@@ -34,7 +34,7 @@ export default function MerchandiseCard({ item }: Props) {
       <p className="text-sm font-semibold">${item.price.toFixed(2)}</p>
         <button
           disabled={cartLoading}
-          className="mt-2 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded-md flex items-center justify-center gap-2"
+          className="mt-2 bg-indigo-600 hover:bg-indigo-700 text-white dark:bg-zinc-900 dark:text-slate-500 dark:hover:bg-zinc-800 dark:hover:text-gray-400 px-3 py-1 rounded-md flex items-center justify-center gap-2 cursor-pointer"
           onClick={() => addItem(item)}
         >
           {cartLoading ? <Loading /> : "Add to Cart"}

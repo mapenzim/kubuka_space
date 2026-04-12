@@ -19,10 +19,10 @@ export default async function Posts() {
   }); 
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-gray-50 to-white">
+    <div className="min-h-screen">
       <div className="max-w-4xl mx-auto px-4 py-16">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900">Posts</h1>
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-zinc-400">Posts</h1>
           <Link
             href="/posts/new"
             className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
@@ -37,11 +37,11 @@ export default async function Posts() {
               href={`/posts/${String(post.id)}?title=${post?.title?.split(" ").join("-").toLowerCase()}`}
               className="block transition-transform hover:scale-[1.01]"
             >
-              <article className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              <article className="bg-white dark:bg-zinc-700 rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-slate-300 mb-2">
                   {post.title}
                 </h2>
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-gray-500 dark:text-gray-400">
                   by {formatName(post.author.name)}
                 </div>
               </article>

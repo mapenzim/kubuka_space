@@ -2,7 +2,7 @@ import Image from "next/image";
 
 const PlanSection = () => {
   return (
-    <section id="our-products" className="relative h-screen bg-indigo-300 w-full">
+    <section id="our-products" className="relative flex h-screen bg-indigo-300 dark:bg-slate-900 dark:border-b border-teal-400 w-full items-center justify-center">
       <div className="">
         <div className="flex flex-col-reverse md:flex-row items-center gap-y-5">
           <div className="w-full md:w-4/12 mx-auto px-4">
@@ -22,10 +22,10 @@ const PlanSection = () => {
                 </svg>
 
               </div>
-              <h3 className="text-3xl font-semibold">
+              <h3 className="text-3xl font-semibold dark:text-zinc-400">
                 A growing company
               </h3>
-              <p className="mt-4 text-lg leading-relaxed text-gray-600">
+              <p className="mt-4 text-lg leading-relaxed text-gray-600 dark:text-slate-400">
                 We are not stagnant but growing daily. Meet us along so that we also help your organisation to grow and reach levels you did not expect.
               </p>
               <ul className="list-none mt-6">
@@ -38,7 +38,7 @@ const PlanSection = () => {
 
                     </span>
                     <div>
-                      <h4 className="text-gray-600">
+                      <h4 className="text-gray-600 dark:text-slate-400">
                         Carefully selected products
                       </h4>
                     </div>
@@ -52,7 +52,7 @@ const PlanSection = () => {
                       </svg>
                     </span>
                     <div>
-                      <h4 className="text-gray-600">Sample code to help you choose</h4>
+                      <h4 className="text-gray-600 dark:text-slate-400">Sample code to help you choose</h4>
                     </div>
                   </div>
                 </li>
@@ -64,7 +64,7 @@ const PlanSection = () => {
                       </svg>
                     </span>
                     <div>
-                      <h4 className="text-gray-600">Simple integratable code.</h4>
+                      <h4 className="text-gray-600 dark:text-slate-400">Simple integratable code.</h4>
                     </div>
                   </div>
                 </li>

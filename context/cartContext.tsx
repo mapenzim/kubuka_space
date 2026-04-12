@@ -145,31 +145,35 @@ export function CartProvider({
   // ❌ Remove item
   // ---------------------------
   const removeItem = async (id: string) => {
-    setCart((prev) => prev.filter((item) => item.id !== id));
-    // LocalStorage update
+    try {
+      if (!isGuest) {
+        const res = await deleteCartItem(id);
 
-    const storedCart = localStorage.getItem("tempCart");
-    if (storedCart) {
-      try {
-        const parsed = JSON.parse(storedCart);
-        const updated = parsed.filter((item: any) => item.id !== id);
-        localStorage.setItem("tempCart", JSON.stringify(updated));
-      } catch (err) {
-        console.error("Failed to parse localStorage cart", err);
+        if (!res || "error" in res) {
+          console.error(res?.error);
+          toast.error("Failed to remove item");
+        } else {
+          toast.success("Item removed");
+          router.refresh();
+        }
+
+      } else {
+        const storedCart = localStorage.getItem("tempCart");
+
+        if (storedCart) {
+          try {
+            const parsed = JSON.parse(storedCart);
+            const updated = parsed.filter((item: any) => item.id !== id);
+            localStorage.setItem("tempCart", JSON.stringify(updated));
+          } catch (err) {
+            console.error("Failed to parse localStorage cart", err);
+          }
+        }
       }
-    }
-
-    // Database deletion (skip if guest)
-    if (isGuest) return;
-
-    const res = await deleteCartItem(id);
-
-    if (!res || "error" in res) {
-      console.error(res?.error);
-      toast.error("Failed to remove item");
-    } else {
-      toast.success("Item removed");
-      router.refresh();
+      setCart((prev) => prev.filter((item) => item.id !== id));
+      
+    } catch (error) {
+      console.log(error)
     }
   };
 

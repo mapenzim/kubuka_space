@@ -33,9 +33,9 @@ export default async function UserProfile({
     : user.posts.filter((post: { published: any; }) => post.published);
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-gray-50 to-white">
+    <div className="min-h-screen">
       <div className="max-w-4xl mx-auto px-4 py-16">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 mb-8">
+        <div className="bg-white dark:bg-zinc-700 rounded-xl shadow-sm border border-gray-100 p-8 mb-8">
           <div className="flex items-center gap-6">
             {user.image ? (
               <Image
@@ -53,12 +53,12 @@ export default async function UserProfile({
               </div>
             )}
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-300 mb-2">
                 {formatName(user.name ?? "User")}
               </h1>
               <Link
                 href="/authors"
-                className="text-gray-500 hover:text-gray-700 transition-colors"
+                className="text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-300 transition-colors"
               >
                 ← Back to all authors
               </Link>
@@ -68,7 +68,7 @@ export default async function UserProfile({
 
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-gray-900">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-zinc-400">
               Published Posts
             </h2>
             {isOwnProfile && (
@@ -94,8 +94,8 @@ export default async function UserProfile({
             )}
           </div>
           {posts.length === 0 ? (
-            <div className="bg-white rounded-lg border border-gray-100 p-8 text-center">
-              <p className="text-gray-500 mb-4">
+            <div className="bg-white dark:bg-zinc-700 rounded-lg border border-gray-100 p-8 text-center">
+              <p className="text-gray-500 dark:text-gray-300 mb-4">
                 {isOwnProfile
                   ? "You haven't published any posts yet."
                   : "No published posts yet."}
@@ -130,9 +130,9 @@ export default async function UserProfile({
                   href={`/posts/${String(post.id)}`}
                   className="block transition-transform hover:scale-[1.01]"
                 >
-                  <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
+                  <div className="bg-white dark:bg-zinc-700 rounded-lg shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
                     <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-xl font-semibold text-gray-900">
+                      <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-300">
                         {post.title}
                       </h3>
                       {!post.published && (
@@ -142,7 +142,7 @@ export default async function UserProfile({
                       )}
                     </div>
                     {post.content && (
-                      <p className="text-gray-600 line-clamp-2">
+                      <p className="text-gray-600 text-xs dark:text-gray-400 line-clamp-2">
                         {post.content}
                       </p>
                     )}

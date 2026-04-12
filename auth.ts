@@ -32,7 +32,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         const user = await prisma.user.findUnique({
           where: { email: String(credentials.email) },
-          include: { role: true, cartItems: true },
+          include: { 
+            role: true, 
+            cartItems: true, 
+            bio: true, skills: true, 
+            social: true, 
+            workExperience: true
+          },
         });
 
         if (!user) throw new Error("No user found with that email");
@@ -51,6 +57,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           role: user.role?.name ?? "USER",
           roleId: user.roleId,
           cartItems: user.cartItems,
+          bio: user.bio?.text ?? "Bio",
+          skills: user.skills,
+          social: user.social,
+          workExperience: user.workExperience
         };
       },
     }),
@@ -64,15 +74,30 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.id = user.id;
         token.role = user.role;
         token.cartItems = user.cartItems;
+        token.bio = user?.bio;
+        token.skills = user.skills;
+        token.social = user.social;
+        token.workExperience = user.workExperience;
       } else if (!token.role && token.sub) {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.sub },
-          include: { role: true, cartItems: true },
+          include: { 
+            role: true, 
+            cartItems: true, 
+            bio: true, 
+            social: true, 
+            skills: true, 
+            workExperience: true
+          },
         });
 
         if (dbUser) {
           token.role = dbUser.role?.name ?? "USER";
           token.cartItems = dbUser.cartItems;
+          token.bio = dbUser?.bio?.text;
+          token.skills = dbUser.skills;
+          token.social = dbUser.social;
+          token.workExperience = dbUser.workExperience;
         }
       }
 
@@ -83,6 +108,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       session.user.id = token.id as string;
       session.user.role = token.role as string;
       session.user.cartItems = token.cartItems as string[];
+      session.user.bio = token?.bio as string;
+      session.user.social = token.social as string[];
+      session.user.skills = token.skills as string[];
+      session.user.workExperience = token.workExperience as string[]
       return session;
     },
   },

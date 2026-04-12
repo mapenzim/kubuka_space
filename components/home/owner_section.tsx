@@ -81,12 +81,12 @@ const OwnerSection = () => {
   return (
     <section
       id="about-us"
-      className="min-h-screen w-full px-4 pt-16 pb-24 bg-linear-to-r from-fuchsia-50 via-indigo-100 to-purple-200"
+      className="min-h-screen w-full px-4 pt-16 pb-24 bg-linear-to-r from-fuchsia-50 via-indigo-100 to-purple-200 dark:from-gray-900 dark:via-slate-900 dark:to-zinc-900"
     >
       <div className="mx-auto px-4">
         <div className="flex flex-wrap justify-center text-center mb-16">
           <div className="w-full lg:w-6/12 px-4">
-            <h2 className="text-4xl font-semibold">
+            <h2 className="text-4xl font-semibold dark:text-zinc-400">
               This company is owned by
             </h2>
           </div>
@@ -109,7 +109,7 @@ const OwnerSection = () => {
                   />
                 </figure>
                 <div className="card-body items-center text-center">
-                  <h5 className="card-title text-xl font-bold">
+                  <h5 className="card-title text-xl font-bold dark:text-zinc-400">
                     {owner.name}
                   </h5>
                   <p className="mt-1 text-sm text-gray-500 uppercase font-semibold">

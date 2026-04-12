@@ -28,9 +28,9 @@ export default async function Post({
   const isAuthor = session?.user?.email === post.author.email;
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-gray-50 to-white">
+    <div className="min-h-screen">
       <div className="max-w-4xl mx-auto px-4 py-16">
-        <article className="rounded-xl bg-white p-4 ring-3 ring-indigo-50 sm:p-6 lg:p-8">
+        <article className="rounded-xl bg-white dark:bg-slate-900 p-4 ring-3 ring-indigo-50 dark:ring-zinc-600 sm:p-6 lg:p-8">
           <div className="flex items-start sm:gap-8">
             <div className="hidden sm:grid sm:size-20 sm:shrink-0 sm:place-content-center sm:rounded-full sm:border-2 sm:border-indigo-500" aria-hidden="true">
               <Image
@@ -44,7 +44,7 @@ export default async function Post({
 
             <div>
               <div className="w-full items-start justify-start space-x-4">
-                <strong className="rounded-sm border border-indigo-500 bg-indigo-500 px-3 py-1.5 text-[10px] font-medium text-white">
+                <strong className="rounded-sm border border-indigo-500 bg-indigo-500 px-3 py-1.5 text-[10px] font-medium text-white dark:text-zinc-200">
                   {post.published ? "Published" : "Draft"}
                 </strong>
                 {isAuthor && (
@@ -57,11 +57,11 @@ export default async function Post({
                 )}
               </div>
 
-              <h3 className="mt-4 text-lg font-medium sm:text-xl">
+              <h3 className="mt-4 text-lg font-medium sm:text-xl dark:text-zinc-300">
                 <a href="#" className="hover:underline"> {post.title} </a>
               </h3>
 
-              <p className="mt-1 text-sm text-gray-700">
+              <p className="mt-1 text-sm text-gray-700 dark:text-gray-500">
                 {post.content}
               </p>
 

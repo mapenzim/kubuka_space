@@ -68,9 +68,10 @@ const MessageForm = () => {
             <div className="col-span-6 sm:col-span-3">
               <input
                 type="text"
-                className="p-3 bg-white rounded text-sm shadow w-full"
+                className="p-3 bg-white dark:bg-zinc-400 rounded text-sm shadow w-full"
                 placeholder="Names"
                 name="names"
+                autoComplete="off"
                 required
               />
             </div>
@@ -79,9 +80,10 @@ const MessageForm = () => {
             <div className="col-span-6 sm:col-span-3">
               <input
                 type="email"
-                className="p-3 bg-white rounded text-sm shadow w-full"
+                className="p-3 bg-white dark:bg-zinc-400 rounded text-sm shadow w-full"
                 placeholder="Email"
                 name="email"
+                autoComplete="off"
                 required
               />
             </div>
@@ -98,7 +100,7 @@ const MessageForm = () => {
             {/* 💬 Message */}
             <div className="col-span-6">
               <textarea
-                className="w-full rounded text-sm shadow bg-gray-50 p-2"
+                className="w-full rounded text-sm shadow bg-gray-50 dark:bg-zinc-400 p-2"
                 placeholder="Type a message..."
                 rows={8}
                 name="message"
@@ -109,8 +111,8 @@ const MessageForm = () => {
               />
 
               {/* 🔢 Character counter */}
-              <div className="text-xs text-gray-500 mt-1 text-right">
-                {message.length}/{MAX_LENGTH}
+              <div className="text-xs text-gray-300 mt-1 text-right">
+                {MAX_LENGTH - message.length} characters left
               </div>
             </div>
 
@@ -130,7 +132,7 @@ const MessageForm = () => {
                 <button
                   type="submit"
                   disabled={isLoading || !captchaToken}
-                  className="flex items-center gap-2 bg-green-400 disabled:bg-gray-300 text-white text-sm uppercase px-6 py-3 rounded shadow hover:shadow-lg transition"
+                  className="flex items-center gap-2 bg-green-400 disabled:bg-gray-300 text-white dark:text-zinc-400 text-sm uppercase px-6 py-3 rounded shadow hover:shadow-lg transition"
                 >
                   {isLoading && <Loading />}
                   Send Message

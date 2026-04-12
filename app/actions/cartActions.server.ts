@@ -116,6 +116,8 @@ export async function updateCartQuantity(itemId: string, quantity: number) {
 }
 
 export async function deleteCartItem(itemId: string) {
+  console.log("Item To Be Deleted: ", itemId);
+  
   try {
     await prisma.cartItem.delete({ where: { id: itemId } });
     // trigger revalidation so UI updates

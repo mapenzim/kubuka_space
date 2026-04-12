@@ -24,8 +24,8 @@ const RemoveAlert = ({
 		</AlertDialog.Trigger>
 		<AlertDialog.Portal>
 			<AlertDialog.Overlay className="AlertDialogOverlay" />
-			<AlertDialog.Content className="AlertDialogContent">
-				<AlertDialog.Title className="AlertDialogTitle">
+			<AlertDialog.Content className="AlertDialogContent dark:bg-gray-900! dark:ring-1! dark:ring-orange-400!">
+				<AlertDialog.Title className="AlertDialogTitle dark:text-zinc-300!">
 					{title}
 				</AlertDialog.Title>
 				<AlertDialog.Description className="AlertDialogDescription">

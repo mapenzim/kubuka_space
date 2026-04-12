@@ -24,32 +24,34 @@ datasource db {
 }
 
 model User {
-  id            String         @id @db.Char(26) @default(dbgenerated())
+  id            String          @id @db.Char(26) @default(dbgenerated())
   name          String?
-  email         String         @unique
+  email         String          @unique
   emailVerified DateTime?
   image         String?
   password      String
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt @default(now())
+
   roleId        String?
-  bio           String?
-  skills        String?
-  social        String?
+  role          Role?           @relation(fields: [roleId], references: [id])
+
+  bio             Bio?
+  workExperience  WorkExperience[]
+  social        SocialLink[]
+  skills        Skill[]
   accounts      Account[]
   notifications Notification[]
   posts         Post[]
   sessions      Session[]
-  role          Role?          @relation(fields: [roleId], references: [id])
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-
-  cartItems Cart[]
+  cartItems     Cart[]
+  orders        Order[]
+  logs          Log[]
+  settings      Settings[]
+  wishlists     Wishlist[]
+  addresses     Address[]
 
   @@index([email])
-  orders Order[]
-  logs Log[]
-  settings Settings[]
-  wishlists Wishlist[]
-  addresses Address[]
 }
 
 model Role {
@@ -57,6 +59,42 @@ model Role {
   name        String          @unique
   permissions Permission[]
   users       User[]
+}
+
+model Bio {
+  id          String      @id @db.Char(26) @default(dbgenerated())
+  text        String
+
+  userId      String    @unique
+  users       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SocialLink {
+  id          String      @id @db.Char(26) @default(dbgenerated())
+  name        String
+  text        String
+
+  userId      String
+  users       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Skill {
+  id          String      @id @db.Char(26) @default(dbgenerated())
+  text        String
+
+  userId      String
+  users User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model WorkExperience {
+  id            String      @id @db.Char(26) @default(dbgenerated())
+  jobTitle      String
+  companyName   String
+  dates         String
+  duties        String[]
+
+  userId        String
+  users         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Account {
@@ -72,7 +110,8 @@ model Account {
   id_token          String?
   session_state     String?
   createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  updatedAt         DateTime @updatedAt @default(now())
+
   user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([provider, providerAccountId])
@@ -84,7 +123,7 @@ model Session {
   userId       String
   expires      DateTime
   createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  updatedAt    DateTime     @updatedAt @default(now())
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
@@ -95,7 +134,7 @@ model Post {
   published Boolean         @default(false)
   authorId  String
   createdAt DateTime        @default(now())
-  updatedAt DateTime        @updatedAt
+  updatedAt DateTime        @updatedAt @default(now())
   deletedAt DateTime?
   author    User            @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
@@ -129,10 +168,10 @@ model Privatemessage {
 
   read      Boolean  @default(false)
   archived  Boolean  @default(false) 
-  deletedAt DateTime?
+  deletedAt DateTime? @default(now())
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt     
+  updatedAt DateTime @updatedAt     @default(now())
 
   @@index([read])
   @@index([createdAt])
@@ -144,7 +183,7 @@ model Cart {
   userId        String?
 
   createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  updatedAt     DateTime    @updatedAt @default(now())
   deletedAt     DateTime?
 
   cartItems CartItem[]
@@ -163,7 +202,7 @@ model CartItem {
   merchandise Merchandise @relation(fields: [merchandiseId], references: [id], onDelete: Cascade)
 
   createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  updatedAt     DateTime    @updatedAt @default(now())
 
   @@unique([cartId, merchandiseId]) // prevent duplicate items in cart
 }
@@ -173,8 +212,8 @@ model Merchandise {
   title     String          @unique
   price     Decimal         @db.Decimal(10, 2)
   body      String
-  createdAt DateTime        @default(now())
-  deletedAt DateTime?
+  createdAt DateTime        @default(now()) 
+  deletedAt DateTime?       @default(now()) 
 
   
   cartItems CartItem[]
@@ -199,10 +238,10 @@ model Order {
   paymentRef      String?       @unique // EcoCash / gateway reference
 
   createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  updatedAt       DateTime      @updatedAt @default(now()) 
 
   archived        Boolean       @default(false)
-  archivedAt      DateTime?
+  archivedAt      DateTime?     @default(now()) 
 
   // ✅ Correct relations
   items           OrderItem[]
@@ -245,13 +284,13 @@ model Payment {
   transactionRef String?    @unique// gateway reference
   pollUrl       String?     @unique
 
-  paidAt        DateTime?
-  expiresAt     DateTime?
+  paidAt        DateTime?   @default(now()) 
+  expiresAt     DateTime?   @default(now()) 
 
   rawWebhook    Json?    // 🔥 store payload for debugging
 
   createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  updatedAt   DateTime      @updatedAt    @default(now()) 
 
   @@index([status])
   @@index([orderId])
@@ -297,7 +336,7 @@ model Log {
   details   Json?
   createdAt DateTime        @default(now())
   archived  Boolean         @default(false)
-  archivedAt DateTime?
+  archivedAt DateTime?      @default(now()) 
 
   @@index([action, createdAt])
 }
@@ -310,7 +349,7 @@ model Settings {
   language  String          @default("en")
   notifyByEmail Boolean     @default(true)
   createdAt DateTime        @default(now())
-  updatedAt DateTime        @updatedAt
+  updatedAt DateTime        @updatedAt  @default(now()) 
 }
 
 model Address {

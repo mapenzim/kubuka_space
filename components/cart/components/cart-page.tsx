@@ -46,15 +46,15 @@ const CartPage = () => {
     <section>
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
         <div className="mx-auto max-w-3xl">
-          <header className="text-center">
-            <h1 className="text-xl font-bold text-gray-900 sm:text-3xl">
+          <header className="text-start">
+            <h1 className="text-xl font-bold text-gray-900 dark:text-zinc-400 sm:text-3xl">
               Your Cart
             </h1>
           </header>
 
           <div className="mt-8">
             {isCartEmpty ? (
-              <p className="text-gray-500 text-center">
+              <p className="text-gray-500 dark:text-zinc-400 text-start">
                 No items found in this cart.
               </p>
             ) : (
@@ -68,11 +68,11 @@ const CartPage = () => {
                     />
 
                     <div>
-                      <h3 className="text-sm text-gray-900 capitalize">
-                        {item.merchandise.title}
+                      <h3 className="text-sm text-gray-900 dark:text-gray-400 capitalize">
+                        {item.merchandise.title} Website Builder
                       </h3>
 
-                      <p className="text-xs text-gray-600">
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
                         ${item.merchandise.price.toFixed(2)}
                       </p>
                     </div>
@@ -88,12 +88,12 @@ const CartPage = () => {
                           if (!value || value < 1) return;
                           updateQuantity(item.id, value);
                         }}
-                        className="h-8 w-12 rounded-sm border-gray-200 bg-gray-50 text-center text-xs"
+                        className="h-8 w-12 rounded-sm border-gray-200 bg-gray-50 dark:bg-gray-400 text-center text-xs"
                       />
 
                       <RemoveAlert
                         trigger={
-                          <button className="text-gray-600 hover:text-red-600">
+                          <button className="text-gray-600 dark:text-gray-300 hover:text-red-600">
                             {cartLoading ? (
                               <Loader2Icon size={16} className="animate-spin" />
                             ) : (
@@ -117,7 +117,7 @@ const CartPage = () => {
             {!isCartEmpty && (
               <div className="mt-8 flex justify-end border-t border-gray-100 pt-8">
                 <div className="w-full max-w-lg space-y-4">
-                  <dl className="space-y-1 text-sm text-gray-700">
+                  <dl className="space-y-1 text-sm text-gray-700 dark:text-zinc-400">
                     <div className="flex justify-between">
                       <dt>Subtotal</dt>
                       <dd>${subtotal.toFixed(2)}</dd>
@@ -141,7 +141,7 @@ const CartPage = () => {
 
                   <div className="flex justify-end">
                     <button
-                      className="rounded-sm bg-gray-700 px-5 py-3 text-sm text-gray-100 hover:bg-gray-600 disabled:bg-gray-300 disabled:text-gray-500"
+                      className="rounded-sm bg-gray-700 px-5 py-3 text-sm text-gray-100 hover:bg-gray-600 disabled:bg-gray-300 disabled:text-gray-500 dark:bg-gray-600 dark:text-zinc-300 dark:hover:bg-gray-400 dark:hover:text-gray-200 dark:disabled:cursor-not-allowed dark:disabled:hover:bg-gray-300 dark:disabled:hover:text-gray-500 disabled:pointer-events-none"
                       disabled={isCartEmpty || !cartId}
                       onClick={handleCheckout}
                     >

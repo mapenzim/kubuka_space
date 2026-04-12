@@ -14,6 +14,13 @@ const NavigationApp = () => {
     { name: "Pricing", path: "/pricing" },
     { name: "Docs", path: "/docs" },
   ];
+
+  const dropdowns = [
+    { name: "Profile", path: "profile", describe: "Check your profile" },
+    { name: "Settings", path: "settings", describe: "Change your preferences" },
+    { name: "Cart", path: "cart", describe: "View your cart contents" }
+  ];
+
   const { data: session } = useSession();
   
   const user = session?.user;
@@ -32,7 +39,10 @@ const NavigationApp = () => {
   return (
     <nav
       className={`fixed top-0 left-0 w-full flex items-center justify-between px-6 md:px-16 lg:px-24 xl:px-32 transition-all duration-500 z-50 
-      ${isScrolled ? "bg-white/80 shadow-md text-gray-700 backdrop-blur-lg py-3 md:py-4" : "bg-indigo-500 py-4 md:py-6"}`}
+      ${isScrolled 
+        ? "bg-white/80 dark:bg-gray-900 dark:text-gray-300 shadow-md dark:shadow-orange-500/50 text-gray-700 backdrop-blur-lg py-3 md:py-4" 
+        : "bg-indigo-500 dark:bg-gray-900 dark:text-zinc-400 py-4 md:py-6"}`
+      }
     >
       {/* Logo */}
       <a href="/" aria-label="Prebuilt UI">
@@ -46,14 +56,14 @@ const NavigationApp = () => {
       {/* Desktop Nav with hover effect */}
       <div className="hidden md:flex items-center gap-8 ml-7">
         {navLinks.map((link, i) => (
-          <a key={i} href={link.path} className="relative overflow-hidden h-6 group">
+          <Link key={i} href={link.path} className="relative overflow-hidden h-6 group">
             <span className="block group-hover:-translate-y-full transition-transform duration-300">
               {link.name}
             </span>
             <span className="block absolute top-full left-0 group-hover:-translate-y-full transition-transform duration-300">
               {link.name}
             </span>
-          </a>
+          </Link>
         ))}
       </div>
 
@@ -74,22 +84,21 @@ const NavigationApp = () => {
                       {({ close }) => (
                       <>
                         <div className="p-3">
-                          <Link
-                            href="/insights"
-                            onClick={() => close()} // ✅ closes popover
-                            className="block rounded-lg px-3 py-2 transition hover:bg-gray-100"
-                          >
-                            <p className="font-semibold text-gray-900">Insights</p>
-                            <p className="text-gray-500">Measure actions your users take</p>
-                          </Link>
-                          <Link
-                            href="/automations"
-                            onClick={() => close()}
-                            className="block rounded-lg px-3 py-2 transition hover:bg-gray-100"
-                          >
-                            <p className="font-semibold text-gray-900">Automations</p>
-                            <p className="text-gray-500">Create your own targeted content</p>
-                          </Link>
+                          {dropdowns.map((ln) => 
+                            <Link
+                              href={`/${ln.path}`}
+                              key={ln.describe}
+                              onClick={() => close()} // ✅ closes popover
+                              className="block rounded-lg px-3 py-2 transition hover:bg-gray-100"
+                            >
+                              <p className="font-semibold text-gray-900">
+                                {ln.name}
+                              </p>
+                              <p className="text-gray-500">
+                                {ln.describe}
+                              </p>
+                            </Link>
+                          )}
                         </div>
                         <SignoutButton close={close} />
                       </>
@@ -100,7 +109,9 @@ const NavigationApp = () => {
                   <Link
                     href="/authentication"
                     className={`px-8 py-2 rounded-full transition-all duration-500 ${
-                      isScrolled ? "text-white bg-black" : "bg-white text-black"
+                      isScrolled 
+                        ? "text-white bg-black dark:bg-gray-500 dark:text-zinc-200" 
+                        : "bg-white text-black dark:bg-zinc-400 dark:text-gray-900"
                     }`}
                   >
                     Sign in
@@ -150,24 +161,32 @@ const NavigationApp = () => {
 
         {/* Nav links */}
         {navLinks.map((link, i) => (
-          <a
+          <Link
             key={i}
             href={link.path}
             onClick={() => setIsMenuOpen(false)}
             className="hover:text-indigo-600 transition-colors"
           >
             {link.name}
-          </a>
+          </Link>
         ))}
 
         {/* Actions */}
-        <button className="border px-4 py-1 text-sm font-light rounded-full cursor-pointer transition-all">
+        <Link 
+          href="#contact-us"
+          className="border px-4 py-1 text-sm font-light rounded-full cursor-pointer transition-all"
+          onClick={() => setIsMenuOpen(false)}
+        >
           Contact
-        </button>
+        </Link>
 
-        <button className="bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500">
+        <Link
+          href="/authentication"
+          className="bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500"
+          onClick={() => setIsMenuOpen(false)}
+        >
           Login
-        </button>
+        </Link>
       </div>
     </nav>
   );

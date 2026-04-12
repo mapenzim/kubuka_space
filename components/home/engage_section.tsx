@@ -16,7 +16,7 @@ const EngageSection = () => {
           y="0"
         >
           <polygon
-            className="text-gray-900 fill-current border-0"
+            className="text-gray-900 fill-current dark:border-b border-amber-400"
             points="2560 0 2560 100 0 100"
           ></polygon>
         </svg>

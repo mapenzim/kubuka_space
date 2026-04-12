@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function Footer() {
   return (
-    <footer className="relative bg-indigo-100 pt-8 pb-6">
+    <footer className="relative bg-indigo-100 dark:bg-gray-900 pt-8 pb-6">
       <div
         className="bottom-auto top-0 left-0 right-0 w-full absolute pointer-events-none overflow-hidden -mt-20"
         style={{ height: "80px" }}
@@ -17,7 +17,7 @@ export default function Footer() {
           y="0"
         >
           <polygon
-            className="text-indigo-100 fill-current"
+            className="text-indigo-100 dark:text-gray-900 fill-current"
             points="2560 0 2560 100 0 100"
           ></polygon>
         </svg>
@@ -25,15 +25,15 @@ export default function Footer() {
       <div className="container mx-auto px-4">
         <div className="flex flex-wrap">
           <div className="w-full lg:w-6/12 px-4">
-            <h4 className="text-3xl font-semibold">
+            <h4 className="text-3xl font-semibold dark:text-zinc-400">
               Let&apos;s keep in touch!
             </h4>
-            <h5 className="text-lg mt-0 mb-2 text-gray-700">
+            <h5 className="text-lg mt-0 mb-2 text-gray-700 dark:text-gray-500">
               Find us on any of these platforms, we respond in 1-2 business days.
             </h5>
             <div className="mt-6 flex flex-row justify-start gap-5 w-full">
               <a
-                className="bg-white text-blue-400 shadow-lg font-normal rounded-full outline-none focus:outline-none p-3"
+                className="bg-white text-blue-400 dark:bg-zinc-400 dark:text-gray-900 shadow-lg font-normal rounded-full outline-none focus:outline-none p-3"
                 href="#"
               >
                 <svg
@@ -48,7 +48,7 @@ export default function Footer() {
                 </svg>
               </a>
               <a
-                className="bg-white text-blue-600 shadow-lg font-normal items-center justify-center align-center rounded-full outline-none focus:outline-none p-3"
+                className="bg-white text-blue-600 dark:bg-zinc-400 dark:text-gray-900 shadow-lg font-normal items-center justify-center align-center rounded-full outline-none focus:outline-none p-3"
                 href="#"
               >
                 <svg
@@ -65,7 +65,7 @@ export default function Footer() {
                 </svg>
               </a>
               <a
-                className="bg-white text-pink-400 shadow-lg font-normal items-center justify-center align-center rounded-full outline-none focus:outline-none p-3"
+                className="bg-white text-pink-400 dark:bg-zinc-400 dark:text-gray-900 shadow-lg font-normal items-center justify-center align-center rounded-full outline-none focus:outline-none p-3"
                 href="#"
               >
                 <svg
@@ -82,7 +82,7 @@ export default function Footer() {
                 </svg>
               </a>
               <a
-                className="bg-white text-gray-900 shadow-lg font-normal items-center justify-center align-center rounded-full outline-none focus:outline-none p-3"
+                className="bg-white text-gray-900 dark:bg-zinc-400 dark:text-gray-900 shadow-lg font-normal items-center justify-center align-center rounded-full outline-none focus:outline-none p-3"
                 href="#"
               >
                 <svg
@@ -103,18 +103,18 @@ export default function Footer() {
           <div className="w-full lg:w-6/12 px-0 lg:px-4 my-4 lg:my-0">
             <div className="flex flex-wrap items-top mb-6">
               <div className="w-full lg:w-4/12 px-4 ml-auto">
-                <span className="block uppercase text-gray-600 text-sm font-bold mb-2">
+                <span className="block uppercase text-gray-600 dark:text-zinc-400 text-sm font-bold mb-2">
                   Useful Links
                 </span>
                 <ul role="list" className="my-2 lg:my-0 list-inside">
                   <li>
-                    <Link className="text-gray-700 hover:text-gray-900 font-[400px] block pb-2 text-sm"
+                    <Link className="text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-600 font-[400px] block pb-2 text-sm"
                       href="#about-us">About Us
                     </Link>
                   </li>
                   <li>
                     <Link 
-                      className="text-gray-700 hover:text-gray-900 font-[400px] block pb-2 text-sm"
+                      className="text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-600 font-[400px] block pb-2 text-sm"
                       href="/posts"
                       scroll={true}
                     >
@@ -122,7 +122,7 @@ export default function Footer() {
                     </Link>
                   </li>
                   <li>
-                    <Link className="text-gray-700 hover:text-gray-900 font-[400px] block pb-2 text-sm"
+                    <Link className="text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-600 font-[400px] block pb-2 text-sm"
                       href="/store"
                       scroll={true}
                     >
@@ -130,7 +130,7 @@ export default function Footer() {
                     </Link>
                   </li>
                   <li>
-                    <Link className="text-gray-700 hover:text-gray-900 font-[400px] block pb-2 text-sm"
+                    <Link className="text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-600 font-[400px] block pb-2 text-sm"
                       href="#contact-us"
                       scroll={false}
                     >
@@ -141,14 +141,14 @@ export default function Footer() {
                 </ul>
               </div>
               <div className="w-full lg:w-4/12 px-4">
-                <span className="block uppercase text-gray-600 text-sm font-bold mb-2">
+                <span className="block uppercase text-gray-600 dark:text-zinc-400 text-sm font-bold mb-2">
                   Policies
                 </span>
                 <ul role="list" className="my-2 lg:my-0 list-inside space-y-1.5">
                   { /** Licenses and agreements */ }
                   <li>
                     <Link 
-                      className="text-gray-700 hover:text-gray-900 font-[400px] block text-sm"
+                      className="text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-600 font-[400px] block text-sm"
                       href="#license"
                     >
                       License
@@ -158,7 +158,7 @@ export default function Footer() {
                     {/** Terms of use */}
                     <Link 
                       href={"#tos"}
-                      className="text-gray-700 hover:text-gray-900 font-[400px] block text-sm"
+                      className="text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-600 font-[400px] block text-sm"
                     >
                       Terms of use
                     </Link>
@@ -167,7 +167,7 @@ export default function Footer() {
                     {/** Cookie Policy */}
                     <Link 
                       href={"#cookie"}
-                      className="text-gray-700 hover:text-gray-900 font-[400px] block text-sm"
+                      className="text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-600 font-[400px] block text-sm"
                     >
                       Cookie Policy
                     </Link>
@@ -185,7 +185,7 @@ export default function Footer() {
               Copyright &copy; {new Date().getFullYear()}{" "}By{" "}
               <a
                 href="#"
-                className="text-gray-600 hover:text-gray-900"
+                className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-600"
               >
                 Kubuka Space PBC
               </a>.

@@ -38,7 +38,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       data-scroll-behavior="smooth" 
     >
       <body
-        className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}
+        className={`${GeistSans.variable} ${GeistMono.variable} antialiased dark:bg-gray-950!`}
       >
         <Provider session={session} initialCart={cart.map(item => ({
           id: item.id,

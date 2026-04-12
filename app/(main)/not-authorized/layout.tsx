@@ -3,7 +3,7 @@ import { ReactNode, Suspense } from "react";
 
 export default async function Layout({ children }: { children: ReactNode }) {
   return (
-    <div className="w-full overflow-auto">
+    <div className="w-full overflow-auto dark:bg-slate-900">
       <div className="min-h-screen items-center justify-center pt-8">
         <div className="relative">
           <div className="md:w-6/12 mx-auto px-2 md:px-0">
