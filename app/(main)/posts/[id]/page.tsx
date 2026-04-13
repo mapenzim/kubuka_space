@@ -4,6 +4,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { formatName } from "@/lib/utils";
 import { auth } from "@/auth";
+import { marked } from "marked";
+import DOMPurify from "dompurify";
+import MarkdownViewer from "@/components/marked-editor/marked-viewer";
 
 export const dynamic = "force-dynamic";
 
@@ -61,9 +64,9 @@ export default async function Post({
                 <a href="#" className="hover:underline"> {post.title} </a>
               </h3>
 
-              <p className="mt-1 text-sm text-gray-700 dark:text-gray-500">
-                {post.content}
-              </p>
+              <MarkdownViewer 
+                content={post.content as string}
+              />
 
               <div className="mt-4 sm:flex sm:items-center sm:gap-2">
                 <div className="flex items-center gap-1 text-gray-500">

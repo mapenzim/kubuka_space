@@ -97,7 +97,13 @@ export async function getUserCart(userId: string) {
     include: {
       cartItems: {
         include: {
-          merchandise: true,
+          merchandise: {
+            select: {
+              id: true,
+              title: true,
+              body: true
+            }
+          },
         },
       },
     },

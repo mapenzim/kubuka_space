@@ -100,7 +100,7 @@ const MessageForm = () => {
             {/* 💬 Message */}
             <div className="col-span-6">
               <textarea
-                className="w-full rounded text-sm shadow bg-gray-50 dark:bg-zinc-400 p-2"
+                className="w-full rounded text-sm shadow bg-gray-50 dark:bg-zinc-400 dark:text-gray-900 p-2"
                 placeholder="Type a message..."
                 rows={8}
                 name="message"
@@ -111,7 +111,7 @@ const MessageForm = () => {
               />
 
               {/* 🔢 Character counter */}
-              <div className="text-xs text-gray-300 mt-1 text-right">
+              <div className="text-xs text-gray-300 dark:text-zinc-500 mt-1 text-right">
                 {MAX_LENGTH - message.length} characters left
               </div>
             </div>
@@ -123,6 +123,7 @@ const MessageForm = () => {
                 sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_MESSAGE_FORM!}
                 onVerify={(token) => setCaptchaToken(token)}
                 onExpire={() => setCaptchaToken(null)}
+                className="w-1/2"
               />
             </div>
 

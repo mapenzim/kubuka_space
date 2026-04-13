@@ -57,7 +57,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           role: user.role?.name ?? "USER",
           roleId: user.roleId,
           cartItems: user.cartItems,
-          bio: user.bio?.text ?? "Bio",
+          'bio.id': String(user.bio?.id),
+          'bio.text': String(user.bio?.text),
+          'bio.userId': String(user.bio?.userId),
           skills: user.skills,
           social: user.social,
           workExperience: user.workExperience
@@ -67,18 +69,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ],
 
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, trigger, user, session }) {
       const prisma = await getPrisma();
 
       if (user) {
         token.id = user.id;
         token.role = user.role;
         token.cartItems = user.cartItems;
-        token.bio = user?.bio;
         token.skills = user.skills;
         token.social = user.social;
         token.workExperience = user.workExperience;
-      } else if (!token.role && token.sub) {
+        token.bio = user.bio;
+      } else if (!token.role && !token.bio && !token.skills && !token.social && !token.workExperience && token.sub) {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.sub },
           include: { 
@@ -94,10 +96,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (dbUser) {
           token.role = dbUser.role?.name ?? "USER";
           token.cartItems = dbUser.cartItems;
-          token.bio = dbUser?.bio?.text;
           token.skills = dbUser.skills;
           token.social = dbUser.social;
           token.workExperience = dbUser.workExperience;
+          token.bio = dbUser.bio;
+        }
+
+        // 🔥 Handle manual session update
+        if (trigger === "update" && session?.bio) {
+          token.bio = {
+            ...(token.bio || {}),
+            ...session.bio,
+          };
         }
       }
 
@@ -108,10 +118,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       session.user.id = token.id as string;
       session.user.role = token.role as string;
       session.user.cartItems = token.cartItems as string[];
-      session.user.bio = token?.bio as string;
       session.user.social = token.social as string[];
       session.user.skills = token.skills as string[];
-      session.user.workExperience = token.workExperience as string[]
+      session.user.workExperience = token.workExperience as string[];
+      session.user.bio = token.bio as {
+        id: string;
+          text: string;
+          userId: string;
+        };
       return session;
     },
   },

@@ -10,7 +10,7 @@ export default async function NewPostPage() {
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-gray-50 to-white pt-24">
+    <div className="min-h-screen bg-linear-to-b from-gray-500 to-gray-700 py-24">
       <div className="max-w-2xl mx-auto px-4">
         <PostForm />
       </div>

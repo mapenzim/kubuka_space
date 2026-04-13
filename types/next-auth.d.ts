@@ -5,7 +5,11 @@ declare module "next-auth" {
     user: {
       id: string;
       role: string;
-      bio?: string;
+      bio?: {
+        id: string;
+        text: string;
+        userId: string;
+      };
       social?: any[];
       skills?: any[]; 
       cartItems?: any[];
@@ -16,7 +20,11 @@ declare module "next-auth" {
   interface User {
     id: string;
     role: string;
-    bio?: string;
+    bio?: {
+      id: string;
+      text: string;
+      userId: string;
+    };
     social?: any[];
     skills?: any[];
     cartItems?: any[];
@@ -26,7 +34,11 @@ declare module "next-auth" {
   interface JWT {
     id: string;
     role: string;
-    bio?: string;
+    bio?: {
+      id: string;
+      text: string;
+      userId: string;
+    };
     social?: any[];
     skills?: any[];
     cartItems?: any[];

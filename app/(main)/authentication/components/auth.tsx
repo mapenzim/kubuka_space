@@ -70,16 +70,32 @@ const Authentication = () => {
       }
 
       if (variant === VARIANTS.login) {
+        const email = form.get("email");
+        const pwd = form.get("password");
+
+        if (!email || !pwd) {
+          toast.error("Email or Password required.");
+          return;
+        }
+
         const res = await signIn("credentials", {
           redirect: false,
-          email: form.get("email"),
-          password: form.get("password"),
+          email,
+          password: pwd,
         });
-        if (res?.error) return toast.error("Invalid credentials");
+
+        if (res?.error) {
+          toast.error("Invalid credentials");
+          return;
+        }
+
         toast.success("Logged in successfully!");
-        router.refresh();
+
         router.push(callbackUrl);
-        //return;
+
+        setTimeout(() => {
+          router.refresh();
+        }, 50);
       }
 
       if (variant === VARIANTS.register) {
@@ -130,12 +146,15 @@ const Authentication = () => {
         className="w-full max-w-md rounded-xl bg-white/90 dark:bg-gray-800 shadow-xl pl-6 pr-6 pb-6 backdrop-blur-sm"
     
       >
-        <Image 
-          src="/images/Kubuka_Logo.png"
-          alt="Logo"
-          width={100}
-          height={100}
-        />
+        <div
+          className="w-16 h-16"
+        >
+          <img
+            src="/images/Kubuka_Logo.png"
+            alt="Logo"
+            className="object-contain"
+          />
+        </div>
         <Fading direction="top" delay={0.8} fullWidth padding={0}>
           <Divider>{variant}</Divider>
         </Fading>

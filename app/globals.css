@@ -17,6 +17,10 @@
   }
 }
 
+html {
+  transition: background-color 0.3s, color 0.3s;
+}
+
 body {
   color: var(--foreground);
   background: var(--background);
@@ -250,4 +254,9 @@ body {
 		opacity: 1;
 		transform: translate(-50%, -50%) scale(1);
 	}
+}
+
+/** Edtor styles */
+.editor-btn {
+	@apply px-2 py-1 text-sm border rounded transition bg-white text-gray-700 border-gray-300 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600;
 }

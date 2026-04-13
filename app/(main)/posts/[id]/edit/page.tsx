@@ -29,7 +29,7 @@ export default async function EditPost({
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-gray-50 to-white py-16">
+    <div className="min-h-screen bg-linear-to-b from-gray-500 to-gray-700 py-16">
       <div className="max-w-2xl mx-auto px-4">
         <PostForm post={post} />
       </div>

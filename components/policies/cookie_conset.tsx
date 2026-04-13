@@ -19,7 +19,7 @@ export default function AppCookieConsent() {
       cookieName="myWebsiteCookieConsent"
       expires={365}
       disableStyles // 👈 we fully control styling
-      containerClasses="fixed bottom-4 left-1 translate-x-2 z-9999"
+      containerClasses="fixed md:-translate-y-2 md:translate-x-2 z-[9999]"
       contentClasses=""
       buttonClasses="hidden"
       declineButtonClasses="hidden"
@@ -27,7 +27,7 @@ export default function AppCookieConsent() {
       onAccept={() => console.log("Cookies accepted")}
       onDecline={handleDecline}
     >
-      <div className="relative w-[90vw] max-w-md bg-indigo-200 text-gray-700 p-5 md:p-6 rounded-xl shadow-xl border border-gray-200">
+      <div className="relative w-[90vw] z-50 max-w-md bg-indigo-200 text-gray-700 p-5 md:p-6 rounded-xl shadow-xl border border-gray-200">
 
         {/* 🍪 Floating Image */}
         <img

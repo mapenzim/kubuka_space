@@ -45,7 +45,7 @@ export default function Notfound() {
                   popular.map((ln) => 
                     <Link
                       key={ln.link}
-                      href={ln.link}
+                      href={`/${ln.link}`}
                       className="-m-3 p-3 flex items-start rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 border-b-2 border-gray-100"
                     >
                       <div className="ml-4">

@@ -1,12 +1,25 @@
+import { getUserBio } from "@/app/actions/authActions.server";
 import { auth } from "@/auth";
+import { AddUpdateBioPopover } from "@/components/poper/add-update-bio";
+import { AddUpdateExperiencePopover } from "@/components/poper/add-update-experience";
+import { AddUpdateSkillPopover } from "@/components/poper/add-update-skills";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+
+type ExistingUserBio = {
+  bio: {
+    id: string;
+    text: string;
+    userId: string;
+  };
+}
 
 const ProfilePage = async () => {
   const session = await auth();
 
   const user = session?.user; 
+  const bio = await getUserBio(String(user?.id));
 
   if (!session?.user) return redirect("/authentication");
   
@@ -42,7 +55,7 @@ const ProfilePage = async () => {
                 <div className="flex flex-col">
                   <header className="flex w-full items-center justify-between p-2" >
                     <span className="text-gray-700 dark:text-zinc-400 uppercase font-bold tracking-wider">Skills</span>
-                    <button className="text-gray-300 dark:text-gray-500 dark:hover:text-gray-400 text-lg cursor-pointer" >+</button>
+                    <AddUpdateSkillPopover />
                   </header>
                   <ul>
                     {
@@ -57,18 +70,16 @@ const ProfilePage = async () => {
           <div className="col-span-4 sm:col-span-9">
             <div className="shadow rounded-lg p-6">
               <header
-                className="flex w-full h-4 items-center justify-between mb-4"
+                className="flex w-full items-center justify-between mb-1 py-1 px-2 dark:rounded-t-md dark:bg-gray-500/10"
               >
                 <h2 className="text-xl font-bold dark:text-zinc-400">About Me</h2>
-                <button
-                  className="text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-300 text-xl cursor-pointer"
-                >+</button>
+                <AddUpdateBioPopover bio={bio} />
               </header>
-              <p className="text-gray-700 dark:text-gray-500">
-                {user?.bio ?? ""}
+              <p className="text-gray-700 dark:text-gray-500 px-2">
+                {bio?.text}
               </p>
 
-              <h3 className="font-semibold text-center mt-3 -mb-2 dark:text-zinc-400">
+              <h3 className="font-semibold text-center mt-4 -mb-2 dark:text-zinc-400">
                 Find me on
               </h3>
               <div className="flex justify-center items-center gap-6 my-6">
@@ -123,17 +134,14 @@ const ProfilePage = async () => {
                         </a>
                     </div>
 
-                    
                     <header
                       className="flex w-full mt-6 h-4 px-4 py-6 items-center justify-between dark:border border-gray-400 rounded-t-lg"
                     >
                       <h2 className="text-xl font-bold dark:text-zinc-400">Experience</h2>
-                      <button
-                        className="dark:text-zinc-400 dark:hover:text-zinc-300 cursor-pointer text-xl"
-                      >+</button>
+                      <AddUpdateExperiencePopover />
                     </header>
                     <div className="flex w-full dark:border border-gray-400 text-zinc-400 p-4">
-                      {user?.workExperience
+                      {!user?.workExperience?.length
                         ?
                           user?.workExperience?.map((exp) => 
                             <div 

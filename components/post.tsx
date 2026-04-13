@@ -5,9 +5,16 @@ import Link from "next/link";
 import { useFormStatus } from "react-dom";
 import { Post } from "@prisma/client";
 import { publishPost, saveDraft } from "@/app/actions/postActions.server";
+import MarkdownEditor from "./marked-editor";
+import { useState } from "react";
 
-function SubmitButton({ isPublished }: { isPublished?: boolean }) {
+function SubmitButton({ isPublished, content }: { isPublished?: boolean; content: string }) {
   const { pending } = useFormStatus();
+
+  const handleDraft = async (formData: FormData) => {
+    formData.set("content", content);
+    await saveDraft(formData);
+  };
  
   return (
     <div className="flex gap-4">
@@ -20,7 +27,7 @@ function SubmitButton({ isPublished }: { isPublished?: boolean }) {
       </button>
       {!isPublished && (
         <button
-          formAction={saveDraft}
+          formAction={handleDraft}
           disabled={pending}
           className="bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 text-gray-700 px-6 py-2 rounded-lg font-medium transition-colors"
         >
@@ -36,6 +43,13 @@ interface PostFormProps {
 }
 
 export function PostForm({ post }: PostFormProps) {
+  const [content, setContent] = useState(post?.content || "");
+
+  const handleSubmit = async (formData: FormData) => {
+    formData.set("content", content); // ✅ always fresh state
+    await publishPost(formData);
+  };
+
   return (
     <>
       <div className="flex items-center justify-between mb-8">
@@ -51,9 +65,10 @@ export function PostForm({ post }: PostFormProps) {
           </Link>
         )}
       </div>
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <Form action={publishPost} className="space-y-6">
+      <div className="rounded-xl shadow-sm border border-gray-100 p-6">
+        <Form action={handleSubmit} className="space-y-6">
           {post && <input type="hidden" name="postId" value={post.id} />}
+          
           <div>
             <label
               htmlFor="title"
@@ -78,17 +93,10 @@ export function PostForm({ post }: PostFormProps) {
             >
               Content
             </label>
-            <textarea
-              id="content"
-              name="content"
-              defaultValue={post?.content || ""}
-              placeholder="Write your post content here..."
-              rows={8}
-              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow"
-            />
+            <MarkdownEditor value={content} onChange={setContent} />
           </div>
           <div className="flex justify-end pt-4">
-            <SubmitButton isPublished={post && post.published} />
+            <SubmitButton isPublished={post && post.published} content={content} />
           </div>
         </Form>
       </div>

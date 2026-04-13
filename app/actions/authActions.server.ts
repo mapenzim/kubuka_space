@@ -1,5 +1,6 @@
 "use server";
 
+import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import { ulidId } from "@/lib/server-utils";
 import { hash } from "bcryptjs";
@@ -98,4 +99,42 @@ export async function changePasswordAction(token: string | null, newPassword: st
   } catch (err: any) {
     return { error: { message: err.message || "Failed to change password" } };
   }
+}
+
+type UpdateUser = 
+  | { success: true }
+  | { error: { message: string } };
+
+export async function userBio(form: FormData): Promise<UpdateUser> {
+  const userId = form.get("userId") as string;
+  const bio = form.get("bio") as string;
+  const bioId = form.get("bioId") as string;
+
+  if (!bioId) {
+    await prisma.bio.create({
+      data: {
+        id: ulidId(),
+        text: bio,
+        userId: userId
+      }
+    });
+
+    revalidatePath("/profile");
+
+    return { success: true };
+  };
+
+  await prisma.bio.update({
+    where: { userId: bioId },
+    data: { text: bio }
+  });
+
+  return { success: true }
+}
+
+export async function getUserBio(userId: string) {
+
+  return prisma.bio.findFirst({
+    where: { userId: userId },
+  });
 }
