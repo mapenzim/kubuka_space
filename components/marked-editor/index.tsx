@@ -309,10 +309,18 @@ export default function MarkdownEditor({ value, onChange }: Props) {
           className="
             prose max-w-none
             prose-gray
-            dark:prose-invert
             prose-p:mb-4
             prose-img:rounded-lg
             prose-img:shadow-md
+            prose-white
+            dark:prose-white
+            prose-p:mb-4
+            prose-img:rounded-lg
+
+            prose-p:mb-4
+            prose-img:rounded-lg
+            prose-img:shadow-md
+            prose-img:my-8
           "
           dangerouslySetInnerHTML={{
             __html: marked.parse(value),

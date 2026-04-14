@@ -191,13 +191,20 @@ const NavigationApp = () => {
           Contact
         </Link>
 
-        <Link
-          href="/authentication"
-          className="bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500"
-          onClick={() => setIsMenuOpen(false)}
-        >
-          Login
-        </Link>
+        {user 
+          ? (
+              <SignoutButton close={() => setIsMenuOpen(false)} />
+            ) : (
+              <Link
+                href="/authentication"
+                className="bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Login
+              </Link>
+            )
+        }
+
       </div>
     </nav>
   );
