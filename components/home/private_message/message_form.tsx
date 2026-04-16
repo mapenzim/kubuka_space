@@ -12,8 +12,8 @@ const MAX_LENGTH = 500;
 const MessageForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-  const [turnstileKey, setTurnstileKey] = useState(0);
+  const [messageCaptchaToken, setMessageCaptchaToken] = useState<string | null>(null);
+  const [turnstileKey, setTurnstileKey] = useState("message-form");
 
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -23,13 +23,13 @@ const MessageForm = () => {
     if (!formRef.current) return;
 
     // 🚫 Block if captcha not completed
-    if (!captchaToken) {
+    if (!messageCaptchaToken) {
       toast.error("Please complete the captcha.");
       return;
     }
 
     const form = new FormData(formRef.current);
-    form.append("captchaToken", captchaToken);
+    form.append("captchaToken", messageCaptchaToken);
 
     setIsLoading(true);
 
@@ -46,7 +46,7 @@ const MessageForm = () => {
       // ✅ Reset everything cleanly
       formRef.current.reset();
       setMessage("");
-      setCaptchaToken(null);
+      setMessageCaptchaToken(null);
 
       // 🔄 Reset Turnstile widget by forcing re-render
       setTurnstileKey((prev) => prev + 1);
@@ -121,8 +121,8 @@ const MessageForm = () => {
               <Turnstile
                 key={turnstileKey}
                 sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_MESSAGE_FORM!}
-                onVerify={(token) => setCaptchaToken(token)}
-                onExpire={() => setCaptchaToken(null)}
+                onVerify={(token) => setMessageCaptchaToken(token)}
+                onExpire={() => setMessageCaptchaToken(null)}
                 className="w-1/2"
               />
             </div>
@@ -132,8 +132,8 @@ const MessageForm = () => {
               <div className="flex items-end text-center">
                 <button
                   type="submit"
-                  disabled={isLoading || !captchaToken}
-                  className="flex items-center gap-2 bg-green-400 disabled:bg-gray-300 text-white dark:text-zinc-400 text-sm uppercase px-6 py-3 rounded shadow hover:shadow-lg transition"
+                  disabled={isLoading || !messageCaptchaToken}
+                  className="flex items-center gap-2 bg-green-400 disabled:bg-gray-300 text-white dark:text-zinc-200 text-sm uppercase px-6 py-3 rounded shadow hover:shadow-lg transition"
                 >
                   {isLoading && <Loading />}
                   Send Message

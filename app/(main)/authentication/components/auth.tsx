@@ -24,8 +24,8 @@ const Authentication = () => {
   const [variant, setVariant] = useState(VARIANTS.login);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [turnstileKey, setTurnstileKey] = useState(0);
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [turnstileKey, setTurnstileKey] = useState("signup");
+  const [accountCaptchaToken, setAccountCaptchaToken] = useState<string | null>(null);
 
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -101,7 +101,7 @@ const Authentication = () => {
       if (variant === VARIANTS.register) {
 
         // 🚫 Block if captcha not completed
-        if (!captchaToken) {
+        if (!accountCaptchaToken) {
           toast.error("Please complete the captcha.");
           return;
         }
@@ -118,7 +118,7 @@ const Authentication = () => {
         
         // 🔄 Reset Turnstile widget by forcing re-render
         setTurnstileKey((prev) => prev + 1);
-        setCaptchaToken(null);
+        setAccountCaptchaToken(null);
 
         return;
       }
@@ -248,12 +248,12 @@ const Authentication = () => {
                 )}
                 <div className="my-3 flex flex-col justify-between text-sm text-sky-600 dark:text-gray-400">
                   {/** check for captcha verification during signup */}
-                  {variant === VARIANTS.register && !captchaToken && (
+                  {variant === VARIANTS.register && !accountCaptchaToken && (
                     <Turnstile
                       key={turnstileKey}
                       sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_SIGNUP_FORM!}
-                      onVerify={(token) => setCaptchaToken(token)}
-                      onExpire={() => setCaptchaToken(null)}
+                      onVerify={(token) => setAccountCaptchaToken(token)}
+                      onExpire={() => setAccountCaptchaToken(null)}
                     />
                   )}
                   {variant === VARIANTS.login && (
