@@ -100,7 +100,7 @@ const Authentication = () => {
 
       if (variant === VARIANTS.register) {
 
-        // 🚫 Block if captcha not completed
+        // 🚫 Block if captcha not completed 
         if (!accountCaptchaToken) {
           toast.error("Please complete the captcha.");
           return;
@@ -109,6 +109,7 @@ const Authentication = () => {
         const password = form.get("password") as string;
         const confirm = form.get("confirmPassword") as string;
         if (password !== confirm) return toast.error("Passwords do not match");
+        form.append("captchaToken", accountCaptchaToken);
 
         const res = await createUser(form);
         if ("error" in res) return toast.error(res.error.message);
