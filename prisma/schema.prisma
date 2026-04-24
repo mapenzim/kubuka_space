@@ -74,7 +74,7 @@ model SocialLink {
   name        String
   text        String
 
-  userId      String
+  userId      String    @unique
   users       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
@@ -82,8 +82,10 @@ model Skill {
   id          String      @id @db.Char(26) @default(dbgenerated())
   text        String
 
-  userId      String
+  userId      String    
   users User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([text, userId])
 }
 
 model WorkExperience {
@@ -91,10 +93,12 @@ model WorkExperience {
   jobTitle      String
   companyName   String
   dates         String
-  duties        String[]
+  duties        String
 
-  userId        String
+  userId        String 
   users         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, jobTitle, companyName])
 }
 
 model Account {

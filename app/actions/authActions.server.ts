@@ -1,6 +1,5 @@
 "use server";
 
-import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import { ulidId } from "@/lib/server-utils";
 import { hash } from "bcryptjs";
@@ -136,5 +135,109 @@ export async function getUserBio(userId: string) {
 
   return prisma.bio.findFirst({
     where: { userId: userId },
+  });
+}
+
+export async function userWorkExperience(form: FormData): Promise<UpdateUser> {
+  const userId = form.get("userId") as string;
+  const jobTitle = form.get("jobTitle") as string;
+  const companyName = form.get("companyName") as string;
+  const dates = form.get("dates") as string;
+  const duties = form.get("duties") as string;;
+
+  await prisma.workExperience.upsert({
+    where: {
+      userId_jobTitle_companyName: {
+        userId,
+        jobTitle,
+        companyName,
+      },
+    },
+    update: {
+      dates,
+      duties,
+    },
+    create: {
+      id: ulidId(),
+      userId,
+      jobTitle,
+      companyName,
+      dates,
+      duties,
+    },
+  });
+
+  revalidatePath("/profile");
+
+  return { success: true }
+}
+
+export async function getUserExperience(id: string) {
+  return prisma.workExperience.findFirst({
+    where: { 
+      id
+    }
+  });
+}
+
+export async function getUserAllExperience(userId: string) {
+  return prisma.workExperience.findMany({
+    where: { userId }
+  });
+}
+
+export async function deleteUserWorkExperience(expId: string) {
+  return prisma.workExperience.delete({
+    where: { id: expId }
+  });
+}
+
+type SubmitResult =
+  | { success: true }
+  | { error: { message: string } };
+
+export async function userSkillAction(formData: FormData): Promise<SubmitResult> {
+  const text = formData.get("text") as string;
+  const userId = formData.get("userId") as string;
+
+  if (!text) {
+    return { error: { message: "Text should not be blank." } };
+  }
+  
+  try {
+    await prisma.skill.upsert({
+      where: {
+        text_userId: {
+          text, 
+          userId
+        }
+      },
+      update: {},
+      create: {
+        id: ulidId(),
+        text,
+        userId
+      }
+    });
+    return { success: true }
+
+  } catch (error: any) {
+    return { error: { message: error.message || "Failed to save data." } };
+  }
+}
+
+export async function getUserSkills(userId: string) {
+  return prisma.skill.findMany({
+    where: {
+      userId
+    }
+  });
+}
+
+export async function deleteUserSkill(id: string) {
+  return prisma.skill.delete({
+    where: {
+      id
+    }
   });
 }

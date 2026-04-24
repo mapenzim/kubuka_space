@@ -78,8 +78,6 @@ export function CartProvider({
         ? JSON.parse(stored)
         : [];
       
-      console.log("Merging guest cart with items:", guestItems);
-
       if (guestItems.length === 0) return;
 
       try {

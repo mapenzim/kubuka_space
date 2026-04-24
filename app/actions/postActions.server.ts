@@ -129,3 +129,25 @@ export async function saveDraft(formData: FormData) {
   revalidatePath("/posts");
   redirect(`/posts/${post.id}`);
 }
+
+export async function getOwnPosts(authorId: string) {
+  return await prisma.post.findMany({
+    where: { authorId },
+    orderBy: { createdAt: "desc" }
+  });
+}
+
+export async function getAllPosts() {
+  return await prisma.post.findMany({
+    where: { published: true },
+    include: { author: {
+      select: {
+        name: true,
+        email: true,
+        image: true,
+        id: true
+      }
+    } },
+    orderBy: { createdAt: "desc" }
+  });
+}

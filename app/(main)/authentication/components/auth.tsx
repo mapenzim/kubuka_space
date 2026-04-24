@@ -10,7 +10,6 @@ import { createUser, resetPasswordAction, changePasswordAction } from "@/app/act
 import Divider from "@/components/divider";
 import Fading from "@/components/fade";
 import Loading from "@/components/loading";
-import Image from "next/image";
 import Turnstile from "react-turnstile";
 
 export const VARIANTS = {

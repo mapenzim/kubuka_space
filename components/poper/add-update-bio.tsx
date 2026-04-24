@@ -2,9 +2,10 @@
 
 import { userBio } from "@/app/actions/authActions.server";
 import * as Form from "@radix-ui/react-form";
-import { Avatar, Box, Button, Flex, Popover, Text, TextArea } from "@radix-ui/themes";
+import { Avatar, Box, Button, Flex, Popover, Text, TextArea, Tooltip } from "@radix-ui/themes";
 import { PlusIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 type ExistingUserBio = {
   bio: {
@@ -19,6 +20,7 @@ export const AddUpdateBioPopover = ({
 }: ExistingUserBio) => {
   const { data: session, update } = useSession();
   const user = session?.user;
+  const router = useRouter();
 
   const addUserBio = async (formData: FormData) => {
     await userBio(formData);
@@ -27,16 +29,22 @@ export const AddUpdateBioPopover = ({
         text: formData.get("bio") as string,
       },
     });
+
+    router.refresh();
   }
+
+  const statement = (word: string) => `${word} Bio status`;
 
   return (
     <Popover.Root>
       <Popover.Trigger>
         <Button variant="ghost" size={"1"}>
-          <PlusIcon className="w-4 h-auto text-zinc-400" />
+          <Tooltip  content={bio?.id ? statement("Update") : statement("Add")}>
+            <PlusIcon className="w-4 h-auto text-zinc-800" />
+          </Tooltip>
         </Button>
       </Popover.Trigger>
-      <Popover.Content width={"360px"}>
+      <Popover.Content width={"480px"} side="left">
         <Flex gap={"3"}>
           <Avatar 
             size={"1"}
@@ -57,11 +65,11 @@ export const AddUpdateBioPopover = ({
             />
             <Flex gap={"3"} mt={"3"} justify={"between"} >
               <Flex align={"center"} gap={"2"} asChild>
-              <Form.Submit asChild>
-                <Button type="submit" size="1">
-                  Add
-                </Button>
-              </Form.Submit>
+                <Form.Submit asChild>
+                  <Button type="submit" size="1">
+                    {!bio?.id ? "Add" : "Update"}
+                  </Button>
+                </Form.Submit>
               </Flex>
               <Popover.Close>
                 <Button size={"1"}>Cancel</Button>

@@ -155,7 +155,7 @@ export default function MarkdownEditor({ value, onChange }: Props) {
       </div>
     </div>
   );
-}*/
+}
 
 "use client";
 
@@ -207,10 +207,8 @@ export default function MarkdownEditor({ value, onChange }: Props) {
   return (
     <div className="grid md:grid-cols-2 gap-6">
 
-      {/* ✍️ EDITOR */}
       <div className="space-y-2">
 
-        {/* 🎛️ RADIX TOOLBAR */}
         <ToggleGroup.Root
           type="multiple"
           className="flex flex-wrap gap-2 border rounded p-2
@@ -272,7 +270,6 @@ export default function MarkdownEditor({ value, onChange }: Props) {
             Code
           </ToggleGroup.Item>
 
-          {/* 🖼️ IMAGE */}
           <ToggleGroup.Item
             value="image"
             onClick={() => wrapText("![alt](", ")")}
@@ -285,7 +282,6 @@ export default function MarkdownEditor({ value, onChange }: Props) {
           </ToggleGroup.Item>
         </ToggleGroup.Root>
 
-        {/* 📝 TEXTAREA */}
         <textarea
           ref={textareaRef}
           value={value}
@@ -300,7 +296,6 @@ export default function MarkdownEditor({ value, onChange }: Props) {
         />
       </div>
 
-      {/* 👀 PREVIEW */}
       <div className="border rounded p-4
         bg-gray-50 border-gray-200
         dark:bg-gray-900 dark:border-gray-700"
@@ -328,5 +323,83 @@ export default function MarkdownEditor({ value, onChange }: Props) {
         />
       </div>
     </div>
+  );
+}*/
+
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ */
+
+import {TabIndentationExtension} from '@lexical/extension';
+import {HistoryExtension} from '@lexical/history';
+import {ContentEditable} from '@lexical/react/LexicalContentEditable';
+import {LexicalExtensionComposer} from '@lexical/react/LexicalExtensionComposer';
+import {RichTextExtension} from '@lexical/rich-text';
+import {defineExtension} from 'lexical';
+
+import { ToolbarPlugin } from '../plugins/toolbar-plugin';
+
+const theme = {
+  heading: {
+    h1: 'mb-2 text-3xl font-bold',
+    h2: 'mb-2 text-2xl font-bold',
+    h3: 'mb-1 text-xl font-semibold',
+  },
+  paragraph: 'my-0',
+  quote:
+    'my-2 border-l-4 [border-left-style:solid] border-zinc-300 pl-4 italic text-zinc-500 dark:border-zinc-600 dark:text-zinc-400',
+  text: {
+    bold: 'font-bold',
+    italic: 'italic',
+    underline: 'underline',
+  },
+};
+
+const landingHeroExtension = defineExtension({
+  dependencies: [RichTextExtension, HistoryExtension, TabIndentationExtension],
+  name: '@lexical/website/landing-hero-editor',
+  namespace: '@lexical/website/landing-hero-editor',
+  theme,
+});
+
+type Props = {
+  value: string;
+  onChange: (value: string) => void;
+};
+
+export default function Editor({ value, onChange }: Props) {
+
+  const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    onChange(e.target.value);
+
+    const el = e.target;
+    el.style.height = "auto";
+    el.style.height = el.scrollHeight + "px";
+  };
+
+  return (
+    <LexicalExtensionComposer
+      extension={landingHeroExtension}
+      contentEditable={null}>
+      <div className="flex w-full flex-col overflow-hidden rounded-2xl border border-solid border-black/10 dark:border-white/10 dark:bg-stone-800">
+        <ToolbarPlugin />
+        <div className="relative">
+          <textarea
+            className="h-55 overflow-y-auto p-4 text-base leading-relaxed text-wrap outline-none"
+            aria-label="Rich text editor"
+            aria-placeholder="Enter some text..."
+            placeholder={
+              "Enter some text..."
+            }
+            value={value}
+            onChange={ handleInput }
+          />
+        </div>
+      </div>
+    </LexicalExtensionComposer>
   );
 }

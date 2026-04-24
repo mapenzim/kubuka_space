@@ -1,12 +1,15 @@
-import { IconButton, Tooltip } from "@radix-ui/themes";
-import { PlusIcon } from "lucide-react";
+import { Tooltip } from "@radix-ui/themes";
+import { ReactNode } from "react";
 
-export const ToolTip = ({ children }: { children: React.ReactNode }) => {
+type TooltipProps = {
+  content: string;
+  children: ReactNode;
+}
+
+export const ToolTip = ({ children, content }: TooltipProps) => {
   return (
-    <Tooltip content="Add to library">
-      <IconButton radius="full">
-        <PlusIcon />
-      </IconButton>
+    <Tooltip content={content}>
+      {children}
     </Tooltip>
   );
 };
