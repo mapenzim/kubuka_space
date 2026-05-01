@@ -8,13 +8,18 @@ import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
 import { getBroadcaster } from "@/lib/broadcaster";
 import { ulidId } from "@/lib/server-utils";
+import { migrateToLexical } from "@/lib/migrateToLexical";
 
-export async function createPost(formData: FormData) {
+type PostResult =
+  | { success: true }
+  | { error: { message: string } };
+
+export async function createPost(formData: FormData): Promise<PostResult> {
   const title = formData.get("title") as string;
   const content = formData.get("content") as string;
   const authorId = formData.get('authorId') as string;
 
-  const post = await prisma.post.create({
+  await prisma.post.create({
     data: { 
       id: ulidId(), 
       title, 
@@ -23,26 +28,31 @@ export async function createPost(formData: FormData) {
     },
   });
 
-  return post;
+  return { success: true };
 }
 
-export async function publishPost(formData: FormData) {
+export async function publishPost(formData: FormData): Promise<PostResult> {
   const session = await auth();
   if (!session?.user) {
-    redirect("/");
+    redirect("/authentication");
   }
 
   const title = formData.get("title") as string;
   const content = formData.get("content") as string;
   const postId = formData.get("postId") as string;
+  const authorId = formData.get("authorId") as string;
 
   if (!title?.trim()) {
     throw new Error("Title is required");
   }
 
   if (containsProfanity(content)) {
-    throw new Error("Content contains profanity");
+    return { error: { message: "Message contains profanity." } };
   }
+
+  /*if(authorId) {
+    return { error: { message: "You do not have permission to update this post." } }
+  }*/
 
   const post = await prisma.post.upsert({
     where: {
@@ -79,10 +89,11 @@ export async function publishPost(formData: FormData) {
 
   revalidatePath(`/posts/${post.id}`);
   revalidatePath("/posts");
-  redirect(`/posts/${post.id}`);
+
+  return { success: true }
 }
 
-export async function saveDraft(formData: FormData) {
+export async function saveDraft(formData: FormData): Promise<PostResult> {
   const session = await auth();
   if (!session?.user) {
     redirect("/");
@@ -93,11 +104,11 @@ export async function saveDraft(formData: FormData) {
   const postId = formData.get("postId") as string;
 
   if (!title?.trim()) {
-    throw new Error("Title is required");
+    return { error: { message: "Title is required" } };
   }
 
   if (containsProfanity(content)) {
-    throw new Error("Content contains profanity");
+    return { error: { message: "Content contains profanity" } };
   }
 
   const post = await prisma.post.upsert({
@@ -127,7 +138,8 @@ export async function saveDraft(formData: FormData) {
 
   revalidatePath(`/posts/${post.id}`);
   revalidatePath("/posts");
-  redirect(`/posts/${post.id}`);
+  
+  return { success: true };
 }
 
 export async function getOwnPosts(authorId: string) {
@@ -150,4 +162,40 @@ export async function getAllPosts() {
     } },
     orderBy: { createdAt: "desc" }
   });
+}
+
+export async function getPost (postId: string) {
+  return await prisma.post.findUnique({
+    where: { id: postId },
+    include: { author: {
+      select: {
+        name: true,
+        email: true,
+        id: true,
+        image: true
+      }
+    } }
+  });
+}
+
+export async function migratePosts() {
+  const posts = await prisma.post.findMany();
+
+  for (const post of posts) {
+    try {
+      const converted = await migrateToLexical(post.content as string);
+
+      await prisma.post.update({
+        where: { id: post.id },
+        data: {
+          content: converted,
+          //contentType: "lexical",
+        },
+      });
+
+      console.log(`✅ Migrated post ${post.id}`);
+    } catch (err) {
+      console.error(`❌ Failed post ${post.id}`, err);
+    }
+  }
 }

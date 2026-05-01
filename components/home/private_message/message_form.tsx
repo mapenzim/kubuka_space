@@ -3,7 +3,7 @@
 import { createPrivateMessage } from "@/app/actions/mainActions.server";
 import Fading from "@/components/fade";
 import Loading from "@/components/loading";
-import { FormEvent, useRef, useState } from "react";
+import { SyntheticEvent, useRef, useState } from "react";
 import { toast } from "sonner";
 import Turnstile from "react-turnstile";
 
@@ -17,7 +17,7 @@ const MessageForm = () => {
 
   const formRef = useRef<HTMLFormElement>(null);
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!formRef.current) return;

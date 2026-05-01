@@ -4,13 +4,6 @@ import { hash } from "bcryptjs";
 import { ulid } from "ulid";
 import prisma from "@/lib/prisma";
 
-/*const prisma = new PrismaClient({
-  adapter: new PrismaPg({ connectionString: process.env.ACCELERATE_URL_PRISMA_DATABASE_URL,
-  max: 10, // 🔥 increase connections
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 10000, })
-});*/
-
 // 🔐 Helper for password hashing
 async function securePassword(password: string) {
   return await hash(password, 10);
@@ -197,11 +190,7 @@ async function main() {
 
   console.log("✅ Settings seeded.");
 
-  // --- 6️⃣ implemented later ---
-
-  // --- 7️⃣ implemented later ---
-
-  // --- 8️⃣ Log entry ---
+  // --- Log entry ---
   await prisma.log.create({
     data: {
       id: ulid(),

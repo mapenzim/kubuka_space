@@ -1,4 +1,5 @@
 import { getUserAllExperience, getUserBio, getUserExperience, getUserSkills } from "@/app/actions/authActions.server";
+import { getAllOrdersByUser } from "@/app/actions/cartActions.server";
 import { getOwnPosts } from "@/app/actions/postActions.server";
 import { auth } from "@/auth";
 import { DeleteUserExperience } from "@/components/buttons/delete-experience-btn";
@@ -19,6 +20,7 @@ const ProfilePage = async () => {
   const workExperience = await getUserAllExperience(user?.id as string);
   const userSkill = await getUserSkills(user?.id as string);
   const posts = await getOwnPosts(user?.id as string);
+  const orders = await getAllOrdersByUser(user?.id as string);
 
   if (!session?.user) return redirect("/authentication");
   
@@ -111,6 +113,7 @@ const ProfilePage = async () => {
                 <pre
                   className="font-light text-sm font-sans text-wrap"
                 >{bio?.text}</pre>
+                {!bio?.id && <Text size={"2"} mx={"4"} my={"2"} color="orange"> Add something about you ... </Text>}
               </Text>
 
               {/** Social Media Channels */}
@@ -118,6 +121,7 @@ const ProfilePage = async () => {
                 <Heading 
                   as="h3" 
                   align={"center"}
+                  className="bg-linear-to-r from-indigo-900  via-green-500 to-orange-600 bg-clip-text text-5xl font-extrabold text-transparent"
                 >My Social Media Channels</Heading>
                 <Flex justify={"center"} gap={"2"}>
                   <FacebookIcon />
@@ -143,8 +147,8 @@ const ProfilePage = async () => {
                   </Heading>
                   <AddUpdateExperiencePopover workExperience={null} />
                 </Flex>
-                <ScrollArea type="always" scrollbars="vertical" style={{ height: 380 }}>
-                {workExperience.length > 0
+                <ScrollArea type="always" scrollbars="vertical" style={{ maxHeight: 380, minHeight: 64 }}>
+                {workExperience.length
                   ? workExperience.map((exp) => (
                     <Flex key={exp.id} direction={"column"} justify={"between"} px="4" py='2'>
                       <Flex direction="row" wrap={"wrap"} justify={"between"} align="center" className="text-sm">
@@ -169,10 +173,12 @@ const ProfilePage = async () => {
                       </Text>
                     </Flex>
                   ))
-                  : <Text size={"2"} mx={"4"} my={"2"} color="red"> No data available </Text>
+                  : <Text size={"2"} mx={"4"} my={"2"} color="orange"> No data available </Text>
                 }
                 </ScrollArea>
               </Flex>
+
+              {/** Publications by this user */}
               <Flex direction="column" gap="4">
                 <Flex 
                   direction="row" 
@@ -189,7 +195,7 @@ const ProfilePage = async () => {
                 </Flex>
                 <Box>
                   <Flex direction="row" wrap='wrap' gap="4" px='4'>
-                    {posts
+                    {posts.length
                       ? posts.map((post) => 
                           <Card 
                             size="1" 
@@ -201,7 +207,52 @@ const ProfilePage = async () => {
                             </Badge>
                           </Card>
                         )
-                      : "No posts poblished yet. Write something"
+                      : <Text size={"2"} mx={"4"} my={"2"} color="orange"> No posts </Text>
+                    }
+                  </Flex>
+                </Box>
+              </Flex>
+
+              {/** Orders */}
+              <Flex direction="column" gap="4">
+                <Flex 
+                  direction="row" 
+                  justify="between" 
+                  style={{  backgroundColor: "gray", color: '#ffe' }}
+                  px="4"
+                  py="2"
+                  align="center"
+                >
+                  <Heading as="h3">
+                    Shopping and orders
+                  </Heading>
+                  <Button size="1" variant="ghost">cart</Button>
+                </Flex>
+                <Box>
+                  <Flex direction="row" wrap='wrap' gap="4" px='4'>
+                    {orders.length
+                      ? orders.map((order) => 
+                          <Card 
+                            size="1" 
+                            key={order.id}
+                            style={{ backgroundColor: "blue" }}
+                            className="gap-2"
+                          >
+                            <span>{order.id}</span>
+                            <Badge>{Number(order.totalAmount)}</Badge>
+                            {order.items.map((itm) => (
+                              <span key={itm.id} className="gap-4">
+                                {itm.title}
+                                {itm.id}
+                                {Number(itm.price)}
+                              </span>
+                            ))} 
+                            <Badge>
+                              {order.status}
+                            </Badge>
+                          </Card>
+                        )
+                      : <Text size={"2"} mx={"4"} my={"2"} color="orange"> The cart is empty. </Text>
                     }
                   </Flex>
                 </Box>

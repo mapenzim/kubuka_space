@@ -7,9 +7,9 @@ import { notFound, redirect } from "next/navigation";
 export const dynamic = "force-dynamic";
 
 interface Props {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 function validateCartId(id: string): string {
@@ -20,7 +20,8 @@ function validateCartId(id: string): string {
 }
 
 export default async function Page({ params }: Props) {
-  const cartId = validateCartId(params.id);
+  const { id } = await params;
+  const cartId = validateCartId(id);
   const session = await auth();
 
   // 🔐 Require auth
@@ -59,26 +60,26 @@ export default async function Page({ params }: Props) {
   const isEmpty = cart.cartItems.length === 0;
 
   if (isEmpty) {
-    redirect("/store/cart"); // no checkout for empty carts
+    redirect("/store"); // no checkout for empty carts
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 px-6 py-16 flex justify-center">
-      <div className="w-full max-w-3xl bg-white p-8 rounded-2xl shadow-lg">
+    <div className="min-h-screen bg-transparent px-6 py-16 flex justify-center">
+      <div className="w-full max-w-3xl bg-gray-600 p-8 rounded-2xl shadow-lg">
 
         {/* 🧾 Order Summary */}
         <div className="mb-8">
-          <h2 className="text-lg font-semibold mb-4">Order Summary</h2>
+          <h2 className="text-lg text-zinc-200 font-semibold mb-4">Order Summary</h2>
 
-          <div className="divide-y border rounded-xl bg-gray-50">
+          <div className="divide-y dark:divide-zinc-500 border rounded-xl bg-gray-50 dark:bg-gray-800">
             {cart.cartItems.map((item) => (
               <div
                 key={item.id}
                 className="p-4 flex justify-between items-center"
               >
                 <div>
-                  <p className="font-medium">
-                    Item #{item.id.slice(-6).toUpperCase()}
+                  <p className="font-medium dark:text-zinc-400">
+                    <span className="">Item ref:</span> <span className="text-orange-400">{item.id.slice(-6).toUpperCase()}</span>
                   </p>
                   <p className="text-sm text-gray-500">
                     Qty: {item.quantity}
@@ -86,7 +87,7 @@ export default async function Page({ params }: Props) {
                 </div>
 
                 <div className="text-right">
-                  <p className="font-medium capitalize">
+                  <p className="font-medium capitalize dark:text-zinc-400">
                     {item.merchandise?.title}
                   </p>
                   <p className="text-sm text-gray-600">
@@ -97,25 +98,25 @@ export default async function Page({ params }: Props) {
             ))}
 
             {/* Totals */}
-            <div className="p-4 space-y-1 text-sm">
-              <div className="flex justify-between">
-                <span>Subtotal</span>
-                <span>${subtotal.toFixed(2)}</span>
+            <div className="ml-16 py-4 space-y-1 text-sm">
+              <div className="flex justify-between pr-4">
+                <span className="dark:text-zinc-400 font-semibold">Subtotal</span>
+                <span className="dark:text-zinc-400">${subtotal.toFixed(2)}</span>
               </div>
 
-              <div className="flex justify-between">
-                <span>VAT</span>
-                <span>${vat.toFixed(2)}</span>
+              <div className="flex justify-between pr-4">
+                <span className="dark:text-zinc-400 font-semibold">VAT</span>
+                <span className="dark:text-zinc-400">${vat.toFixed(2)}</span>
               </div>
 
-              <div className="flex justify-between">
-                <span>Discount</span>
-                <span>- ${discount.toFixed(2)}</span>
+              <div className="flex justify-between pr-4">
+                <span className="dark:text-zinc-400 font-semibold">Discount</span>
+                <span className="dark:text-zinc-400">- ${discount.toFixed(2)}</span>
               </div>
 
-              <div className="flex justify-between font-semibold text-base pt-2 border-t">
-                <span>Total</span>
-                <span>${total.toFixed(2)}</span>
+              <div className="flex justify-between font-semibold text-base pt-2 border-t border-zinc-500">
+                <span className="dark:text-zinc-400 font-semibold">Total</span>
+                <span className="dark:text-zinc-400 pr-4 underline decoration-2 underline-offset-2">${total.toFixed(2)}</span>
               </div>
             </div>
           </div>

@@ -28,6 +28,7 @@ import {
   REDO_COMMAND,
   UNDO_COMMAND,
 } from 'lexical';
+import { AlignCenterIcon, AlignJustifyIcon, AlignLeft, AlignRightIcon, Bold, ItalicIcon, RedoIcon, UnderlineIcon, Undo, UndoIcon } from 'lucide-react';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 
 const BLOCK_TYPES = [
@@ -35,6 +36,8 @@ const BLOCK_TYPES = [
   {label: 'Heading 1', value: 'h1'},
   {label: 'Heading 2', value: 'h2'},
   {label: 'Heading 3', value: 'h3'},
+  {label: 'Heading 4', value: 'h4'},
+  {label: 'Heading 5', value: 'h5'},
   {label: 'Quote', value: 'quote'},
 ];
 
@@ -45,7 +48,7 @@ function formatParagraph(editor: LexicalEditor) {
   });
 }
 
-function formatHeading(editor: LexicalEditor, headingTag: 'h1' | 'h2' | 'h3') {
+function formatHeading(editor: LexicalEditor, headingTag: 'h1' | 'h2' | 'h3' | 'h4' | 'h5') {
   editor.update(() => {
     const selection = $getSelection();
     $setBlocksType(selection, () => $createHeadingNode(headingTag));
@@ -65,26 +68,13 @@ function applyBlockType(editor: LexicalEditor, type: string) {
   } else if (type === 'quote') {
     formatQuote(editor);
   } else {
-    formatHeading(editor, type as 'h1' | 'h2' | 'h3');
+    formatHeading(editor, type as 'h1' | 'h2' | 'h3' | 'h4' | 'h5');
   }
-}
-
-function maskStyle(url: string): React.CSSProperties {
-  return {
-    WebkitMaskImage: `url('${url}')`,
-    WebkitMaskPosition: 'center',
-    WebkitMaskRepeat: 'no-repeat',
-    WebkitMaskSize: 'contain',
-    maskImage: `url('${url}')`,
-    maskPosition: 'center',
-    maskRepeat: 'no-repeat',
-    maskSize: 'contain',
-  };
 }
 
 function Divider() {
   return (
-    <div className="mx-1 w-px self-stretch bg-zinc-200 dark:bg-zinc-600" />
+    <div className="mx-1 w-px self-stretch bg-zinc-400 dark:bg-zinc-600" />
   );
 }
 
@@ -102,7 +92,7 @@ export function ToolbarPlugin() {
     const selection = $getSelection();
     if ($isRangeSelection(selection)) {
       const anchorNode = selection.anchor.getNode();
-      let topLevelElement = $findMatchingParent(anchorNode, (e) => {
+      let topLevelElement = $findMatchingParent(anchorNode, e => {
         const parent = e.getParent();
         return parent !== null && $isRootOrShadowRoot(parent);
       });
@@ -133,7 +123,7 @@ export function ToolbarPlugin() {
       }),
       editor.registerCommand(
         CAN_UNDO_COMMAND,
-        (payload) => {
+        payload => {
           setCanUndo(payload);
           return false;
         },
@@ -141,7 +131,7 @@ export function ToolbarPlugin() {
       ),
       editor.registerCommand(
         CAN_REDO_COMMAND,
-        (payload) => {
+        payload => {
           setCanRedo(payload);
           return false;
         },
@@ -155,18 +145,18 @@ export function ToolbarPlugin() {
   const btnInactive =
     'bg-transparent text-zinc-700 enabled:hover:bg-zinc-200 dark:text-zinc-200 dark:enabled:hover:bg-zinc-700';
   const btnActive =
-    'bg-blue-500 text-white enabled:hover:bg-blue-600 dark:bg-blue-600 dark:enabled:hover:bg-blue-700';
+    'bg-zinc-500 text-white enabled:hover:bg-zinc-600 dark:bg-zinc-600 dark:enabled:hover:bg-zinc-700';
   const iconBase =
-    'flex h-[18px] w-[18px] shrink-0 bg-current group-hover:opacity-100';
+    'flex h-[18px] w-[18px] shrink-0 bg-transparent group-hover:opacity-100';
 
   return (
     <div
-      className="sticky top-0 z-10 flex flex-wrap items-center gap-0.5 overflow-x-auto border-b [border-bottom-style:solid] border-b-black/10 bg-zinc-50 px-2 py-1.5 md:justify-evenly dark:border-b-white/10 dark:bg-zinc-800"
+      className="sticky top-0 z-10 flex flex-wrap items-center gap-0.5 overflow-x-auto border-b [border-bottom-style:solid] border-b-black/10 bg-zinc-50 px-2 py-1.5 md:justify-start dark:border-b-white/10 dark:bg-zinc-800"
       ref={toolbarRef}>
       <select
-        className="cursor-pointer appearance-none rounded-md border border-solid border-transparent bg-transparent px-2 py-1 text-sm font-medium text-zinc-700 transition-colors duration-150 hover:bg-zinc-200 focus:outline-none focus-visible:outline-2 focus-visible:outline-blue-500 dark:text-zinc-200 dark:hover:bg-zinc-700"
+        className="cursor-pointer appearance-none rounded-md border border-solid border-transparent bg-transparent px-2 py-1 text-sm font-medium text-zinc-700 transition-colors duration-150 hover:bg-zinc-200 focus:outline-none focus-visible:outline  focus-visible:outline-blue-500 dark:text-zinc-200 dark:hover:bg-zinc-700"
         value={blockType}
-        onChange={(e) => applyBlockType(editor, e.target.value)}
+        onChange={e => applyBlockType(editor, e.target.value)}
         aria-label="Block type">
         {BLOCK_TYPES.map(({label, value}) => (
           <option key={value} value={value}>
@@ -177,118 +167,91 @@ export function ToolbarPlugin() {
       <Divider />
       <button
         disabled={!canUndo}
-        type='button'
+        type="button"
         onClick={() => {
           editor.dispatchCommand(UNDO_COMMAND, undefined);
         }}
         className={`${btnBase} ${btnInactive} mr-0.5`}
         aria-label="Undo">
-        <i
-          className={`${iconBase} opacity-70`}
-          style={maskStyle('/img/undo.svg')}
-        />
-      </button>
+          <UndoIcon className={`${iconBase} w-4 h-4`} />
+        </button>
       <button
         disabled={!canRedo}
-        type='button'
+        type="button"
         onClick={() => {
           editor.dispatchCommand(REDO_COMMAND, undefined);
         }}
         className={`${btnBase} ${btnInactive}`}
         aria-label="Redo">
-        <i
-          className={`${iconBase} opacity-70`}
-          style={maskStyle('/img/redo.svg')}
-        />
-      </button>
+          <RedoIcon className={`${iconBase} opacity-70`} />
+        </button>
       <Divider />
       <button
+        type="button"
         onClick={() => {
           editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold');
         }}
-        type='button'
         className={`${btnBase} mr-0.5 ${isBold ? btnActive : btnInactive}`}
         aria-label="Format Bold"
         aria-pressed={isBold}>
-        <i
-          className={`${iconBase} ${isBold ? 'opacity-100' : 'opacity-70'}`}
-          style={maskStyle('/img/bold.svg')}
-        />
-      </button>
+          <Bold className={`${iconBase} ${isBold ? 'opacity-100' : 'opacity-70'}`} />
+        </button>
       <button
+        type="button"
         onClick={() => {
           editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'italic');
         }}
-        type='button'
         className={`${btnBase} mr-0.5 ${isItalic ? btnActive : btnInactive}`}
         aria-label="Format Italics"
         aria-pressed={isItalic}>
-        <i
-          className={`${iconBase} ${isItalic ? 'opacity-100' : 'opacity-70'}`}
-          style={maskStyle('/img/italic.svg')}
-        />
-      </button>
+          <ItalicIcon className={`${iconBase} ${isItalic ? 'opacity-100' : 'opacity-70'}`} />
+        </button>
       <button
+        type="button"
         onClick={() => {
           editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'underline');
         }}
-        type='button'
         className={`${btnBase} mr-0.5 ${isUnderline ? btnActive : btnInactive}`}
         aria-label="Format Underline"
         aria-pressed={isUnderline}>
-        <i
-          className={`${iconBase} ${isUnderline ? 'opacity-100' : 'opacity-70'}`}
-          style={maskStyle('/img/underline.svg')}
-        />
+          <UnderlineIcon className={`${iconBase} ${isUnderline ? 'opacity-100' : 'opacity-70'}`} />
       </button>
       <Divider />
       <button
+        type="button"
         onClick={() => {
           editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'left');
         }}
-        type='button'
         className={`${btnBase} ${btnInactive} mr-0.5`}
         aria-label="Left Align">
-        <i
-          className={`${iconBase} opacity-70`}
-          style={maskStyle('/img/text-align-start.svg')}
-        />
-      </button>
+          <AlignLeft className={`${iconBase} opacity-70`} />
+        </button>
       <button
+        type="button"
         onClick={() => {
           editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'center');
         }}
-        type='button'
         className={`${btnBase} ${btnInactive} mr-0.5`}
         aria-label="Center Align">
-        <i
-          className={`${iconBase} opacity-70`}
-          style={maskStyle('/img/text-align-center.svg')}
-        />
-      </button>
+          <AlignCenterIcon className={`${iconBase} opacity-70`} />
+        </button>
       <button
+        type="button"
         onClick={() => {
           editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'right');
         }}
-        type='button'
         className={`${btnBase} ${btnInactive} mr-0.5`}
         aria-label="Right Align">
-        <i
-          className={`${iconBase} opacity-70`}
-          style={maskStyle('/img/text-align-end.svg')}
-        />
+          <AlignRightIcon className={`${iconBase} opacity-70`} />
       </button>
       <button
+        type="button"
         onClick={() => {
           editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'justify');
         }}
-        type='button'
         className={`${btnBase} ${btnInactive}`}
         aria-label="Justify Align">
-        <i
-          className={`${iconBase} opacity-70`}
-          style={maskStyle('/img/text-align-justify.svg')}
-        />
+          <AlignJustifyIcon className={`${iconBase} opacity-70`} />
       </button>
     </div>
   );

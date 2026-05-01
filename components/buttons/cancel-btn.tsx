@@ -11,6 +11,5 @@ export const CancelOrder = ({ cartId }: { cartId: string }) => {
     >
       Cancel Order
     </button>
-
   );
 }

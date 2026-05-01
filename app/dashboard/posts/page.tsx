@@ -1,6 +1,5 @@
 export const dynamic = "force-dynamic";
 
-import { PostForm } from "@/components/post";
 import prisma from "@/lib/prisma";
  
 export default async function PostsPage() {
@@ -19,7 +18,6 @@ export default async function PostsPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold mb-6">Posts</h1>
-      <PostForm />
       <ul className="space-y-2">
         {posts.map((p) => (
           <li key={p.id} className="bg-white p-3 shadow rounded">

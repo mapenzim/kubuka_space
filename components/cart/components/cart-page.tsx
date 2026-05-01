@@ -15,7 +15,7 @@ interface CartItem {
   };
   quantity: number;
 }
-
+ 
 const CartPage = () => {
   const { cart, cartLoading, isGuest, removeItem, updateQuantity, cartId } = useCart();
   const router = useRouter();

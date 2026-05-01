@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { formatName } from "@/lib/utils";
 import { getAllPosts } from "@/app/actions/postActions.server";
-import { Box, Card, Flex, Heading, Inset, Strong, Text } from "@radix-ui/themes";
+import { Box, Button, Card, Flex, Heading, Inset, Strong, Text } from "@radix-ui/themes";
 import { auth } from "@/auth";
 
 export default async function Posts() {
@@ -12,20 +12,22 @@ export default async function Posts() {
 
   return (
     <div className="min-h-screen">
-      <div className="max-w-4xl mx-auto px-4 py-16">
+      <div className="max-w-4xl mx-auto px-4 pt-4 pb-16 md:py-16">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-zinc-400">Posts</h1>
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-zinc-400">
+            Blog
+          </h1>
           {session?.user && <Link
-              href="/posts/new"
+              href={`/posts/new`}
               className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
             >
               New Post
             </Link>
           }
         </div>
-        <div className="space-y-4 flex flex-col md:flex-row md:flex-wrap w-full space-x-3">
-          {posts.map((post: { id: string; title: string; author: { name: any; }; }) => (
-            <Box width="280px" key={post.id}>
+        <div className="space-y-4 flex flex-col md:flex-row md:flex-wrap w-full space-x-4">
+          {posts.map((post: { id: string; title: string; author: { id: string; name: any; email: string; }; }) => (
+            <Box width="240px" key={post.id} >
               <Card size="2">
                 <Inset clip="padding-box" side="top" pb="current">
                   <img
@@ -41,11 +43,22 @@ export default async function Posts() {
                   />
                 </Inset>
                 <Flex className="flex-col">
-                  <Heading as="h5" className="text-justify">{post.title}</Heading>
+                  <Heading as="h1" className="text-justify">
+                    <Link href={`/posts/${post.id}/read`}>{post.title}</Link>
+                  </Heading>
                 </Flex>
-                <Text as="p" size="3">
-                  <Strong>{formatName(post.author.name)}</Strong>
-                </Text>
+                <Flex direction={'row'} justify={'between'}>
+                  <Text as="p" size="3" asChild>
+                    <Link href={`/authors/${post.author.id}`}>{formatName(post.author.name)}</Link>
+                  </Text>
+                  {session?.user.email === post.author.email && 
+                    <Link href={`/posts/${post.id}`}>
+                      <Button variant="ghost" size="1">
+                        Update
+                      </Button>
+                    </Link>
+                  }
+                </Flex>
               </Card>
             </Box>
           ))}
@@ -54,20 +67,3 @@ export default async function Posts() {
     </div>
   );
 }
-
-/*
-
-            <Link
-              key={post.id}
-              href={`/posts/${String(post.id)}?title=${post?.title?.split(" ").join("-").toLowerCase()}`}
-              className="block transition-transform hover:scale-[1.01]"
-            >
-              <article className="bg-white dark:bg-zinc-700 rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-slate-300 mb-2">
-                  {post.title}
-                </h2>
-                <div className="text-sm text-gray-500 dark:text-gray-400">
-                  by {formatName(post.author.name)}
-                </div>
-              </article>
-            </Link>*/

@@ -92,7 +92,7 @@ export async function getCartCount(userId: string): Promise<number> {
 }
 
 export async function getUserCart(userId: string) {
-  return prisma.cart.findFirst({
+  return await prisma.cart.findFirst({
     where: { userId },
     include: {
       cartItems: {
@@ -101,7 +101,30 @@ export async function getUserCart(userId: string) {
             select: {
               id: true,
               title: true,
-              body: true
+              body: true,
+              price: true
+            }
+          },
+        },
+      },
+    },
+  });
+}
+
+export async function getCartById(cartId: string) {
+  return await prisma.cart.findMany({
+    where: {
+      id: cartId,
+    },
+    include: {
+      cartItems: {
+        include: {
+          merchandise: {
+            select: {
+              id: true,
+              title: true,
+              body: true,
+              price: true
             }
           },
         },
@@ -245,4 +268,15 @@ export async function commitCart(tempCart: CartItem[]) {
   }
 
   return { success: true };
+}
+
+export async function getAllOrdersByUser(userId: string) {
+  return await prisma.order.findMany({
+    where: {
+      userId
+    },
+    include: {
+      items: true
+    }
+  });
 }

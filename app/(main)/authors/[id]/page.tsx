@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { formatName } from "@/lib/utils";
 import { Key, ReactElement, JSXElementConstructor, ReactNode, ReactPortal } from "react";
+import { PostViewer } from "@/components/lexical-editor/viewer";
 
 export default async function UserProfile({
   params,
@@ -123,11 +124,11 @@ export default async function UserProfile({
               )}
             </div>
           ) : (
-            <div className="grid gap-4">
+            <div className="grid gap-4 ml-4">
               {posts.map((post: { id: Key | null | undefined; title: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; published: any; content: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; }) => (
                 <Link
                   key={post.id}
-                  href={`/posts/${String(post.id)}`}
+                  href={`/posts/${String(post.id)}/read`}
                   className="block transition-transform hover:scale-[1.01]"
                 >
                   <div className="bg-white dark:bg-zinc-700 rounded-lg shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
@@ -141,11 +142,6 @@ export default async function UserProfile({
                         </span>
                       )}
                     </div>
-                    {post.content && (
-                      <p className="text-gray-600 text-xs dark:text-gray-400 line-clamp-2">
-                        {post.content}
-                      </p>
-                    )}
                   </div>
                 </Link>
               ))}

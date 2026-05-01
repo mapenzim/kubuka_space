@@ -3,17 +3,33 @@
 import Form from "next/form";
 import Link from "next/link";
 import { useFormStatus } from "react-dom";
-import { Post } from "@prisma/client";
 import { publishPost, saveDraft } from "@/app/actions/postActions.server";
-import MarkdownEditor from "./marked-editor";
 import { useState } from "react";
+import { redirect, useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { useSession } from "next-auth/react";
+import LexicalEditor from "./lexical-editor/editor";
 
-function SubmitButton({ isPublished, content }: { isPublished?: boolean; content: string }) {
+function SubmitButton({ isPublished, postId, content }: { isPublished?: boolean; postId: string; content: string }) {
   const { pending } = useFormStatus();
+  const { data: session } = useSession();
 
   const handleDraft = async (formData: FormData) => {
     formData.set("content", content);
-    await saveDraft(formData);
+    const res = await saveDraft(formData);
+
+    if ("error" in res) {
+      toast.error(res.error.message);
+      return;
+    }
+
+    toast.success("The draft was saved successfully.");
+
+    if (postId) {
+      redirect(`/posts/${postId}/read`);
+    }
+
+    redirect(`/authors/${session?.user.id}`);
   };
  
   return (
@@ -39,35 +55,69 @@ function SubmitButton({ isPublished, content }: { isPublished?: boolean; content
 }
 
 interface PostFormProps {
-  post?: Post;
+  post: {
+    content: string | null;
+    id: string;
+    title: string;
+    published: boolean;
+    authorId: string;
+    createdAt: Date;
+    updatedAt: Date;
+    deletedAt: Date | null;
+  } | null;
 }
 
 export function PostForm({ post }: PostFormProps) {
   const [content, setContent] = useState(post?.content || "");
+  const router = useRouter();
+  const { data: session } = useSession();
 
   const handleSubmit = async (formData: FormData) => {
-    formData.set("content", content); // ✅ always fresh state
-    await publishPost(formData);
+    //formData.set("content", content); // ✅ always fresh state
+    const res = await publishPost(formData);
+
+    if ( "error" in res) {
+      toast.error(res.error.message);
+    }
+
+    toast.success("The post was saved successfully.");
+
+    if (post?.id) return redirect(`/posts/${post?.id}/read`);
+
+    return redirect("/posts");
   };
 
+  const isPublished = post?.published;
+
+  if (
+    post && session?.user.id !== post?.authorId 
+  ) { 
+    toast.error("You don't have permission to edit this post.");
+    redirect("/posts")
+  }
+
   return (
-    <>
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">
-          {!post ? "Create New Post" : "Edit Post"}
-        </h1>
-        {!!post && (
-          <Link
-            href={`/posts/${post?.id}`}
-            className="text-gray-600 hover:text-gray-800 font-medium transition-colors"
-          >
-            Cancel
-          </Link>
-        )}
+    <div className="min-h-screen py-14 px-4">
+      <div className="max-w-2xl mx-auto px-4">
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">
+            {!post ? "Create New Post" : "Edit Post"}
+          </h1>
+          {!!post && (
+            <Link
+              href={`#`}
+              className="text-gray-600 hover:text-gray-800 font-medium transition-colors"
+              onClick={() => router.back()}
+            >
+              Cancel
+            </Link>
+          )}
+        </div>
       </div>
-      <div className="rounded-xl shadow-sm border border-gray-100 p-6">
+      <div className="rounded-xl shadow-sm border border-gray-100 p-4">
         <Form action={handleSubmit} className="space-y-6">
           {post && <input type="hidden" name="postId" value={post.id} />}
+          <input type="hidden" name="content" value={content} />
           
           <div>
             <label
@@ -93,13 +143,13 @@ export function PostForm({ post }: PostFormProps) {
             >
               Content
             </label>
-            <MarkdownEditor value={content} onChange={setContent} />
+            <LexicalEditor key={post?.id} initialValue={post?.content as string} onChange={setContent} />
           </div>
           <div className="flex justify-end pt-4">
-            <SubmitButton isPublished={post && post.published} content={content} />
+            <SubmitButton isPublished={isPublished} postId={post?.id as string} content={content} />
           </div>
         </Form>
       </div>
-    </>
+    </div>
   );
 }

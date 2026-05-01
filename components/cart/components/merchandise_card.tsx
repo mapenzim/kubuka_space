@@ -14,7 +14,7 @@ type Props = {
 };
 
 export default function MerchandiseCard({ item }: Props) {
-  const { cartLoading, addItem } = useCart(); // to trigger re-render on cart updates
+  const { cartLoading, addItem } = useCart(); 
 
   const col = item.body?.split(",") || [];
 

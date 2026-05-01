@@ -1,13 +1,13 @@
 "use client";
 
-import { Popover, PopoverButton, PopoverPanel } from "@headlessui/react";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import React from "react";
 import { SignoutButton } from "./sign_out";
 import CartStatus from "../cart/components/cart_status";
-import { Button, DropdownMenu, IconButton, Tooltip } from "@radix-ui/themes";
-import { UserIcon } from "lucide-react";
+import { DropdownMenu, IconButton } from "@radix-ui/themes";
+import { useRouter } from "next/navigation";
+import ThemeToggle from "../themeToggle";
 
 const NavigationApp = () => {
   const navLinks = [
@@ -17,15 +17,10 @@ const NavigationApp = () => {
     { name: "Docs", path: "/docs" },
   ];
 
-  const dropdowns = [
-    { name: "Profile", path: "profile", describe: "Check your profile" },
-    { name: "Settings", path: "settings", describe: "Change your preferences" },
-    { name: "Cart", path: "cart", describe: "View your cart contents" }
-  ];
-
   const { data: session } = useSession();
-  
+                                                                                              
   const user = session?.user;
+  const router = useRouter();
 
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
@@ -75,18 +70,19 @@ const NavigationApp = () => {
 
       {/* Right side: Cart + Login */}
       <div className="hidden md:flex items-center gap-6">
+        <ThemeToggle />
         <CartStatus isScrolled={isScrolled} />
         {user 
           ? (	
               <DropdownMenu.Root>
                 <DropdownMenu.Trigger>
                   <IconButton variant="classic" size="3" color="teal">
-                      U
+                      {user.name?.split(" ")[0][0]}
                   </IconButton>
                 </DropdownMenu.Trigger>
                 <DropdownMenu.Content size="1" side="bottom">
-                  <DropdownMenu.Item shortcut="⌘ E">
-                    <Link href="/profile">Profile</Link>
+                  <DropdownMenu.Item shortcut="⌘ E" onSelect={() => router.push("/profile")}>
+                    Profile
                   </DropdownMenu.Item>
                   <DropdownMenu.Item shortcut="⌘ D">Duplicate</DropdownMenu.Item>
                   <DropdownMenu.Separator />
@@ -94,8 +90,8 @@ const NavigationApp = () => {
 
                   <DropdownMenu.Separator />
                             
-                  <DropdownMenu.Item>
-                    <SignoutButton close={null} />
+                  <DropdownMenu.Item onSelect={() => signOut({ redirect: false }).then(() => router.refresh())}>
+                    Sign Out
                   </DropdownMenu.Item>
                 </DropdownMenu.Content>
               </DropdownMenu.Root>

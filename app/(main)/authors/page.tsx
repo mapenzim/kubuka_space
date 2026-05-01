@@ -6,9 +6,16 @@ import { formatName } from "@/lib/utils";
 
 export default async function Authors() {
   const authors = await prisma.user.findMany({
-    /*where: {
-      posts: null,
-    },*/
+    where: {
+      posts: {
+        some: { published: true }
+      }
+    },
+    include: {
+      posts: {
+        where: { published: true }
+      }
+    },
     orderBy: {
       createdAt: "desc",
     }

@@ -1,34 +1,23 @@
-import { notFound } from "next/navigation";
-import prisma from "@/lib/prisma";
+import { redirect } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { formatName } from "@/lib/utils";
+import { getPost } from "@/app/actions/postActions.server";
 import { auth } from "@/auth";
-import { marked } from "marked";
-import DOMPurify from "dompurify";
-import MarkdownViewer from "@/components/marked-editor/marked-viewer";
+import { PostViewer } from "@/components/lexical-editor/viewer";
 
 export const dynamic = "force-dynamic";
 
-export default async function Post({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default async function ReadPage({ params }: {params: Promise<{ item: string}>}) {
   const session = await auth();
-  const { id } = await params;
-  const post = await prisma.post.findUnique({
-    where: { id: id },
-    include: {
-      author: true,
-    },
-  });
-
+  const { item } = await params;
+  const post = await getPost(item);
+  
   if (!post) {
-    notFound();
+    redirect("/posts");
   }
 
-  const isAuthor = session?.user?.email === post.author.email;
+  const isAuthor = session?.user?.email === post?.author?.email;
 
   return (
     <div className="min-h-screen">
@@ -38,7 +27,7 @@ export default async function Post({
             <div className="hidden sm:grid sm:size-20 sm:shrink-0 sm:place-content-center sm:rounded-full sm:border-2 sm:border-indigo-500" aria-hidden="true">
               <Image
                 src="/images/kubuka-logo.png"
-                alt={formatName(post.author.name ?? "User")}
+                alt={formatName(post?.author?.name ?? "User")}
                 width={100}
                 height={100}
                 className="rounded-full"
@@ -52,7 +41,7 @@ export default async function Post({
                 </strong>
                 {isAuthor && (
                   <Link
-                    href={`/posts/${post.id}/edit`}
+                    href={`/posts/${post.id}`}
                     className="rounded-sm border border-indigo-500 bg-indigo-500 px-3 py-1.5 text-[10px] font-medium text-white transition-colors hover:bg-indigo-600"
                   >
                     Edit Post
@@ -64,7 +53,7 @@ export default async function Post({
                 <a href="#" className="hover:underline"> {post.title} </a>
               </h3>
 
-              <MarkdownViewer 
+              <PostViewer 
                 content={post.content as string}
               />
 

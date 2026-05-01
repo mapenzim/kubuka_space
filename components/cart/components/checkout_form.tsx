@@ -34,17 +34,17 @@ export default function CheckoutForm({
     <>
     <Form.Root
       action={handleCheckout}
-      className="mx-auto max-w-md space-y-4 rounded-lg border border-gray-300 bg-gray-100 p-6"
+      className="mx-auto max-w-md space-y-4 rounded-lg border border-gray-300 bg-gray-100 dark:bg-gray-800 p-6"
     >
-      <h3 className="text-2xl font-semibold mb-4">Billing Info</h3>
+      <h3 className="text-2xl font-semibold mb-4 dark:text-zinc-400">Billing Info</h3>
 
       {/* Hidden fields for cartId and total */}
       <input type="hidden" name="cartId" value={cartId} />
       <input type="hidden" name="total" value={total} />
 
       {/* Full Name */}
-      <Form.Field name="fullName" className="flex flex-col">
-        <Label.Root className="block text-sm font-medium text-gray-900">Full Name</Label.Root>
+      <Form.Field name="fullName" className="flex flex-col dark:text-zinc-400">
+        <Label.Root className="block text-sm font-medium text-gray-900 dark:text-zinc-400">Full Name</Label.Root>
         <Form.Control asChild>
           <input
             required
@@ -59,8 +59,8 @@ export default function CheckoutForm({
       </Form.Field>
 
       {/* Email */}
-      <Form.Field name="email" className="flex flex-col">
-        <Label.Root className="block text-sm font-medium text-gray-900">Email</Label.Root>
+      <Form.Field name="email" className="flex flex-col dark:text-zinc-400">
+        <Label.Root className="block text-sm font-medium text-gray-900 dark:text-zinc-400">Email</Label.Root>
         <Form.Control asChild>
           <input
             required
@@ -77,24 +77,39 @@ export default function CheckoutForm({
         </Form.Message>
       </Form.Field>
 
-      <Form.Field name="street" className="flex flex-col">
+      <Form.Field name="street" className="flex flex-col dark:text-zinc-400">
         <Label.Root className="text-sm font-medium mb-1">Street</Label.Root>
         <Form.Control asChild>
-          <input required type="text" className="rounded-lg border p-2 focus:border-indigo-500 focus:outline-none" />
+          <input 
+            required 
+            type="text" 
+            className="rounded-lg border p-2 focus:border-indigo-500 focus:outline-none" 
+            placeholder="street address"
+          />
         </Form.Control>
       </Form.Field>
 
-      <Form.Field name="city" className="flex flex-col">
+      <Form.Field name="city" className="flex flex-col dark:text-zinc-400">
         <Label.Root className="text-sm font-medium mb-1">City</Label.Root>
         <Form.Control asChild>
-          <input required type="text" className="rounded-lg border p-2 focus:border-indigo-500 focus:outline-none" />
+          <input 
+            required 
+            type="text" 
+            className="rounded-lg border p-2 focus:border-indigo-500 focus:outline-none" 
+            placeholder="city/town"
+          />
         </Form.Control>
       </Form.Field>
 
-      <Form.Field name="country" className="flex flex-col">
+      <Form.Field name="country" className="flex flex-col dark:text-zinc-400">
         <Label.Root className="text-sm font-medium mb-1">Country</Label.Root>
         <Form.Control asChild>
-          <input required type="text" className="rounded-lg border p-2 focus:border-indigo-500 focus:outline-none" />
+          <input 
+            required 
+            type="text" 
+            className="rounded-lg border p-2 focus:border-indigo-500 focus:outline-none"
+            placeholder="country" 
+          />
         </Form.Control>
       </Form.Field>
 

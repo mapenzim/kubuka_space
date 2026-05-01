@@ -115,6 +115,8 @@ export function CartProvider({
           return toast.error(res.error.message);
         }
 
+        console.log("Added item: ",item.id);
+
         toast.success(`${item?.merchandise?.title} added to cart`);
         router.refresh();
       } else {
@@ -148,7 +150,7 @@ export function CartProvider({
         const res = await deleteCartItem(id);
 
         if (!res || "error" in res) {
-          console.error(res?.error);
+          console.log(res?.error);
           toast.error("Failed to remove item");
         } else {
           toast.success("Item removed");
@@ -212,6 +214,7 @@ export function CartProvider({
         setCartId(cartData?.id ?? null);
       } else {
         const stored = localStorage.getItem("tempCart");
+        console.log("Items in the local cart: ",stored?.length);
         if (stored) {
           const items = JSON.parse(stored);
           const total = items.reduce(
