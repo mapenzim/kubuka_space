@@ -28,8 +28,8 @@ import {
   REDO_COMMAND,
   UNDO_COMMAND,
 } from 'lexical';
-import { AlignCenterIcon, AlignJustifyIcon, AlignLeft, AlignRightIcon, Bold, ItalicIcon, RedoIcon, UnderlineIcon, Undo, UndoIcon } from 'lucide-react';
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import { AlignCenterIcon, AlignJustifyIcon, AlignLeft, AlignRightIcon, Bold, ItalicIcon, RedoIcon, UnderlineIcon, UndoIcon } from 'lucide-react';
+import {useCallback, useEffect, useRef, useState} from 'react';
 
 const BLOCK_TYPES = [
   {label: 'Normal', value: 'paragraph'},

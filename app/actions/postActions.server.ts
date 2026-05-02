@@ -49,9 +49,9 @@ export async function publishPost(formData: FormData): Promise<PostResult> {
     return { error: { message: "Message contains profanity." } };
   }
 
-  /*if(authorId) {
+  if(postId && authorId !== session.user.id) {
     return { error: { message: "You do not have permission to update this post." } }
-  }*/
+  }
 
   const post = await prisma.post.upsert({
     where: {

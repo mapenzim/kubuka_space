@@ -7,7 +7,6 @@ import { SignoutButton } from "./sign_out";
 import CartStatus from "../cart/components/cart_status";
 import { DropdownMenu, IconButton } from "@radix-ui/themes";
 import { useRouter } from "next/navigation";
-import ThemeToggle from "../themeToggle";
 
 const NavigationApp = () => {
   const navLinks = [
@@ -70,7 +69,6 @@ const NavigationApp = () => {
 
       {/* Right side: Cart + Login */}
       <div className="hidden md:flex items-center gap-6">
-        <ThemeToggle />
         <CartStatus isScrolled={isScrolled} />
         {user 
           ? (	

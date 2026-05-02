@@ -10,7 +10,7 @@ import { HeadingNode, QuoteNode } from "@lexical/rich-text";
 import { useEffect, useRef } from "react";
 
 // ✨ Import the same nodes you use in the editor
-import { $getRoot, $createParagraphNode } from "lexical";
+import { $getRoot, $createParagraphNode, $createTextNode } from "lexical";
 import { ListNode, ListItemNode } from "@lexical/list";
 import { LinkNode } from "@lexical/link";
 
@@ -42,9 +42,18 @@ function LoadContent({ content }: { content: string }) {
         console.warn("Viewer hydration failed. Injecting safe fallback.", error);
         editor.update(() => {
           const root = $getRoot();
-          if (root.getChildrenSize() === 0) {
-            root.append($createParagraphNode());
-          }
+          //if (root.getChildrenSize() === 0) {
+          //  root.append($createParagraphNode());
+          //}
+          root.clear(); 
+
+          // Clear any default nodes
+          const p = $createParagraphNode();
+
+          // Wrap the raw string in a Lexical TextNode
+          p.append($createTextNode(content)); 
+                    
+          root.append(p);
         });
       }
       isInitialized.current = true;

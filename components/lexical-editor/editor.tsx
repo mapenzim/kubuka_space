@@ -2,7 +2,7 @@
 
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
 
-import { defineExtension, $getRoot, $createParagraphNode } from "lexical";
+import { defineExtension } from "lexical";
 
 import { RichTextExtension } from "@lexical/rich-text";
 import { HistoryExtension } from "@lexical/history";
@@ -10,10 +10,10 @@ import { AutoFocusExtension as AutoFocusExt, TabIndentationExtension } from "@le
 import { LexicalExtensionComposer } from "@lexical/react/LexicalExtensionComposer";
 import { ToolbarPlugin } from "./toolbar";
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
-import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { useEffect, useRef } from "react";
 import { ListNode, ListItemNode } from "@lexical/list";
 import { LinkNode } from "@lexical/link";
+import { InitialStatePlugin } from "./initialStatePlugin";
+import { useRef } from "react";
 
 type Props = {
   initialValue?: string;
@@ -46,66 +46,20 @@ const landingHeroExtension = defineExtension({
   theme,
 });
 
-// ✨ Upgraded Anti-Crash Hydration Plugin
-function InitialStatePlugin({ initialValue }: { initialValue?: string }) {
-  const [editor] = useLexicalComposerContext();
-  const isInitialized = useRef(false);
-
-  useEffect(() => {
-    // Only run if we haven't initialized yet, AND if we have an actual string value
-    if (!isInitialized.current && initialValue && initialValue.trim() !== "") {
-      try {
-        const parsedState = editor.parseEditorState(initialValue);
-
-        // 1. Verify the state didn't parse into an empty root
-        let isStateEmpty = false;
-        parsedState.read(() => {
-          const root = $getRoot();
-          if (root.getChildrenSize() === 0) {
-            isStateEmpty = true;
-          }
-        });
-
-        // 2. If it's empty, throw to trigger our fallback
-        if (isStateEmpty) {
-          throw new Error("Parsed state resulted in an empty root.");
-        }
-
-        // 3. Apply the valid state
-        editor.setEditorState(parsedState);
-
-      } catch (error) {
-        console.warn("Lexical hydration failed. Injecting safe fallback state.", error);
-        
-        // 🚨 FALLBACK: Forcefully create a safe paragraph block to prevent the crash
-        editor.update(() => {
-          const root = $getRoot();
-          if (root.getChildrenSize() === 0) {
-            const p = $createParagraphNode();
-            root.append(p);
-          }
-        });
-      }
-      isInitialized.current = true;
-    }
-  }, [editor, initialValue]);
-
-  return null;
-}
 
 // ✨ Main Editor
 export default function LexicalEditor({ initialValue, onChange }: Props) {
+  const initialStateRef = useRef(initialValue);
 
   return (
     <LexicalExtensionComposer
       extension={[landingHeroExtension, AutoFocusExt]}
-      contentEditable={null}
-    >
+      contentEditable={
       <div className="flex w-full flex-col overflow-hidden rounded-2xl border border-solid border-black/10 dark:border-white/10 dark:bg-stone-800">
         <ToolbarPlugin />
         <div className="relative">
           <ContentEditable
-            className="h-55 overflow-y-auto p-4 text-base leading-relaxed text-wrap outline-none"
+            className="h-56 overflow-y-auto p-4 text-base leading-relaxed text-wrap outline-none"
             aria-label="Rich text editor"
             aria-placeholder="Enter some text..."
             placeholder={
@@ -116,16 +70,22 @@ export default function LexicalEditor({ initialValue, onChange }: Props) {
           />
         </div>
       </div>
+      }
+    >
+
+      <InitialStatePlugin initialValue={initialStateRef.current} />
 
       {/* ✨ ADDED: Listens to state changes and stringifies the JSON for saving */}
       <OnChangePlugin
-        onChange={(editorState) => {
+        onChange={(editorState, editor) => {
+          //const jsonString = JSON.stringify(editorState.toJSON());
           const jsonString = JSON.stringify(editorState.toJSON());
           onChange(jsonString);
+          editor.setEditable(true);
+          console.log("editable?", editorState.isEmpty());
         }}
       />
 
-      <InitialStatePlugin initialValue={initialValue} />
     </LexicalExtensionComposer>
   );
 }

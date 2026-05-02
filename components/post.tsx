@@ -4,11 +4,19 @@ import Form from "next/form";
 import Link from "next/link";
 import { useFormStatus } from "react-dom";
 import { publishPost, saveDraft } from "@/app/actions/postActions.server";
-import { useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { redirect, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import LexicalEditor from "./lexical-editor/editor";
+
+const debounce = (func: (...args: any[]) => void, wait: number) => {
+  let timeout: NodeJS.Timeout;
+  return (...args: any[]) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(null, args), wait);
+  };
+};
 
 function SubmitButton({ isPublished, postId, content }: { isPublished?: boolean; postId: string; content: string }) {
   const { pending } = useFormStatus();
@@ -71,9 +79,10 @@ export function PostForm({ post }: PostFormProps) {
   const [content, setContent] = useState(post?.content || "");
   const router = useRouter();
   const { data: session } = useSession();
+  const contentRef = useRef("");
 
   const handleSubmit = async (formData: FormData) => {
-    //formData.set("content", content); // ✅ always fresh state
+    formData.set("content", contentRef.current);
     const res = await publishPost(formData);
 
     if ( "error" in res) {
@@ -117,7 +126,7 @@ export function PostForm({ post }: PostFormProps) {
       <div className="rounded-xl shadow-sm border border-gray-100 p-4">
         <Form action={handleSubmit} className="space-y-6">
           {post && <input type="hidden" name="postId" value={post.id} />}
-          <input type="hidden" name="content" value={content} />
+          {post?.id && <input type="hidden" name="authorId" value={post.authorId} />}
           
           <div>
             <label
@@ -143,10 +152,16 @@ export function PostForm({ post }: PostFormProps) {
             >
               Content
             </label>
-            <LexicalEditor key={post?.id} initialValue={post?.content as string} onChange={setContent} />
+            <LexicalEditor 
+              key={post?.id} 
+              initialValue={post?.content as string} 
+              onChange={(val) => {
+                contentRef.current = val;
+              }} 
+            />
           </div>
           <div className="flex justify-end pt-4">
-            <SubmitButton isPublished={isPublished} postId={post?.id as string} content={content} />
+            <SubmitButton isPublished={isPublished} postId={post?.id as string} content={contentRef.current} />
           </div>
         </Form>
       </div>
