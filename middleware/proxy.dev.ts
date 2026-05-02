@@ -15,7 +15,7 @@ const globalForPrisma = globalThis as unknown as {
 
 if (!globalForPrisma.pool) {
   globalForPrisma.pool = new Pool({
-    connectionString: process.env.PRISMA_DATABASE_URL,
+    connectionString: process.env.DATABASE_URL_KUBUKA,
     max: 5,
     idleTimeoutMillis: 10000,
   });

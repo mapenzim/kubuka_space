@@ -4,11 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "pnpm prisma generate && pnpm prisma migrate deploy && pnpm prisma db seed && next build",
+    "build": "pnpm prisma migrate deploy && pnpm prisma generate && pnpm prisma db seed && next build",
     "start": "next start",
-    "lint": "next lint",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev"
+    "lint": "next lint"
   },
   "dependencies": {
     "@auth/core": "0.41.1",

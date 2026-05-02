@@ -3,7 +3,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
 
 const pool = new Pool({
-  connectionString: process.env.PRISMA_DATABASE_URL,
+  connectionString: process.env.DATABASE_URL_KUBUKA,
 });
 
 const adapter = new PrismaPg(pool);

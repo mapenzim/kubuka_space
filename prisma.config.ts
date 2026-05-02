@@ -7,7 +7,7 @@ export default defineConfig({
 
   datasource: {
     // Migrate still needs a plain URL
-    url: process.env.PRISMA_DATABASE_URL!,
+    url: process.env.DATABASE_URL_KUBUKA!,
   },
 
   migrations: {
