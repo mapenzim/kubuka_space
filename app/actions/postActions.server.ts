@@ -151,7 +151,7 @@ export async function getOwnPosts(authorId: string) {
 
 export async function getAllPosts() {
   return await prisma.post.findMany({
-    where: { published: true },
+    where: { published: Boolean(true) },
     include: { author: {
       select: {
         name: true,

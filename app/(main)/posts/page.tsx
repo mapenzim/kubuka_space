@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { formatName } from "@/lib/utils";
 import { getAllPosts } from "@/app/actions/postActions.server";
-import { Box, Button, Card, Flex, Heading, Inset, Strong, Text } from "@radix-ui/themes";
+import { Box, Button, Card, Flex, Heading, Inset, Text } from "@radix-ui/themes";
 import { auth } from "@/auth";
 
 export default async function Posts() {
@@ -26,12 +26,12 @@ export default async function Posts() {
           }
         </div>
         <div className="space-y-4 flex flex-col md:flex-row md:flex-wrap w-full space-x-4">
-          {posts.map((post: { id: string; title: string; author: { id: string; name: any; email: string; }; }) => (
+          {posts.map((post: { id: string; title: string; author: { id: string; name: any; email: string; image: any; }; }) => (
             <Box width="240px" key={post.id} >
               <Card size="2">
                 <Inset clip="padding-box" side="top" pb="current">
                   <img
-                    src="/svgs/cover.avif"
+                    src={post.author.image || "/svgs/cover.avif"}
                     alt="Bold typography"
                     style={{
                       display: "block",
@@ -51,7 +51,7 @@ export default async function Posts() {
                   <Text as="p" size="3" asChild>
                     <Link href={`/authors/${post.author.id}`}>{formatName(post.author.name)}</Link>
                   </Text>
-                  {session?.user.email === post.author.email && 
+                  {session?.user && session?.user.email === post.author.email && 
                     <Link href={`/posts/${post.id}`}>
                       <Button variant="ghost" size="1">
                         Update
