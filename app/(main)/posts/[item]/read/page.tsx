@@ -1,12 +1,22 @@
 import { redirect } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import dynamic from "next/dynamic";
+
 import { formatName } from "@/lib/utils";
 import { getPost } from "@/app/actions/postActions.server";
 import { auth } from "@/auth";
-import { PostViewer } from "@/components/lexical-editor/viewer";
 
-export const dynamic = "force-dynamic";
+const PostViewer = dynamic(
+  () => import("@/components/lexical-editor/viewer").then((mod) => mod.PostViewer),
+  { 
+    ssr: false, 
+    // Optional: Add a loading skeleton so the page doesn't jump when it loads
+    loading: () => <div className="h-64 w-full animate-pulse bg-zinc-200 dark:bg-zinc-800 rounded-xl" /> 
+  }
+);
+
+export const dynamicPageConfig = "force-dynamic";
 
 export default async function ReadPage({ params }: {params: Promise<{ item: string}>}) {
   const session = await auth();

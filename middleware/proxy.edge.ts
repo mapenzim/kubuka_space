@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { NextResponse, type NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { PrismaClient } from "@prisma/client/edge";
