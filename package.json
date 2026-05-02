@@ -44,7 +44,6 @@
     "framer-motion": "^12.38.0",
     "geist": "^1.7.0",
     "highlight.js": "^11.11.1",
-    "jsdom": "^29.1.0",
     "lexical": "^0.43.0",
     "lucide-react": "^0.577.0",
     "marked": "^18.0.0",

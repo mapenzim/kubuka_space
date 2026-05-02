@@ -8,7 +8,6 @@ import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
 import { getBroadcaster } from "@/lib/broadcaster";
 import { ulidId } from "@/lib/server-utils";
-import { migrateToLexical } from "@/lib/migrateToLexical";
 
 type PostResult =
   | { success: true }
@@ -176,26 +175,4 @@ export async function getPost (postId: string) {
       }
     } }
   });
-}
-
-export async function migratePosts() {
-  const posts = await prisma.post.findMany();
-
-  for (const post of posts) {
-    try {
-      const converted = await migrateToLexical(post.content as string);
-
-      await prisma.post.update({
-        where: { id: post.id },
-        data: {
-          content: converted,
-          //contentType: "lexical",
-        },
-      });
-
-      console.log(`✅ Migrated post ${post.id}`);
-    } catch (err) {
-      console.error(`❌ Failed post ${post.id}`, err);
-    }
-  }
 }
