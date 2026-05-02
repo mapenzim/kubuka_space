@@ -10,6 +10,18 @@ export default async function Posts() {
   const posts = await getAllPosts();
   const session = await auth();
 
+  if (posts.length === 0) {
+    return (
+      <div className="min-h-screen">
+        <div className="max-w-4xl mx-auto px-4 pt-4 pb-16 md:py-16">
+          <p className="text-lg text-gray-500 dark:text-gray-400">
+            No posts available.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen">
       <div className="max-w-4xl mx-auto px-4 pt-4 pb-16 md:py-16">
