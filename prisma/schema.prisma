@@ -377,3 +377,38 @@ model Address {
 
   @@index([userId])
 }
+
+enum ThreadStatus {
+  unread
+  read
+  archived
+}
+
+enum MessageDirection {
+  incoming
+  outgoing
+}
+
+model Thread {
+  id        String          @id @db.Char(26) @default(dbgenerated())
+  sender    String
+  email     String
+  status    ThreadStatus    @default(unread)
+
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt @default(now())
+  archived  Boolean         @default(false)
+  dateArchived DateTime?     @default(now())
+
+  messages   Message[]
+}
+
+model Message {
+  id        String          @id @db.Char(26) @default(dbgenerated())
+  threadId  String
+  thread    Thread          @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  direction MessageDirection  // "incoming" or "outgoing"
+  content   String
+
+  timestamp DateTime        @default(now())
+}

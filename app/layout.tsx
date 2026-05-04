@@ -9,7 +9,6 @@ import { Toaster } from "sonner";
 import Provider from "@/context/provider";
 import { auth } from "@/auth";
 import { ReactNode } from "react";
-import prisma from "@/lib/prisma";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
 import ScrollToTopButton from "@/components/scroltotop";
@@ -23,13 +22,6 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const session = await auth();
 
-  const someUserId = session?.user?.id;
-
-  const cart = await prisma.cart.findMany({
-    where: { userId: someUserId },
-    include: { cartItems: { include: { merchandise: true } } },
-  });
-
   return (
     <html 
       lang="en" 
@@ -40,15 +32,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       <body
         className={`${GeistSans.variable} ${GeistMono.variable} antialiased dark:bg-gray-950!`}
       >
-        <Provider session={session} initialCart={cart.map(item => ({
-          id: item.id,
-          merchandise: {
-            title: item.cartItems[0]?.merchandise?.title,
-            price: Number(item.cartItems[0]?.merchandise?.price),
-          },
-          quantity: item.cartItems.reduce((total, cartItem) => total + cartItem.quantity, 0),
-        }))}
-        >
+        <Provider session={session}>
           <Theme accentColor="iris" grayColor="sage" radius="small">
             {children}
           </Theme>

@@ -1,20 +1,19 @@
 import { SessionProvider } from "next-auth/react";
-import { CartProvider } from "./cartContext";
+import type { Session } from "next-auth";
 
-interface CartItem {
-  id: string;
-  merchandise: { title: string; price: number };
-  quantity: number;
-}
+type ProviderProps = {
+  children: React.ReactNode;
+  session: Session | null;
+};
 
-export default function Provider(
-  { children, session, initialCart }: { children: React.ReactNode; session: any; initialCart: CartItem[] }
-) {
+export default async function Provider({
+  children,
+  session,
+}: ProviderProps) {
+
   return (
     <SessionProvider session={session}>
-      <CartProvider initialCart={initialCart}>
-        {children}
-      </CartProvider>
+      {children}
     </SessionProvider>
   );
 }

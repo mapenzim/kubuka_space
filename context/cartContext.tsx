@@ -3,10 +3,11 @@
 import {
   addToCartAction,
   deleteCartItem,
-  getCartCount,
-  getUserCart,
+  getCartMeta,
   updateCartQuantity,
 } from "@/app/actions/cartActions.server";
+
+import { safeParse } from "@/lib/safe-parse";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
@@ -18,19 +19,39 @@ import {
 } from "react";
 import { toast } from "sonner";
 
-interface CartItem {
-  id: string;
-  merchandise: { title: string; price: number };
+import {
+  Cart,
+  CartItem,
+  emptyCart,
+  InitialCartInput,
+  MerchandiseItem,
+} from "@/lib/interfaces";
+
+/* ---------------------------
+   🧱 CONSTANTS
+---------------------------- */
+
+type GuestCart = {
+  merchandiseId: string;
   quantity: number;
-}
+}[];
+
+/* ---------------------------
+   CONTEXT
+---------------------------- */
 
 const CartContext = createContext<any>(null);
+
+
+function normalizeCart(input?: InitialCartInput): Cart {
+  return input ?? emptyCart;
+}
 
 export function CartProvider({
   initialCart,
   children,
 }: {
-  initialCart: CartItem[];
+  initialCart?: InitialCartInput;
   children: React.ReactNode;
 }) {
   const { data: session } = useSession();
@@ -38,50 +59,85 @@ export function CartProvider({
 
   const isGuest = !session?.user;
 
-  const [cart, setCart] = useState<CartItem[]>(initialCart);
+  const [cart, setCart] = useState<Cart>(normalizeCart(initialCart));
   const [cartLoading, setLoading] = useState(false);
   const [cartCount, setCount] = useState(0);
   const [cartId, setCartId] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
-  const mergedRef = useRef(false); // ✅ prevent double merge
+  const mergedRef = useRef(false);
 
-  // ---------------------------
-  // 🧠 Load guest cart on mount
-  // ---------------------------
+  /* ---------------------------
+     🧠 HYDRATE GUEST CART
+  ---------------------------- */
   useEffect(() => {
-    if (initialCart.length === 0) {
-      const stored = localStorage.getItem("tempCart");
-      if (stored) setCart(JSON.parse(stored));
+    if (initialCart) {
+      setHydrated(true);
+      return;
     }
+
+    const stored = localStorage.getItem("tempCart");
+    const items = safeParse<GuestCart>(stored);
+
+    if (!items || items.length === 0) {
+      localStorage.removeItem("tempCart");
+      setCart(emptyCart);
+      setHydrated(true);
+      return;
+    }
+
+    const hydratedCart: Cart = {
+      ...emptyCart,
+      cartItems: items.map((item) => ({
+        id: crypto.randomUUID(),
+        merchandise: {
+          id: item.merchandiseId,
+          title: "",
+          body: "",
+          price: 0,
+        },
+        quantity: item.quantity,
+      })),
+    };
+
+    setCart(hydratedCart);
     setHydrated(true);
   }, [initialCart]);
 
-  // ---------------------------
-  // 💾 Persist guest cart
-  // ---------------------------
+  /* ---------------------------
+     💾 PERSIST GUEST CART
+  ---------------------------- */
   useEffect(() => {
-    if (hydrated && isGuest) {
-      localStorage.setItem("tempCart", JSON.stringify(cart));
-    }
+    if (!hydrated || !isGuest) return;
+
+    const minimal: GuestCart = cart?.cartItems?.map((item) => ({
+      merchandiseId: item.merchandise.id,
+      quantity: item.quantity,
+    }));
+
+    localStorage.setItem("tempCart", JSON.stringify(minimal));
   }, [cart, hydrated, isGuest]);
 
-  // ---------------------------
-  // 🔄 Merge guest cart ON LOGIN (once)
-  // ---------------------------
+  /* ---------------------------
+     🔄 MERGE CART ON LOGIN
+  ---------------------------- */
   useEffect(() => {
     const mergeGuestCart = async () => {
-      if (!session?.user || mergedRef.current) return;
+      if (!session?.user?.id || mergedRef.current) return;
 
       const stored = localStorage.getItem("tempCart");
-      const guestItems: { id: string; quantity: number }[] = stored
-        ? JSON.parse(stored)
-        : [];
-      
-      if (guestItems.length === 0) return;
+      const guestItems = safeParse<GuestCart>(stored);
+
+      if (!guestItems || guestItems.length === 0) return;
 
       try {
-        await addToCartAction(session.user.id, guestItems);
+        for (const item of guestItems) {
+          await addToCartAction({
+            userId: session.user.id,
+            merchandiseId: item.merchandiseId,
+            quantity: item.quantity,
+          });
+        }
 
         localStorage.removeItem("tempCart");
         mergedRef.current = true;
@@ -95,141 +151,167 @@ export function CartProvider({
     };
 
     mergeGuestCart();
-  }, [session?.user, router]);
+  }, [session?.user?.id]);
 
-  // ---------------------------
-  // ➕ Add item
-  // ---------------------------
-  const addItem = async (item: CartItem) => {
+  /* ---------------------------
+     ➕ ADD ITEM
+  ---------------------------- */
+  const addItem = async (item: MerchandiseItem) => {
     setLoading(true);
 
     try {
       if (session?.user) {
-        const res = await addToCartAction(
-          session.user.id,
-          [],
-          item.id
-        );
-
-        if ("error" in res) {
-          return toast.error(res.error.message);
-        }
-
-        console.log("Added item: ",item.id);
-
-        toast.success(`${item?.merchandise?.title} added to cart`);
-        router.refresh();
-      } else {
-        setCart((prev) => {
-          const existing = prev.find((i) => i.id === item.id);
-
-          if (existing) {
-            return prev.map((i) =>
-              i.id === item.id
-                ? { ...i, quantity: i.quantity + 1 }
-                : i
-            );
-          }
-
-          return [...prev, { ...item, quantity: 1 }];
+        const res = await addToCartAction({
+          userId: session.user.id,
+          merchandiseId: item.id,
+          quantity: 1,
         });
 
-        toast.success(`${item?.merchandise?.title} added to cart`);
+        if ("error" in res) {
+          toast.error(res.error.message);
+          return;
+        }
+
+        toast.success(`${item.title.toUpperCase()} added to cart`);
+        router.refresh();
+        return;
       }
+
+      // guest flow
+      setCart((prev) => {
+        const safeItems = prev?.cartItems ?? [];
+
+        const existing = safeItems.find(
+          (i) => i.merchandise.id === item.id
+        );
+
+        let updatedItems: CartItem[];
+
+        if (existing) {
+          updatedItems = safeItems.map((i) =>
+            i.merchandise.id === item.id
+              ? { ...i, quantity: i.quantity + 1 }
+              : i
+          );
+        } else {
+          updatedItems = [
+            ...safeItems,
+            {
+              id: crypto.randomUUID(),
+              merchandise: item,
+              quantity: 1,
+            },
+          ];
+        }
+
+        return {
+          ...prev,
+          cartItems: updatedItems,
+        };
+      });
+
+      router.refresh();
+
+      toast.success(`${item.title.toUpperCase()} added to cart`);
     } finally {
       setLoading(false);
     }
   };
 
-  // ---------------------------
-  // ❌ Remove item
-  // ---------------------------
+  /* ---------------------------
+     ❌ REMOVE ITEM
+  ---------------------------- */
   const removeItem = async (id: string) => {
     try {
       if (!isGuest) {
         const res = await deleteCartItem(id);
 
         if (!res || "error" in res) {
-          console.log(res?.error);
           toast.error("Failed to remove item");
-        } else {
-          toast.success("Item removed");
-          router.refresh();
+          return;
         }
 
+        toast.success("Item removed");
+        router.refresh();
       } else {
-        const storedCart = localStorage.getItem("tempCart");
+        const stored = localStorage.getItem("tempCart");
+        const parsed = safeParse<GuestCart>(stored);
 
-        if (storedCart) {
-          try {
-            const parsed = JSON.parse(storedCart);
-            const updated = parsed.filter((item: any) => item.id !== id);
-            localStorage.setItem("tempCart", JSON.stringify(updated));
-          } catch (err) {
-            console.error("Failed to parse localStorage cart", err);
-          }
+        if (parsed) {
+          const updated = parsed.filter(
+            (item) => item.merchandiseId !== id
+          );
+
+          localStorage.setItem("tempCart", JSON.stringify(updated));
         }
       }
-      setCart((prev) => prev.filter((item) => item.id !== id));
-      
-    } catch (error) {
-      console.log(error)
+
+      setCart((prev) => ({
+        ...prev,
+        cartItems: prev?.cartItems?.filter((item) => item.id !== id),
+      }));
+      router.refresh();
+    } catch (err) {
+      console.error(err);
     }
   };
 
-  // ---------------------------
-  // 🔢 Update quantity
-  // ---------------------------
+  /* ---------------------------
+     🔢 UPDATE QUANTITY
+  ---------------------------- */
   const updateQuantity = async (id: string, newQty: number) => {
-    setCart((prev) =>
-      prev.map((item) =>
+    setCart((prev) => ({
+      ...prev,
+      cartItems: prev?.cartItems?.map((item) =>
         item.id === id ? { ...item, quantity: newQty } : item
-      )
-    );
+      ),
+    }));
 
     if (isGuest) return;
 
     const res = await updateCartQuantity(id, newQty);
 
     if (!res || "error" in res) {
-      console.error(res?.error);
       toast.error("Failed to update quantity");
     } else {
       router.refresh();
     }
   };
 
-  // ---------------------------
-  // 📊 Fetch cart meta
-  // ---------------------------
+  /* ---------------------------
+     📊 CART META
+  ---------------------------- */
   useEffect(() => {
     const fetchData = async () => {
-      if (session?.user) {
-        const [count, cartData] = await Promise.all([
-          getCartCount(session.user.id),
-          getUserCart(session.user.id),
-        ]);
-
-        setCount(count);
-        setCartId(cartData?.id ?? null);
-      } else {
-        const stored = localStorage.getItem("tempCart");
-        console.log("Items in the local cart: ",stored?.length);
-        if (stored) {
-          const items = JSON.parse(stored);
-          const total = items.reduce(
-            (sum: number, i: { quantity: number }) =>
-              sum + i.quantity,
-            0
-          );
-          setCount(total);
+      if (session?.user?.id) {
+        try {
+          const { count, cartId } = await getCartMeta(session.user.id);
+          setCount(count);
+          setCartId(cartId);
+        } catch (err) {
+          console.error(err);
         }
+        return;
       }
+
+      const stored = localStorage.getItem("tempCart");
+      const items = safeParse<GuestCart>(stored);
+
+      if (!items) {
+        setCount(0);
+        return;
+      }
+
+      const total = items.reduce((sum, i) => sum + i.quantity, 0);
+      setCount(total);
     };
 
     fetchData();
-  }, [session]);
+  }, [session?.user?.id]);
 
+  /* ---------------------------
+     PROVIDER
+  ---------------------------- */
   return (
     <CartContext.Provider
       value={{

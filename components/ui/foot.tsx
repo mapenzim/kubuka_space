@@ -131,7 +131,7 @@ export default function Footer() {
                   </li>
                   <li>
                     <Link className="text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-600 font-[400px] block pb-2 text-sm"
-                      href="#contact-us"
+                      href="/contact_us"
                       scroll={false}
                     >
                       Contact Us
@@ -149,7 +149,7 @@ export default function Footer() {
                   <li>
                     <Link 
                       className="text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-600 font-[400px] block text-sm"
-                      href="#license"
+                      href="privacy_data"
                     >
                       License
                     </Link>
@@ -157,7 +157,7 @@ export default function Footer() {
                   <li>
                     {/** Terms of use */}
                     <Link 
-                      href={"#tos"}
+                      href={"/terms_and_conditions"}
                       className="text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-600 font-[400px] block text-sm"
                     >
                       Terms of use
@@ -166,7 +166,7 @@ export default function Footer() {
                   <li>
                     {/** Cookie Policy */}
                     <Link 
-                      href={"#cookie"}
+                      href={"/cookie_policy"}
                       className="text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-600 font-[400px] block text-sm"
                     >
                       Cookie Policy

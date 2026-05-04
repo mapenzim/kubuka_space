@@ -1,5 +1,3 @@
-import { getCartCount, getUserCart } from "@/app/actions/cartActions.server";
-import { auth } from "@/auth";
 import MerchandiseCard from "@/components/cart/components/merchandise_card";
 import prisma from "@/lib/prisma";
 
@@ -13,16 +11,6 @@ const Page = async () => {
     body: item.body,
     price: Number(item.price),
   }));
-
-  const session = await auth();
-  let count = 0;
-  let cartId: string | null = null;
-
-  if (session?.user) {
-    count = await getCartCount(session.user.id);
-    const cart = await getUserCart(session.user.id);
-    cartId = cart?.id ?? null;
-  }
 
   // Wrap CartStatus in a client component that listens for updates
   return (

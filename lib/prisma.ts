@@ -14,3 +14,14 @@ const prisma = new PrismaClient({
 });
 
 export default prisma;
+
+// lib/prisma.ts or helper
+export function serializeDecimal(obj: any) {
+  return JSON.parse(
+    JSON.stringify(obj, (_, value) =>
+      typeof value === "object" && value?.toNumber
+        ? value.toNumber()
+        : value
+    )
+  );
+}

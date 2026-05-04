@@ -26,51 +26,44 @@ async function getOrCreateCart(userId: string) {
   return cart;
 }
 
-export async function addToCartAction(
-  userId: string,
-  items: { id: string; quantity: number }[],
-  itemToAdd?: string
-): Promise<AddToCartResult> {
+type AddToCartInput =
+  | { userId: string; merchandiseId: string; quantity: number }
+  //| { userId: string; items: { merchandiseId: string; quantity: number }[] }; // future batch add support
+
+export async function addToCartAction({
+  userId,
+  merchandiseId,
+  quantity,
+}: AddToCartInput): Promise<AddToCartResult> {
   if (!userId) return { error: { message: "User ID is required" } };
 
   try {
     await prisma.$transaction(async (tx) => {
       const cart = await getOrCreateCart(userId);
 
-      const allItems = [
-        ...items,
-        ...(itemToAdd ? [{ id: itemToAdd, quantity: 1 }] : []),
-      ];
+      const existing = await tx.cartItem.findUnique({
+        where: {
+          cartId_merchandiseId: {
+            cartId: cart.id,
+            merchandiseId,
+          },
+        },
+      });
 
-      if (allItems.length === 0) {
-        throw new Error("No items to add");
-      }
-
-      for (const item of allItems) {
-        const existing = await tx.cartItem.findUnique({
-          where: {
-            cartId_merchandiseId: {
-              cartId: cart.id,
-              merchandiseId: item.id,
-            },
+      if (existing) {
+        await tx.cartItem.update({
+          where: { id: existing.id },
+          data: { quantity: { increment: quantity } },
+        });
+      } else {
+        await tx.cartItem.create({
+          data: {
+            id: ulidId(),
+            cartId: cart.id,
+            merchandiseId,
+            quantity,
           },
         });
-
-        if (existing) {
-          await tx.cartItem.update({
-            where: { id: existing.id },
-            data: { quantity: { increment: item.quantity } },
-          });
-        } else {
-          await tx.cartItem.create({
-            data: {
-              id: ulidId(),
-              cartId: cart.id,
-              merchandiseId: item.id,
-              quantity: item.quantity,
-            },
-          });
-        }
       }
     });
 
@@ -80,35 +73,27 @@ export async function addToCartAction(
   }
 }
 
-export async function getCartCount(userId: string): Promise<number> {
+export async function getCartMeta(userId: string) {
+  if (!userId) return { count: 0, cartId: null };
+
   const cart = await prisma.cart.findFirst({
     where: { userId },
-    include: { cartItems: true },
-  });
-
-  if (!cart) return 0;
-
-  return cart.cartItems.reduce((sum, i) => sum + i.quantity, 0);
-}
-
-export async function getUserCart(userId: string) {
-  return await prisma.cart.findFirst({
-    where: { userId },
     include: {
-      cartItems: {
-        include: {
-          merchandise: {
-            select: {
-              id: true,
-              title: true,
-              body: true,
-              price: true
-            }
-          },
-        },
-      },
+      cartItems: true,
     },
   });
+
+  if (!cart) return { count: 0, cartId: null };
+
+  const count = cart.cartItems.reduce(
+    (sum, item) => sum + item.quantity,
+    0
+  );
+
+  return {
+    count,
+    cartId: cart.id,
+  };
 }
 
 export async function getCartById(cartId: string) {

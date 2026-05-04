@@ -163,6 +163,21 @@ export async function getAllPosts() {
   });
 }
 
+export async function fetchAllPosts() {
+  return await prisma.post.findMany({
+    where: {},
+    include: { author: {
+      select: {
+        name: true,
+        email: true,
+        image: true,
+        id: true
+      }
+    } },
+    orderBy: { createdAt: "desc" }
+  });
+}
+
 export async function getPost (postId: string) {
   return await prisma.post.findUnique({
     where: { id: postId },
