@@ -138,11 +138,11 @@ export default function PrivacyAndLicencePolicyPage() {
             <Flex direction="column" gap="1" mt="2">
               <Text as="p" size="3">
                 <Text weight="bold">Email: </Text>
-                <Link href="mailto:privacy@kubuka.com" referrerPolicy="no-referrer" className="text-blue-500 hover:text-blue-700 dark:text-zinc-400!">privacy@kubuka.com</Link>
+                <Link href="mailto:privacy@kubuka.space" referrerPolicy="no-referrer" className="text-blue-500 hover:text-blue-700 dark:text-zinc-400!">privacy@kubuka.space</Link>
               </Text>
               <Text as="p" size="3">
                 <Text weight="bold">Website: </Text>
-                <Link href="https://kubuka.com/contact" referrerPolicy="no-referrer" className="text-blue-500 hover:text-blue-700 dark:text-zinc-400!">https://kubuka.com/contact</Link>
+                <Link href="https://kubuka.space/contact_us" referrerPolicy="no-referrer" className="text-blue-500 hover:text-blue-700 dark:text-zinc-400!">https://kubuka.space</Link>
               </Text>
             </Flex>
           </Box>

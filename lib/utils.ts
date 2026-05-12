@@ -97,3 +97,11 @@ export function generateLexicalExcerpt(lexicalStateString: string, maxLength: nu
     return "Content unavailable";
   }
 }
+
+export function debounceQuery<F extends (...args: any[]) => void>(fn: F, delay: number) {
+  let timer: NodeJS.Timeout;
+  return (...args: Parameters<F>) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  };
+}

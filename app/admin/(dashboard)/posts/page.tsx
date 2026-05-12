@@ -48,7 +48,7 @@ export default async function AdminPostsPage() {
       </Flex>
 
       {/* Main Data Table */}
-      <Card size="2" variant="surface" className="overflow-hidden">
+      <Card size="2" variant="surface" className="overflow-hidden bg-sky-950">
         <Box className="overflow-x-auto">
           <Table.Root variant="surface" size="3">
             <Table.Header>

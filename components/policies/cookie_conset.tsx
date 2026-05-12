@@ -1,88 +1,105 @@
 "use client";
-
+import { useEffect, useState } from "react";
 import CookieConsent from "react-cookie-consent";
 
 export default function AppCookieConsent() {
-  const handleDecline = () => {
-    // ⏱️ expire in 2 minutes
-    const expires = new Date(Date.now() + 2 * 60 * 1000).toUTCString();
+  const [isDev, setIsDev] = useState(false);
 
-    document.cookie = `myWebsiteCookieConsent=false; path=/; expires=${expires}`;
+  useEffect(() => {
+    if (process.env.NODE_ENV === "development") {
+      setIsDev(true);
+    }
+  }, []);
 
-    // Optional: hide immediately
+  const resetConsent = () => {
+    document.cookie =
+      "myWebsiteCookieConsent=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     window.location.reload();
   };
 
   return (
-    <CookieConsent
-      location="bottom"
-      cookieName="myWebsiteCookieConsent"
-      expires={365}
-      disableStyles // 👈 we fully control styling
-      containerClasses="fixed md:-translate-y-2 md:translate-x-2 z-[9999]"
-      contentClasses=""
-      buttonClasses="hidden"
-      declineButtonClasses="hidden"
-      enableDeclineButton
-      onAccept={() => console.log("Cookies accepted")}
-      onDecline={handleDecline}
-    >
-      <div className="relative w-[90vw] z-50 max-w-md bg-indigo-200 text-gray-700 p-5 md:p-6 rounded-xl shadow-xl border border-gray-200">
+    <>
+      <CookieConsent
+        location="bottom"
+        enableDeclineButton
+        declineButtonText="Decline"
+        buttonText="Accept All"
+        cookieName="myWebsiteCookieConsent"
+        style={{
+          background: "#2ae",
+          padding: "20px",
+          zIndex: 1000,
+          borderRadius: "8px",
+          maxWidth: "400px",
+          maxHeight: "300px",
+          margin: "0 auto",
+          left: "20px",
+          marginBottom: "20px",
+        }}
+        buttonStyle={{
+          color: "#fff",
+          fontSize: "14px",
+          background: "#27ae60",
+          padding: "6px 10px",
+          borderRadius: "4px",
+          position: "absolute",
+          right: "10px",
+          bottom: "10px",
+        }}
+        declineButtonStyle={{
+          color: "#fff",
+          background: "#c0392b",
+          fontSize: "14px",
+          padding: "6px 10px",
+          borderRadius: "4px",
+          position: "absolute",
+          left: "32px",
+          bottom: "10px",
+        }}
+        expires={365}
+        onAccept={() => {
+          console.log("Cookies accepted");
+        }}
+        onDecline={() => {
+          console.log("Cookies declined");
+        }}
+      >
+        <div className="flex flex-col items-center w-full bg-transparent text-sm pb-10">
+          {/* Header */}
+          <div className="flex items-center justify-center relative w-full gap-2 pb-3">
+            <img
+              className="absolute -top-16"
+              src="/svgs/cookieImage.svg"
+              alt="cookieImage"
+            />
+            <h2 className="text-gray-800 text-xl font-medium text-left w-full pt-3">
+              Your privacy is important to us
+            </h2>
+          </div>
 
-        {/* 🍪 Floating Image */}
-        <img
-          src="/svgs/cookieImage.svg"
-          alt="Cookies"
-          className="absolute -top-10 left-1/2 -translate-x-1/2 w-16 h-16"
-        />
-
-        {/* 🧠 Header */}
-        <h2 className="text-lg md:text-xl font-semibold text-gray-900 text-justify mt-6">
-          Your privacy matters
-        </h2>
-
-        {/* 📄 Description */}
-        <p className="mt-3 text-sm text-justify leading-relaxed">
-          We use cookies to improve your experience, analyze traffic, and
-          personalize content. Learn more in our{" "}
-          <a href="#" className="underline font-medium hover:text-indigo-600">
-            Privacy Policy
-          </a>.
-        </p>
-
-        {/* ⚙️ Actions */}
-        <div className="mt-6 flex flex-col sm:flex-row items-center justify-end gap-3">
-
-          <button
-            onClick={() => {
-              document.cookie =
-                "myWebsiteCookieConsent=false; path=/; max-age=31536000";
-              window.location.reload();
-            }}
-            className="w-full sm:w-auto px-4 py-2 text-sm rounded-md border border-red-300 hover:bg-red-100 transition"
-          >
-            Decline
-          </button>
-
-          <button
-            onClick={() => {
-              document.cookie =
-                "myWebsiteCookieConsent=true; path=/; max-age=31536000";
-              window.location.reload();
-            }}
-            className="w-full sm:w-auto px-5 py-2 text-sm rounded-md bg-green-600 text-white font-medium hover:bg-green-700 active:scale-95 transition"
-          >
-            Accept All
-          </button>
+          {/* Description */}
+          <p className="text-gray-600 text-justify">
+            We process your personal information to measure and improve our site
+            and services, assist our campaigns, and provide personalised content.
+            For more information, see our{" "}
+            <a href="/cookie_policy" className="font-medium underline">
+              Privacy Policy
+            </a>
+            .
+          </p>
         </div>
+      </CookieConsent>
 
-        {/* 🔗 Footer link */}
-        <div className="mt-4 text-center">
-          <a href="#" className="text-xs underline hover:text-indigo-600">
-            More options
-          </a>
-        </div>
-      </div>
-    </CookieConsent>
+      {/* Developer-only reset button */}
+      {isDev && (
+        <button
+          type="button"
+          onClick={resetConsent}
+          className="fixed bottom-4 right-4 bg-red-600 text-white px-4 py-2 rounded shadow-md hover:bg-red-700 transition"
+        >
+          Reset Cookie Consent
+        </button>
+      )}
+    </>
   );
 }

@@ -37,7 +37,7 @@ export default async function AdminUsersPage() {
       </Flex>
 
       {/* Main Data Table */}
-      <Card size="2" variant="surface" className="overflow-hidden">
+      <Card size="2" variant="surface" className="overflow-hidden bg-sky-950">
         {/* We use Box with overflow-x-auto to make the table scrollable on mobile */}
         <Box className="overflow-x-auto">
           <Table.Root variant="surface" size="3">

@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  addToCartAction,
+  batchAddToCartAction,
   deleteCartItem,
   getCartMeta,
   updateCartQuantity,
@@ -23,23 +23,20 @@ import {
   Cart,
   CartItem,
   emptyCart,
+  GuestCartItem,
   InitialCartInput,
   MerchandiseItem,
 } from "@/lib/interfaces";
+import { ulidId } from "@/lib/ulid";
+import { debounceQuery } from "@/lib/utils";
 
 /* ---------------------------
    🧱 CONSTANTS
 ---------------------------- */
 
-type GuestCart = {
-  merchandiseId: string;
-  quantity: number;
-}[];
-
 /* ---------------------------
    CONTEXT
 ---------------------------- */
-
 const CartContext = createContext<any>(null);
 
 
@@ -61,89 +58,137 @@ export function CartProvider({
 
   const [cart, setCart] = useState<Cart>(normalizeCart(initialCart));
   const [cartLoading, setLoading] = useState(false);
-  const [cartCount, setCount] = useState(0);
   const [cartId, setCartId] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
+  const [cartCountDistinct, setCountDistinct] = useState(0);
+  const [cartCountTotal, setCountTotal] = useState(0);
 
   const mergedRef = useRef(false);
 
   /* ---------------------------
-     🧠 HYDRATE GUEST CART
+     🛠️ HELPERS
+  ---------------------------- */
+  // For guest carts: recalc counts from local state
+  function updateCounts(items: CartItem[]) {
+    setCountDistinct(items.length);
+    setCountTotal(items.reduce((sum, i) => sum + i.quantity, 0));
+  }
+
+  // wrap your server fetch in debounce
+  const updateCountsFromServer = debounceQuery(async (userId: string) => {
+    const { distinctCount, totalCount, cartId } = await getCartMeta(userId);
+    setCountDistinct(distinctCount);
+    setCountTotal(totalCount);
+    setCartId(cartId);
+  }, 500); // half a second delay
+
+  /* ---------------------------
+    🧠 HYDRATE GUEST CART
   ---------------------------- */
   useEffect(() => {
     if (initialCart) {
       setHydrated(true);
+      setCartId(initialCart.id ?? null);
       return;
     }
 
-    const stored = localStorage.getItem("tempCart");
-    const items = safeParse<GuestCart>(stored);
+    const storedItems = localStorage.getItem("tempCart");
+    const storedId = localStorage.getItem("tempCartId");
+
+    const items = safeParse<GuestCartItem[]>(storedItems);
+
+    // Ensure cartId exists
+    let id = storedId;
+    if (!id) {
+      id = ulidId();
+      localStorage.setItem("tempCartId", id);
+    }
 
     if (!items || items.length === 0) {
       localStorage.removeItem("tempCart");
-      setCart(emptyCart);
+      setCart({ ...emptyCart, id });
       setHydrated(true);
+      setCartId(id);
       return;
     }
 
     const hydratedCart: Cart = {
       ...emptyCart,
+      id,
       cartItems: items.map((item) => ({
-        id: crypto.randomUUID(),
-        merchandise: {
-          id: item.merchandiseId,
-          title: "",
-          body: "",
-          price: 0,
-        },
+        id: ulidId(),
+        merchandise: item.merchandise,
         quantity: item.quantity,
       })),
     };
 
     setCart(hydratedCart);
     setHydrated(true);
+    setCartId(id);
   }, [initialCart]);
 
   /* ---------------------------
-     💾 PERSIST GUEST CART
+    💾 PERSIST GUEST CART
   ---------------------------- */
   useEffect(() => {
     if (!hydrated || !isGuest) return;
 
-    const minimal: GuestCart = cart?.cartItems?.map((item) => ({
-      merchandiseId: item.merchandise.id,
+    // Only persist if user has never been authenticated in this session
+    if (session?.user) return; // prevent writing DB cart back into localStorage
+
+    const minimal: GuestCartItem[] = cart?.cartItems?.map((item) => ({
+      merchandise: {
+        id: item.merchandise.id,
+        title: item.merchandise.title,
+        body: item.merchandise.body,
+        price: item.merchandise.price,
+      },
       quantity: item.quantity,
     }));
 
     localStorage.setItem("tempCart", JSON.stringify(minimal));
-  }, [cart, hydrated, isGuest]);
+    if (cartId) localStorage.setItem("tempCartId", cartId);
+  }, [cart, hydrated, isGuest, cartId, session?.user]);
 
   /* ---------------------------
-     🔄 MERGE CART ON LOGIN
+    🔄 MERGE GUEST CART ON LOGIN
   ---------------------------- */
   useEffect(() => {
     const mergeGuestCart = async () => {
       if (!session?.user?.id || mergedRef.current) return;
 
-      const stored = localStorage.getItem("tempCart");
-      const guestItems = safeParse<GuestCart>(stored);
+      const storedItems = localStorage.getItem("tempCart");
+      const storedId = localStorage.getItem("tempCartId");
+      const guestItems = safeParse<GuestCartItem[]>(storedItems);
 
       if (!guestItems || guestItems.length === 0) return;
 
+      // 🔑 Normalize into { merchandiseId, quantity }
+      const normalizedItems = guestItems.map((i) => ({
+        merchandiseId: i.merchandise.id,
+        quantity: i.quantity,
+      }));
+
       try {
-        for (const item of guestItems) {
-          await addToCartAction({
-            userId: session.user.id,
-            merchandiseId: item.merchandiseId,
-            quantity: item.quantity,
-          });
+        const res = await batchAddToCartAction({
+          userId: session.user.id,
+          cartId: storedId ?? undefined, // respect guest cartId
+          items: normalizedItems,
+        });
+
+        if (res.success) {
+          // cleanup localStorage
+          localStorage.removeItem("tempCart");
+          localStorage.removeItem("tempCartId");
+
+          updateCountsFromServer(session.user.id); // ensure counts are accurate post-merge
+
+          mergedRef.current = true;
+          toast.success("Cart synced");
+          router.refresh();
+        } else {
+          toast.error(res.error?.message ?? "Failed to merge cart");
         }
-
-        localStorage.removeItem("tempCart");
-        mergedRef.current = true;
-
-        toast.success("Cart synced");
-        router.refresh();
       } catch (err) {
         console.error(err);
         toast.error("Failed to merge cart");
@@ -161,16 +206,22 @@ export function CartProvider({
 
     try {
       if (session?.user) {
-        const res = await addToCartAction({
+        const res = await batchAddToCartAction({
           userId: session.user.id,
-          merchandiseId: item.id,
-          quantity: 1,
+          cartId: cartId || undefined,
+          items: [{
+            merchandiseId: item.id,
+            quantity: 1
+          }]
         });
 
         if ("error" in res) {
-          toast.error(res.error.message);
+          toast.error(res?.error?.message);
           return;
         }
+
+        // 🔑 Immediately refresh counts from server
+        updateCountsFromServer(session.user.id);
 
         toast.success(`${item.title.toUpperCase()} added to cart`);
         router.refresh();
@@ -197,12 +248,15 @@ export function CartProvider({
           updatedItems = [
             ...safeItems,
             {
-              id: crypto.randomUUID(),
+              id: ulidId(),
               merchandise: item,
               quantity: 1,
             },
           ];
         }
+
+        // recalc counts
+        updateCounts(updatedItems);
 
         return {
           ...prev,
@@ -219,7 +273,7 @@ export function CartProvider({
   };
 
   /* ---------------------------
-     ❌ REMOVE ITEM
+    ❌ REMOVE ITEM
   ---------------------------- */
   const removeItem = async (id: string) => {
     try {
@@ -235,21 +289,29 @@ export function CartProvider({
         router.refresh();
       } else {
         const stored = localStorage.getItem("tempCart");
-        const parsed = safeParse<GuestCart>(stored);
+        const parsed = safeParse<GuestCartItem[]>(stored);
 
         if (parsed) {
           const updated = parsed.filter(
-            (item) => item.merchandiseId !== id
+            (item) => item.merchandise.id !== id
           );
-
           localStorage.setItem("tempCart", JSON.stringify(updated));
         }
       }
 
-      setCart((prev) => ({
-        ...prev,
-        cartItems: prev?.cartItems?.filter((item) => item.id !== id),
-      }));
+      // 🔑 Update cart state + counts
+      setCart((prev) => {
+        const updatedItems = prev?.cartItems?.filter((item) => item.id !== id) ?? [];
+
+        // recalc counts
+        updateCounts(updatedItems);
+
+        return {
+          ...prev,
+          cartItems: updatedItems,
+        };
+      });
+
       router.refresh();
     } catch (err) {
       console.error(err);
@@ -285,9 +347,7 @@ export function CartProvider({
     const fetchData = async () => {
       if (session?.user?.id) {
         try {
-          const { count, cartId } = await getCartMeta(session.user.id);
-          setCount(count);
-          setCartId(cartId);
+          updateCountsFromServer(session.user.id);
         } catch (err) {
           console.error(err);
         }
@@ -295,15 +355,15 @@ export function CartProvider({
       }
 
       const stored = localStorage.getItem("tempCart");
-      const items = safeParse<GuestCart>(stored);
+      const items = safeParse<CartItem[]>(stored);
 
       if (!items) {
-        setCount(0);
+        setCountDistinct(0);
+        setCountTotal(0);
         return;
       }
 
-      const total = items.reduce((sum, i) => sum + i.quantity, 0);
-      setCount(total);
+      updateCounts(items);
     };
 
     fetchData();
@@ -320,7 +380,8 @@ export function CartProvider({
         removeItem,
         updateQuantity,
         cartLoading,
-        cartCount,
+        cartCountDistinct,
+        cartCountTotal,
         cartId,
         isGuest,
       }}

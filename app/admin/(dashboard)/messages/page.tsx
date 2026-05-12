@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { SubmitEvent, useEffect, useRef, useState, useTransition } from "react";
 import { 
   Flex, 
   Heading, 
@@ -18,7 +18,7 @@ import {
 import { getActiveThreads, getThreadById, sendAdminReply } from "@/app/actions/messageThreadAction";
 import { Thread } from "@/lib/interfaces";
 
-// Formatter for message timestamps
+// Formatter for message timestamps 
 const formatTime = (dateString: Date | string) => {
   return new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit", hour12: true }).format(new Date(dateString));
 };
@@ -31,12 +31,40 @@ export default function AdminMessagesPage() {
   // State to track which conversation is currently active
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
+  const [errorText, setErrorText] = useState("");
   const [threads, setThreads] = useState<Thread[]>([]);
   const [isPending, startTransition] = useTransition();
+  const [activeThread, setActiveThread] = useState<Thread | null>(null);
+  // States for the Form
+  const [messageContent, setMessageContent] = useState("");
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  // Dynamically derive activeThread from the threads array based on selected ID
-  const activeThread = threads.find(t => t.id === selectedThreadId) || null;
+  
+  // ----------------------------------------------------
+  // SSE CONNECTION (REAL TIME)
+  // ----------------------------------------------------
+  useEffect(() => {
+    if (!activeThread?.id) return;
+
+    const eventSource = new EventSource(
+      `/api/sse?threadId=${activeThread.id}`
+    );
+
+    eventSource.onmessage = (event) => {
+      const msg = JSON.parse(event.data);
+
+      setActiveThread((prev) => {
+        if (!prev) return prev;
+
+        return {
+          ...prev,
+          messages: [...prev.messages, msg],
+        };
+      });
+    };
+
+    return () => eventSource.close();
+  }, [activeThread?.id]);
 
   // In a real implementation, this would fetch from the backend
   const fetchThreads = async () => {
@@ -53,8 +81,18 @@ export default function AdminMessagesPage() {
     fetchThreads();
   }, []);
 
+  // ----------------------------------------------------
+  // Auto scroll
+  // ----------------------------------------------------
+  useEffect(() => {
+    scrollContainerRef.current?.scrollTo({
+      top: scrollContainerRef.current.scrollHeight,
+      behavior: "smooth",
+    });
+  }, [activeThread?.messages?.length]);
+
   // Add the form submission handler
-  async function handleReplySubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleReplySubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     
     if (!activeThread || !replyText.trim()) return;
@@ -73,23 +111,6 @@ export default function AdminMessagesPage() {
       }
     });
   }
-
-  // Create a helper function to trigger the scroll
-  const scrollToBottom = () => {
-    if (scrollContainerRef.current) {
-      const container = scrollContainerRef.current;
-      // Tell the container to scroll to its maximum internal height
-      container.scrollTo({
-        top: container.scrollHeight,
-        behavior: "smooth",
-      });
-    }
-  };
-
-  // Watch the active thread's messages. Whenever the length changes, scroll down!
-  useEffect(() => {
-    scrollToBottom();
-  }, [activeThread?.messages?.length]);
 
   // Poll for updates and sync the threads array
   useEffect(() => {
@@ -115,6 +136,8 @@ export default function AdminMessagesPage() {
     return () => clearInterval(pollInterval);
   }, [selectedThreadId]);
 
+  const isChatMode = !!activeThread;
+
   return (
     <Flex direction="column" className="h-full overflow-hidden" gap="2">
       
@@ -128,13 +151,13 @@ export default function AdminMessagesPage() {
       <Flex gap="4" className="flex-1 overflow-hidden min-h-0">
         
         {/* LEFT PANE: Thread List */}
-        <Card size="1" variant="surface" className="w-full md:w-1/3 flex flex-col h-full overflow-hidden">
+        <Card size="1" variant="surface" className="w-full md:w-1/3 flex flex-col h-full overflow-hidden bg-sky-900">
           <Box className="p-3 border-b border-(--gray-a6) bg-(--color-panel) shrink-0">
             <Text weight="bold" size="3">Conversations</Text>
           </Box>
           <Box className="flex-1 overflow-y-auto min-h-0">
             <ScrollArea type="scroll" scrollbars="vertical" style={{ height: "440px" }}>
-            {threads.map((thread) => {
+            {threads?.map((thread) => {
               const latestMessage = thread.messages[thread.messages.length - 1];
               const isActive = thread.id === selectedThreadId;
 
@@ -164,8 +187,8 @@ export default function AdminMessagesPage() {
         </Card>
 
         {/* RIGHT PANE: Active Thread View */}
-        <Card size="1" variant="surface" className="hidden md:flex flex-1 flex-col h-full overflow-hidden">
-          {activeThread ? (
+        <Card size="1" variant="surface" className="hidden md:flex flex-1 flex-col h-full overflow-hidden bg-sky-900">
+          {activeThread?.id ? (
             <>
               {/* Thread Header */}
               <Flex align="center" justify="between" className="px-4 py-1 border-b border-(--gray-a6) bg-(--color-panel) shrink-0">
@@ -213,17 +236,19 @@ export default function AdminMessagesPage() {
               <Separator size="4" />
 
               {/* Reply Box */}
-              <Box className="p-4 shrink-0 bg-(--color-panel)">
+              <Box className="p-4 shrink-0 bg-(--gray-a2)">
                 <form onSubmit={handleReplySubmit}>
                   <Flex gap="3" align="end">
                     <Box className="flex-1">
                       <TextArea 
                         size="3" 
+                        color="grass"
                         placeholder={`Reply to ${activeThread.sender} (${activeThread.email})...`}
                         value={replyText}
                         onChange={(e) => setReplyText(e.target.value)}
                         className="resize-none"
                         disabled={isPending}
+                        style={{ backgroundColor: "var(--gray-a4)", color: "ededed" }}
                       />
                     </Box>
                     <Button 

@@ -128,28 +128,28 @@ export default function AdminStorePage() {
       </Flex>
 
       {/* 3. The Tabs Component managing the categories */}
-      <Tabs.Root defaultValue="paid">
+      <Tabs.Root defaultValue="paid" className="bg-sky-900">
         <Tabs.List size="2">
           {/* Active Carts */}
-          <Tabs.Trigger value="cart" style={{ cursor: "pointer" }}>
+          <Tabs.Trigger value="cart" style={{ cursor: "pointer", color: "var(--gray-2)" }}>
             In Cart
-            <Badge size="1" color="gray" variant="soft" radius="full" className="ml-2">1</Badge>
+            <Badge size="1" color="orange" variant="solid" radius="full" className="ml-2">1</Badge>
           </Tabs.Trigger>
           
           {/* Pending Checkout */}
-          <Tabs.Trigger value="checkout" style={{ cursor: "pointer" }}>
+          <Tabs.Trigger value="checkout" style={{ cursor: "pointer", color: "var(--gray-2)" }}>
             Checkout Queue
-            <Badge size="1" color="orange" variant="soft" radius="full" className="ml-2">1</Badge>
+            <Badge size="1" color="amber" variant="solid" radius="full" className="ml-2">1</Badge>
           </Tabs.Trigger>
           
           {/* Paid / Processing */}
-          <Tabs.Trigger value="paid" style={{ cursor: "pointer" }}>
+          <Tabs.Trigger value="paid" style={{ cursor: "pointer", color: "var(--gray-2)" }}>
             Paid (Action Required)
             <Badge size="1" color="indigo" variant="solid" radius="full" className="ml-2">2</Badge>
           </Tabs.Trigger>
           
           {/* Shipped / Downloaded */}
-          <Tabs.Trigger value="fulfilled" style={{ cursor: "pointer" }}>
+          <Tabs.Trigger value="fulfilled" style={{ cursor: "pointer", color: "var(--gray-2)" }}>
             Shipped / Downloaded
           </Tabs.Trigger>
         </Tabs.List>

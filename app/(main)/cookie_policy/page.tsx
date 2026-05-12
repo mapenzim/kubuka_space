@@ -118,14 +118,14 @@ export default function CookiesPolicyPage() {
             <Flex direction="column" gap="1" mt="2">
               <Text as="p" size="3">
                 <Text weight="bold">Email: </Text>
-                <Link href="mailto:privacy@kubuka.com" className="text-blue-500 hover:text-blue-700 dark:text-zinc-400!">
-                  privacy@kubuka.com
+                <Link href="mailto:privacy@kubuka.space" className="text-blue-500 hover:text-blue-700 dark:text-zinc-400!">
+                  privacy@kubuka.space
                 </Link>
               </Text>
               <Text as="p" size="3">
                 <Text weight="bold">Website: </Text>
-                <Link href="https://kubuka.com/contact" className="text-blue-500 hover:text-blue-700 dark:text-zinc-400!" referrerPolicy="no-referrer" target="__blank">
-                  https://kubuka.com/contact
+                <Link href="https://kubuka.space/contact_us" className="text-blue-500 hover:text-blue-700 dark:text-zinc-400!" referrerPolicy="no-referrer" target="__blank">
+                  https://kubuka.space
                 </Link>
               </Text>
             </Flex>

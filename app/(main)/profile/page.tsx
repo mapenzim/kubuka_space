@@ -6,13 +6,15 @@ import { DeleteUserExperience } from "@/components/buttons/delete-experience-btn
 import { AddUpdateBioPopover } from "@/components/poper/add-update-bio";
 import { AddUpdateExperiencePopover } from "@/components/poper/add-update-experience";
 import { AddUpdateSkillPopover } from "@/components/poper/add-update-skills";
-import { Badge, Box, Button, Card, Flex, Heading, Inset, ScrollArea, Text } from "@radix-ui/themes";
-import { DeleteIcon, FacebookIcon, FactoryIcon, GithubIcon, InstagramIcon, Tag, TwitterIcon, YoutubeIcon } from "lucide-react";
+import { Badge, Box, Button, Card, Flex, Grid, Heading, ScrollArea, Text, Avatar, Separator } from "@radix-ui/themes";
+import { FacebookIcon, GithubIcon, Tag, TwitterIcon } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
 const ProfilePage = async () => {
   const session = await auth();
+
+  if (!session?.user) return redirect("/authentication");
 
   const user = session?.user; 
   
@@ -21,246 +23,252 @@ const ProfilePage = async () => {
   const userSkill = await getUserSkills(user?.id as string);
   const posts = await getOwnPosts(user?.id as string);
   const orders = await getAllOrdersByUser(user?.id as string);
-
-  if (!session?.user) return redirect("/authentication");
   
   return (
-    <Box maxWidth="1366px" className="mx-4 my-16 md:mx-30 md:my-28">
-      <Flex className="flex-col md:flex-row" justify="between" content="center">
+    <Box className="min-h-screen bg-zinc-50 dark:bg-zinc-950 py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-200">
+      <Box className="max-w-7xl mx-auto">
+        <Grid columns={{ initial: "1", md: "12" }} gap="6" align="start" py="64px">
 
-        {/** Left side contents */}
-        <Flex direction="column" justify="start" gapY="4" className="w-full md:w-[30vw] h-full md:h-[92vh]" asChild>
-          <Card size="1">
-            <Inset clip="padding-box" side="top" pb="current">
-              <img 
-                src={user?.image ?? "/images/mape.png"} 
-                alt="Profile" 
-              />
-            </Inset>
-            <Heading as="h3" color="gray" size="4" weight="medium">
-              {user?.name}
-            </Heading>
-            <Text as="p" size="1">
-              {user?.email}
-            </Text>
+          {/* =========================================
+              LEFT COLUMN: Profile & Skills (Spans 4)
+              ========================================= */}
+          <Flex direction="column" gap="6" className="md:col-span-4 md:sticky ">
+            
+            {/* Profile Card */}
+            <Card size="4" className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 shadow-sm rounded-2xl text-center">
+              <Flex direction="column" align="center" gap="4">
+                <Avatar
+                  size="8"
+                  src={user?.image ?? "/images/mape.png"}
+                  fallback={user?.name?.charAt(0) || "U"}
+                  color="iris"
+                  radius="full"
+                  className="shadow-sm border-4 border-zinc-50 dark:border-zinc-950 ring-1 ring-zinc-200 dark:ring-zinc-800"
+                />
+                
+                <Box>
+                  <Heading as="h1" size="6" weight="bold" className="text-zinc-900 dark:text-zinc-100">
+                    {user?.name}
+                  </Heading>
+                  <Text as="p" size="2" color="gray" mt="1">
+                    {user?.email}
+                  </Text>
+                </Box>
 
-            {/** Edit button */}
-            <Flex my="4" asChild>
-              <Link 
-                href={"/profile"}
-                className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded"
-              >
-                Edit
-              </Link>
-            </Flex>
+                <Button size="2" variant="soft" color="iris" className="w-full mt-2" asChild>
+                  <Link href="/profile">Edit Profile</Link>
+                </Button>
+              </Flex>
+            </Card>
 
-            {/** Skills Data */}
-            <Flex direction="column" justify="between">
-              <Flex 
-                direction="row" 
-                justify="between"
-                style={{ backgroundColor: "gray", alignItems: "center" }}
-                px={"3"}
-                py="1"
-              >
-                <Heading as="h3" size="3">
+            {/* Skills Card */}
+            <Card size="3" className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 shadow-sm rounded-2xl">
+              <Flex align="center" justify="between" mb="4">
+                <Heading as="h3" size="4" className="text-zinc-900 dark:text-zinc-100">
                   Skills
                 </Heading>
                 <AddUpdateSkillPopover skill={null} />
               </Flex>
-              <ScrollArea type="always" scrollbars="vertical" style={{ height: 180 }}>
-                <Flex direction="column" gap="1" my="4" mx="2">
-                  {userSkill?.length > 0 
-                    ? userSkill?.map((skill) => 
-                      <Flex key={skill.id}>
-                        <Tag 
-                          width={"12"} height={"12"} 
-                          className="rotate-90 text-teal-700 mr-1"
-                        />
-                        <Text 
-                          size="1" 
-                          color="teal"
-                        >{skill?.text}</Text>
+              
+              <ScrollArea type="auto" scrollbars="vertical" className="max-h-64 pr-3">
+                <Flex direction="column" gap="2">
+                  {userSkill?.length > 0 ? (
+                    userSkill.map((skill) => (
+                      <Flex key={skill.id} align="center" gap="2" className="bg-zinc-100 dark:bg-zinc-800/50 p-2 rounded-lg">
+                        <Tag className="w-4 h-4 text-(--iris-11)" />
+                        <Text size="2" weight="medium" className="text-zinc-700 dark:text-zinc-300">
+                          {skill?.text}
+                        </Text>
                       </Flex>
-                      )
-                    : <Text size="1" mx="8" my="4" color="orange">No skills yet, add</Text>
-                  }
+                    ))
+                  ) : (
+                    <Text size="2" color="gray" className="italic text-center py-4 border border-dashed border-zinc-200 dark:border-zinc-700 rounded-lg">
+                      No skills added yet.
+                    </Text>
+                  )}
                 </Flex>
               </ScrollArea>
-            </Flex>
-          </Card>
-        </Flex>
+            </Card>
 
-        {/** Right side contents */}
-        <Flex direction="column" justify="start" gapY="4" className="w-full md:w-screen" asChild>
-          <Card size="1">
-            <Flex as="div" direction="column" gap="4">
+          </Flex>
 
-              {/** ABout Me Data */}
-              <Flex 
-                direction="row" 
-                width={"full"} 
-                justify={"between"}
-                px={"4"}
-                py="2"
-                align={"center"}
-                style={{ backgroundColor: "gray", color: "#ffe" }}
-              >
-                <Heading as="h3">About Me</Heading>
-                <AddUpdateBioPopover bio={bio} />
-              </Flex>
-              <Text as="div" size={"2"} mx="4">
-                <pre
-                  className="font-light text-sm font-sans text-wrap"
-                >{bio?.text}</pre>
-                {!bio?.id && <Text size={"2"} mx={"4"} my={"2"} color="orange"> Add something about you ... </Text>}
-              </Text>
 
-              {/** Social Media Channels */}
-              <Flex direction={"column"} my="6">
-                <Heading 
-                  as="h3" 
-                  align={"center"}
-                  className="bg-linear-to-r from-indigo-900  via-green-500 to-orange-600 bg-clip-text text-5xl font-extrabold text-transparent"
-                >My Social Media Channels</Heading>
-                <Flex justify={"center"} gap={"2"}>
-                  <FacebookIcon />
-                  <TwitterIcon />
-                  <GithubIcon />
-                </Flex>
-              </Flex>
+          {/* =========================================
+              RIGHT COLUMN: Main Content (Spans 8)
+              ========================================= */}
+          <Flex direction="column" gap="6" className="md:col-span-8">
+            
+            <Card size="4" className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 shadow-sm rounded-2xl">
+              <Flex direction="column" gap="8">
 
-              {/** Work Experience Data */}
-              <Flex
-                direction={"column"}
-              >
-                <Flex 
-                  direction={"row"} 
-                  justify={"between"} 
-                  align={"center"} 
-                  style={{  backgroundColor: "gray", color: '#ffe' }}
-                  px='4'
-                  py='2'
-                >
-                  <Heading as="h3">
-                    Work Experience
-                  </Heading>
-                  <AddUpdateExperiencePopover workExperience={null} />
-                </Flex>
-                <ScrollArea type="always" scrollbars="vertical" style={{ maxHeight: 380, minHeight: 64 }}>
-                {workExperience.length
-                  ? workExperience.map((exp) => (
-                    <Flex key={exp.id} direction={"column"} justify={"between"} px="4" py='2'>
-                      <Flex direction="row" wrap={"wrap"} justify={"between"} align="center" className="text-sm">
-                        <Text as="span" className="text-gray-800 font-semibold">
-                          {exp.jobTitle}
-                        </Text>
-                        <Flex direction="row" gap="6">
-                          <Text as="span">
-                            {exp.companyName}
-                          </Text>
-                          <Text as="span" className="text-gray-600">
-                            {exp.dates}
-                          </Text>
-                        </Flex>
-                        <Flex direction="row" gap="5">
-                          <AddUpdateExperiencePopover workExperience={exp} />
-                          <DeleteUserExperience id={exp.id} />
-                        </Flex>
-                      </Flex>
-                      <Text as="div">
-                        <pre className="mt-1 ml-2 text-xs text-wrap font-normal font-sans dark: text-gray-500">{exp.duties}</pre>
+                {/* --- About Me Section --- */}
+                <Box>
+                  <Flex align="center" justify="between" mb="3">
+                    <Heading as="h3" size="5" className="text-zinc-900 dark:text-zinc-100">About Me</Heading>
+                    <AddUpdateBioPopover bio={bio} />
+                  </Flex>
+                  <Text as="div" size="3" className="text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                    {bio?.text ? (
+                      <span className="whitespace-pre-wrap">{bio.text}</span>
+                    ) : (
+                      <Text size="2" color="gray" className="italic block p-4 border border-dashed border-zinc-200 dark:border-zinc-700 rounded-lg text-center">
+                        Add something about yourself...
                       </Text>
-                    </Flex>
-                  ))
-                  : <Text size={"2"} mx={"4"} my={"2"} color="orange"> No data available </Text>
-                }
-                </ScrollArea>
-              </Flex>
+                    )}
+                  </Text>
+                </Box>
 
-              {/** Publications by this user */}
-              <Flex direction="column" gap="4">
-                <Flex 
-                  direction="row" 
-                  justify="between" 
-                  style={{  backgroundColor: "gray", color: '#ffe' }}
-                  px="4"
-                  py="2"
-                  align="center"
-                >
-                  <Heading as="h3">
-                    Publications
+                <Separator size="4" className="bg-zinc-200 dark:bg-zinc-800" />
+
+                {/* --- Social Media Section --- */}
+                <Box className="text-center">
+                  <Heading as="h4" size="3" weight="medium" color="gray" mb="4" className="uppercase tracking-wider">
+                    Connect With Me
                   </Heading>
-                  <Button size="1" variant="ghost">Visit blog area</Button>
-                </Flex>
-                <Box>
-                  <Flex direction="row" wrap='wrap' gap="4" px='4'>
-                    {posts.length
-                      ? posts.map((post) => 
-                          <Card 
-                            size="1" 
-                            key={post.id}
-                            style={{ backgroundColor: "blue" }}
-                          >
-                            {post.title} <Badge>
-                              {post.published ? "Published" : "Draft"}
-                            </Badge>
-                          </Card>
-                        )
-                      : <Text size={"2"} mx={"4"} my={"2"} color="orange"> No posts </Text>
-                    }
+                  <Flex justify="center" gap="4">
+                    <Button variant="soft" color="gray" radius="full" className="w-10 h-10 p-0 cursor-pointer hover:text-blue-600 transition-colors">
+                      <FacebookIcon size={20} />
+                    </Button>
+                    <Button variant="soft" color="gray" radius="full" className="w-10 h-10 p-0 cursor-pointer hover:text-sky-500 transition-colors">
+                      <TwitterIcon size={20} />
+                    </Button>
+                    <Button variant="soft" color="gray" radius="full" className="w-10 h-10 p-0 cursor-pointer hover:text-zinc-900 dark:hover:text-white transition-colors">
+                      <GithubIcon size={20} />
+                    </Button>
                   </Flex>
                 </Box>
-              </Flex>
 
-              {/** Orders */}
-              <Flex direction="column" gap="4">
-                <Flex 
-                  direction="row" 
-                  justify="between" 
-                  style={{  backgroundColor: "gray", color: '#ffe' }}
-                  px="4"
-                  py="2"
-                  align="center"
-                >
-                  <Heading as="h3">
-                    Shopping and orders
-                  </Heading>
-                  <Button size="1" variant="ghost">cart</Button>
-                </Flex>
+                <Separator size="4" className="bg-zinc-200 dark:bg-zinc-800" />
+
+                {/* --- Work Experience Section --- */}
                 <Box>
-                  <Flex direction="row" wrap='wrap' gap="4" px='4'>
-                    {orders.length
-                      ? orders.map((order) => 
-                          <Card 
-                            size="1" 
-                            key={order.id}
-                            style={{ backgroundColor: "blue" }}
-                            className="gap-2"
-                          >
-                            <span>{order.id}</span>
-                            <Badge>{Number(order.totalAmount)}</Badge>
+                  <Flex align="center" justify="between" mb="5">
+                    <Heading as="h3" size="5" className="text-zinc-900 dark:text-zinc-100">Work Experience</Heading>
+                    <AddUpdateExperiencePopover workExperience={null} />
+                  </Flex>
+                  
+                  <Flex direction="column" gap="4">
+                    {workExperience.length ? (
+                      workExperience.map((exp) => (
+                        <Box key={exp.id} className="relative pl-6 border-l-2 border-zinc-200 dark:border-zinc-800 pb-2 last:pb-0">
+                          {/* Timeline dot */}
+                          <div className="absolute w-3 h-3 bg-(--iris-9) rounded-full -left-1.75 top-1.5 ring-4 ring-white dark:ring-zinc-900" />
+                          
+                          <Flex justify="between" align="start" wrap="wrap" gap="4" mb="2">
+                            <Box>
+                              <Heading as="h4" size="4" className="text-zinc-900 dark:text-zinc-100">
+                                {exp.jobTitle}
+                              </Heading>
+                              <Text size="2" color="gray" weight="medium" className="mt-1 flex items-center gap-2">
+                                {exp.companyName} <span>•</span> {exp.dates}
+                              </Text>
+                            </Box>
+                            
+                            <Flex gap="2">
+                              <AddUpdateExperiencePopover workExperience={exp} />
+                              <DeleteUserExperience id={exp.id} />
+                            </Flex>
+                          </Flex>
+                          
+                          <Text as="p" size="2" className="text-zinc-600 dark:text-zinc-400 whitespace-pre-wrap mt-2">
+                            {exp.duties}
+                          </Text>
+                        </Box>
+                      ))
+                    ) : (
+                      <Text size="2" color="gray" className="italic p-6 border border-dashed border-zinc-200 dark:border-zinc-700 rounded-lg text-center">
+                        No work experience added yet.
+                      </Text>
+                    )}
+                  </Flex>
+                </Box>
+
+                <Separator size="4" className="bg-zinc-200 dark:bg-zinc-800" />
+
+                {/* --- Publications Section --- */}
+                <Box>
+                  <Flex align="center" justify="between" mb="4">
+                    <Heading as="h3" size="5" className="text-zinc-900 dark:text-zinc-100">Publications</Heading>
+                    <Button size="1" variant="ghost" asChild>
+                      <Link href="/blog">Visit blog area &rarr;</Link>
+                    </Button>
+                  </Flex>
+
+                  <Grid columns={{ initial: "1", sm: "2" }} gap="4">
+                    {posts.length ? (
+                      posts.map((post) => (
+                        <Card key={post.id} size="2" className="bg-zinc-50 dark:bg-zinc-950/50 border border-zinc-200 dark:border-zinc-800">
+                          <Flex direction="column" justify="between" className="h-full">
+                            <Heading as="h4" size="3" className="line-clamp-2 text-zinc-800 dark:text-zinc-200 mb-3">
+                              {post.title}
+                            </Heading>
+                            <Box>
+                              <Badge color={post.published ? "green" : "orange"} variant="soft">
+                                {post.published ? "Published" : "Draft"}
+                              </Badge>
+                            </Box>
+                          </Flex>
+                        </Card>
+                      ))
+                    ) : (
+                      <Text size="2" color="gray" className="col-span-full italic p-6 border border-dashed border-zinc-200 dark:border-zinc-700 rounded-lg text-center">
+                        No publications found.
+                      </Text>
+                    )}
+                  </Grid>
+                </Box>
+
+                <Separator size="4" className="bg-zinc-200 dark:bg-zinc-800" />
+
+                {/* --- Orders Section --- */}
+                <Box>
+                  <Flex align="center" justify="between" mb="4">
+                    <Heading as="h3" size="5" className="text-zinc-900 dark:text-zinc-100">Shopping & Orders</Heading>
+                    <Button size="1" variant="ghost" asChild>
+                      <Link href="/store/cart">View Cart &rarr;</Link>
+                    </Button>
+                  </Flex>
+
+                  <Flex direction="column" gap="4">
+                    {orders.length ? (
+                      orders.map((order) => (
+                        <Card key={order.id} size="2" className="bg-zinc-50 dark:bg-zinc-950/50 border border-zinc-200 dark:border-zinc-800">
+                          <Flex justify="between" align="center" wrap="wrap" gap="4" mb="3">
+                            <Text size="2" weight="bold" className="text-zinc-700 dark:text-zinc-300">
+                              Order #{String(order.id).slice(-6).toUpperCase()}
+                            </Text>
+                            <Flex gap="2" align="center">
+                              <Badge color="blue" variant="soft">${Number(order.totalAmount).toFixed(2)}</Badge>
+                              <Badge color={order.status === "paid" ? "green" : "gray"} variant="surface">
+                                {order.status}
+                              </Badge>
+                            </Flex>
+                          </Flex>
+                          
+                          <Flex direction="column" gap="1" className="text-sm text-zinc-600 dark:text-zinc-400">
                             {order.items.map((itm) => (
-                              <span key={itm.id} className="gap-4">
-                                {itm.title}
-                                {itm.id}
-                                {Number(itm.price)}
-                              </span>
-                            ))} 
-                            <Badge>
-                              {order.status}
-                            </Badge>
-                          </Card>
-                        )
-                      : <Text size={"2"} mx={"4"} my={"2"} color="orange"> The cart is empty. </Text>
-                    }
+                              <Flex key={itm.id} justify="between" className="border-t border-zinc-200 dark:border-zinc-800/50 pt-1 mt-1">
+                                <Text size="1" className="line-clamp-1">{itm.title}</Text>
+                                <Text size="1" weight="medium">${Number(itm.price).toFixed(2)}</Text>
+                              </Flex>
+                            ))}
+                          </Flex>
+                        </Card>
+                      ))
+                    ) : (
+                      <Text size="2" color="gray" className="italic p-6 border border-dashed border-zinc-200 dark:border-zinc-700 rounded-lg text-center">
+                        Your order history is empty.
+                      </Text>
+                    )}
                   </Flex>
                 </Box>
+
               </Flex>
-            </Flex>
-          </Card>
-        </Flex>
-      </Flex>
+            </Card>
+
+          </Flex>
+        </Grid>
+      </Box>
     </Box>
   );
 }

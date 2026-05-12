@@ -22,7 +22,7 @@ export interface Cart {
 }
 
 export type GuestCartItem = {
-  merchandiseId: string;
+  merchandise: MerchandiseItem;
   quantity: number;
 };
 
@@ -73,3 +73,15 @@ export interface Thread {
   dateArchived: Date | null;
   messages: Message[]; // Array of messages attached to the thread
 }
+
+export interface UIThread {
+  id: string;
+  sender: string;
+  email: string;
+  messages: {
+    id: string;
+    role: "user" | "admin" | "bot";
+    content: string;
+    timestamp: string;
+  }[];
+};

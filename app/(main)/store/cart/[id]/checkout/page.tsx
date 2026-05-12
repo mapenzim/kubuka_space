@@ -1,8 +1,9 @@
-import { DISCOUNT, VAT } from "@/lib/utils";
+import { DISCOUNT } from "@/lib/utils";
 import { auth } from "@/auth";
 import CheckoutForm from "@/components/cart/components/checkout_form";
 import prisma from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";
+import { Box, Flex, Heading, Text, Separator, Card } from "@radix-ui/themes";
 
 export const dynamic = "force-dynamic";
 
@@ -46,86 +47,107 @@ export default async function Page({ params }: Props) {
 
   if (!cart) return notFound();
 
-  // 🧮 Totals
-  const subtotal = cart.cartItems.reduce((sum, item) => {
-    const quantity = Number(item.quantity) || 0;
-    const price = Number(item.merchandise?.price) || 0;
-    return sum + quantity * price;
-  }, 0);
-
-  const vat = subtotal * Number(VAT || 0);
-  const discount = Number(DISCOUNT || 0);
-  const total = Math.max(0, subtotal + vat - discount);
-
   const isEmpty = cart.cartItems.length === 0;
 
   if (isEmpty) {
     redirect("/store"); // no checkout for empty carts
   }
 
+  /**
+   * ---------------------------
+   * Totals (Backwards VAT Calculation)
+   * ---------------------------
+   */
+  // DB Price is INCLUSIVE of 15% VAT
+  const inclusiveSubtotal = cart.cartItems.reduce((sum, item) => {
+    const quantity = Number(item.quantity) || 0;
+    const price = Number(item.merchandise?.price) || 0;
+    return sum + quantity * price;
+  }, 0);
+
+  const VAT_RATE = 0.15;
+  const exclusiveSubtotal = inclusiveSubtotal / (1 + VAT_RATE);
+  const vat = inclusiveSubtotal - exclusiveSubtotal;
+  
+  const discount = Number(DISCOUNT || 0);
+  const total = Math.max(0, inclusiveSubtotal - discount);
+
   return (
-    <div className="min-h-screen bg-transparent px-6 py-16 flex justify-center">
-      <div className="w-full max-w-3xl bg-gray-600 p-8 rounded-2xl shadow-lg">
+    <Box className="min-h-screen bg-white dark:bg-zinc-950 px-6 py-16 transition-colors duration-200 flex justify-center">
+      <Box className="w-full max-w-3xl">
+        
+        {/* 🧾 Order Summary Box */}
+        <Card size="4" className="bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 shadow-sm mb-8">
+          <Heading as="h2" size="5" weight="bold" mb="4" className="text-zinc-900 dark:text-zinc-100">
+            Order Summary
+          </Heading>
 
-        {/* 🧾 Order Summary */}
-        <div className="mb-8">
-          <h2 className="text-lg text-zinc-200 font-semibold mb-4">Order Summary</h2>
+          <Box className="border border-zinc-200 dark:border-zinc-700 rounded-xl overflow-hidden bg-white dark:bg-zinc-800">
+            
+            {/* Items List */}
+            <Flex direction="column" className="divide-y divide-zinc-200 dark:divide-zinc-700">
+              {cart.cartItems.map((item) => (
+                <Flex key={item.id} justify="between" align="center" p="4">
+                  <Box>
+                    <Text as="div" size="2" weight="medium" className="text-zinc-700 dark:text-zinc-300">
+                      Item ref: <Text className="text-orange-500 dark:text-orange-400">{item.id.slice(-6).toUpperCase()}</Text>
+                    </Text>
+                    <Text as="div" size="2" color="gray">
+                      Qty: {item.quantity}
+                    </Text>
+                  </Box>
 
-          <div className="divide-y dark:divide-zinc-500 border rounded-xl bg-gray-50 dark:bg-gray-800">
-            {cart.cartItems.map((item) => (
-              <div
-                key={item.id}
-                className="p-4 flex justify-between items-center"
-              >
-                <div>
-                  <p className="font-medium dark:text-zinc-400">
-                    <span className="">Item ref:</span> <span className="text-orange-400">{item.id.slice(-6).toUpperCase()}</span>
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Qty: {item.quantity}
-                  </p>
-                </div>
+                  <Box className="text-right">
+                    <Text as="div" size="3" weight="medium" className="capitalize text-zinc-900 dark:text-zinc-100">
+                      {item.merchandise?.title}
+                    </Text>
+                    <Text as="div" size="2" color="gray">
+                      ${Number(item.merchandise?.price || 0).toFixed(2)}
+                    </Text>
+                  </Box>
+                </Flex>
+              ))}
+            </Flex>
 
-                <div className="text-right">
-                  <p className="font-medium capitalize dark:text-zinc-400">
-                    {item.merchandise?.title}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    ${Number(item.merchandise?.price || 0).toFixed(2)}
-                  </p>
-                </div>
-              </div>
-            ))}
+            {/* Totals Section */}
+            <Box className="bg-zinc-50 dark:bg-zinc-800/50 p-4 border-t border-zinc-200 dark:border-zinc-700">
+              <Flex direction="column" gap="2" className="ml-0 sm:ml-16">
+                
+                <Flex justify="between" className="pr-4">
+                  <Text size="2" weight="medium" className="text-zinc-700 dark:text-zinc-400">Subtotal (Excl. VAT)</Text>
+                  <Text size="2" className="text-zinc-900 dark:text-zinc-300">${exclusiveSubtotal.toFixed(2)}</Text>
+                </Flex>
 
-            {/* Totals */}
-            <div className="ml-16 py-4 space-y-1 text-sm">
-              <div className="flex justify-between pr-4">
-                <span className="dark:text-zinc-400 font-semibold">Subtotal</span>
-                <span className="dark:text-zinc-400">${subtotal.toFixed(2)}</span>
-              </div>
+                <Flex justify="between" className="pr-4">
+                  <Text size="2" weight="medium" className="text-zinc-700 dark:text-zinc-400">VAT (15%)</Text>
+                  <Text size="2" className="text-zinc-900 dark:text-zinc-300">${vat.toFixed(2)}</Text>
+                </Flex>
 
-              <div className="flex justify-between pr-4">
-                <span className="dark:text-zinc-400 font-semibold">VAT</span>
-                <span className="dark:text-zinc-400">${vat.toFixed(2)}</span>
-              </div>
+                <Flex justify="between" className="pr-4">
+                  <Text size="2" weight="medium" className="text-zinc-700 dark:text-zinc-400">Discount</Text>
+                  <Text size="2" className="text-zinc-900 dark:text-zinc-300">- ${discount.toFixed(2)}</Text>
+                </Flex>
 
-              <div className="flex justify-between pr-4">
-                <span className="dark:text-zinc-400 font-semibold">Discount</span>
-                <span className="dark:text-zinc-400">- ${discount.toFixed(2)}</span>
-              </div>
+                <Separator size="4" my="2" className="bg-zinc-300 dark:bg-zinc-600 w-full" />
 
-              <div className="flex justify-between font-semibold text-base pt-2 border-t border-zinc-500">
-                <span className="dark:text-zinc-400 font-semibold">Total</span>
-                <span className="dark:text-zinc-400 pr-4 underline decoration-2 underline-offset-2">${total.toFixed(2)}</span>
-              </div>
-            </div>
-          </div>
-        </div>
+                <Flex justify="between" align="center" className="pr-4">
+                  <Text size="4" weight="bold" className="text-zinc-900 dark:text-zinc-100">Total</Text>
+                  <Text size="4" weight="bold" className="text-zinc-900 dark:text-zinc-100 underline decoration-2 underline-offset-2">
+                    ${total.toFixed(2)}
+                  </Text>
+                </Flex>
 
-        {/* 💳 Checkout */}
-        <CheckoutForm cartId={cart.id} total={total} />
+              </Flex>
+            </Box>
+          </Box>
+        </Card>
 
-      </div>
-    </div>
+        {/* 💳 Checkout Component */}
+        <Box>
+          <CheckoutForm cartId={cart.id} total={total} />
+        </Box>
+
+      </Box>
+    </Box>
   );
 }

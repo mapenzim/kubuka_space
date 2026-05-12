@@ -11,6 +11,9 @@ export function SignoutButton({ children, close }: { children?: React.ReactNode;
 
   const handleSignOut = async () => {
     await signOut({ redirect: false });
+    // clear guest cart before signout
+    localStorage.removeItem("tempCart");
+    localStorage.removeItem("tempCartId");
     router.refresh(); // 🔥 refresh server components (NavigationBar)
     close();
   };

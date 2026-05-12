@@ -6,10 +6,34 @@ import { formatName } from "@/lib/utils";
 import { getPost } from "@/app/actions/postActions.server";
 import { auth } from "@/auth";
 import { ClientViewer } from "@/components/lexical-editor/client-viewer";
+import { Box, Card, Flex, Heading, Text, Badge, Button, Container } from "@radix-ui/themes";
 
 export const dynamic = "force-dynamic";
 
-export default async function ReadPage({ params }: {params: Promise<{ item: string}>}) {
+/**
+ * ---------------------------
+ * Helpers
+ * ---------------------------
+ */
+function calculateReadTime(content: string | undefined | null): string {
+  if (!content) return "1 min read";
+  
+  // Extract words using a regex boundary (works decently well for stripping HTML/JSON noise)
+  const wordCount = content.match(/\b\w+\b/g)?.length || 0;
+  
+  // Average adult reading speed is ~225 words per minute
+  const wordsPerMinute = 225; 
+  const minutes = Math.max(1, Math.ceil(wordCount / wordsPerMinute));
+  
+  return minutes === 1 ? "1 min read" : `${minutes} mins read`;
+}
+
+/**
+ * ---------------------------
+ * Page
+ * ---------------------------
+ */
+export default async function ReadPage({ params }: { params: Promise<{ item: string }> }) {
   const session = await auth();
   const { item } = await params;
   const post = await getPost(item);
@@ -19,67 +43,98 @@ export default async function ReadPage({ params }: {params: Promise<{ item: stri
   }
 
   const isAuthor = session?.user?.email === post?.author?.email;
+  const readTime = calculateReadTime(post.content as string);
 
   return (
-    <div className="min-h-screen">
-      <div className="max-w-4xl mx-auto px-4 py-16">
-        <article className="rounded-xl bg-white dark:bg-slate-900 p-4 ring-3 ring-indigo-50 dark:ring-zinc-600 sm:p-6 lg:p-8">
-          <div className="flex items-start sm:gap-8">
-            <div className="hidden sm:grid sm:size-20 sm:shrink-0 sm:place-content-center sm:rounded-full sm:border-2 sm:border-indigo-500" aria-hidden="true">
+    <Box className="min-h-screen bg-zinc-50 dark:bg-zinc-950 py-16 px-4 transition-colors duration-200">
+      <Container size="3">
+        <Card 
+          size="4" 
+          className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 shadow-sm rounded-2xl"
+        >
+          <Flex gap={{ initial: "4", sm: "8" }} direction={{ initial: "column", sm: "row" }} align="start">
+            
+            {/* Left Column: Author Avatar */}
+            <Box className="hidden sm:flex shrink-0 place-content-center rounded-full border-2 border-(--iris-6) p-1">
               <Image
                 src="/images/kubuka-logo.png"
                 alt={formatName(post?.author?.name ?? "User")}
-                width={100}
-                height={100}
-                className="rounded-full"
+                width={80}
+                height={80}
+                className="rounded-full object-cover"
               />
-            </div>
+            </Box>
 
-            <div>
-              <div className="w-full items-start justify-start space-x-4">
-                <strong className="rounded-sm border border-indigo-500 bg-indigo-500 px-3 py-1.5 text-[10px] font-medium text-white dark:text-zinc-200">
+            {/* Right Column: Article Content */}
+            <Flex direction="column" className="w-full">
+              
+              {/* Top Bar: Status & Actions */}
+              <Flex gap="3" align="center" wrap="wrap" mb="4">
+                <Badge 
+                  color={post.published ? "green" : "orange"} 
+                  size="2" 
+                  variant="soft"
+                >
                   {post.published ? "Published" : "Draft"}
-                </strong>
+                </Badge>
+                
                 {isAuthor && (
-                  <Link
-                    href={`/posts/${post.id}`}
-                    className="rounded-sm border border-indigo-500 bg-indigo-500 px-3 py-1.5 text-[10px] font-medium text-white transition-colors hover:bg-indigo-600"
-                  >
-                    Edit Post
-                  </Link>
+                  <Button size="1" color="iris" variant="soft" asChild className="cursor-pointer">
+                    <Link href={`/posts/${post.id}`}>
+                      Edit Post
+                    </Link>
+                  </Button>
                 )}
-              </div>
+              </Flex>
 
-              <h3 className="mt-4 text-lg font-medium sm:text-xl dark:text-zinc-300">
-                <a href="#" className="hover:underline"> {post.title} </a>
-              </h3>
+              {/* Title */}
+              <Heading as="h1" size="7" weight="bold" className="text-zinc-900 dark:text-zinc-100 mb-6">
+                {post.title}
+              </Heading>
 
-              <ClientViewer 
-                content={post.content as string}
-              />
+              {/* Lexical Editor Viewer */}
+              {/* Note: Wrapped in a prose div to ensure internal Lexical tags inherit good typography styles if needed */}
+              <Box className="prose dark:prose-invert max-w-none text-zinc-800 dark:text-zinc-300">
+                <ClientViewer content={post.content as string} />
+              </Box>
 
-              <div className="mt-4 sm:flex sm:items-center sm:gap-2">
-                <div className="flex items-center gap-1 text-gray-500">
-                  <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              {/* Footer Metadata */}
+              <Flex 
+                align="center" 
+                gap="3" 
+                mt="6" 
+                pt="4" 
+                wrap="wrap"
+                className="border-t border-zinc-200 dark:border-zinc-800"
+              >
+                {/* Read Time */}
+                <Flex align="center" gap="1" className="text-zinc-500 dark:text-zinc-400">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
+                  <Text size="2" weight="medium">{readTime}</Text>
+                </Flex>
 
-                  <p className="text-xs font-medium">48:32 minutes</p>
-                </div>
+                <Text className="hidden sm:block text-zinc-300 dark:text-zinc-700" aria-hidden="true">
+                  ·
+                </Text>
 
-                <span className="hidden sm:block" aria-hidden="true">·</span>
-
-                <p className="mt-2 text-xs font-medium text-gray-500 sm:mt-0">
-                  Featuring -{" "}
-                  <Link href={`/authors/${post.authorId}`} className="underline hover:text-gray-700"> 
+                {/* Author Info */}
+                <Text size="2" className="text-zinc-500 dark:text-zinc-400">
+                  Featuring —{" "}
+                  <Link 
+                    href={`/authors/${post.authorId}`} 
+                    className="text-zinc-700 dark:text-zinc-300 font-medium hover:text-(--iris-11) dark:hover:text-(--iris-11) hover:underline transition-colors"
+                  > 
                     {formatName(post.author.name ?? "User")}
                   </Link>
-                </p>
-              </div>
-            </div>
-          </div>
-        </article>
-      </div>
-    </div>
+                </Text>
+              </Flex>
+
+            </Flex>
+          </Flex>
+        </Card>
+      </Container>
+    </Box>
   );
 }

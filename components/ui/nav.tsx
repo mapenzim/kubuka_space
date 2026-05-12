@@ -14,6 +14,7 @@ const NavigationApp = () => {
     { name: "Blog", path: "/posts" },
     { name: "Pricing", path: "/pricing" },
     { name: "Docs", path: "/docs" },
+    { name: "Contact Us", path: "/contact_us" },
   ];
 
   const { data: session } = useSession();
@@ -78,7 +79,7 @@ const NavigationApp = () => {
                       {user.name?.split(" ")[0][0]}
                   </IconButton>
                 </DropdownMenu.Trigger>
-                <DropdownMenu.Content size="1" side="bottom">
+                <DropdownMenu.Content size="1" side="bottom" align="end">
                   <DropdownMenu.Item shortcut="⌘ E" onSelect={() => router.push("/profile")}>
                     Profile
                   </DropdownMenu.Item>

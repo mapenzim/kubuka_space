@@ -5,6 +5,10 @@ import { revalidatePath } from "next/cache";
 import prisma from "@/lib/prisma"; 
 import { ulidId } from "@/lib/server-utils";
 
+type ChatEvent =
+  | { type: "message"; role: "user" | "admin" | "bot"; content: string }
+  | { type: "typing"; role: "admin" }
+  
 // ------------------------------------------------------------------
 // 1. READ: Fetching Data
 // ------------------------------------------------------------------

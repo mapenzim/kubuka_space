@@ -63,7 +63,9 @@ function FormLexicalEditor({ onChange }: { onChange: (text: string) => void }) {
           }
           ErrorBoundary={LexicalErrorBoundary}
         />
+
         <HistoryPlugin />
+
         {/* 2. Added OnChangePlugin to extract the plain text */}
         <OnChangePlugin 
           onChange={(editorState) => {
@@ -72,6 +74,14 @@ function FormLexicalEditor({ onChange }: { onChange: (text: string) => void }) {
               // inside your admin dashboard, you can use JSON.stringify(editorState.toJSON()) instead.
               const root = editorState._nodeMap.get('root');
               onChange(root ? root.getTextContent() : "");
+
+              //const text = editorState
+              //  .toJSON()
+              //  ?.root?.children
+              //  ?.map((n: any) => n.text)
+              //  .join(" ") || "";
+
+              //onChange(text);
             });
           }} 
         />
@@ -97,14 +107,56 @@ export default function ContactUsPage() {
   const [replyText, setReplyText] = useState("");
   
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  // Handles the initial form submission
-  async function handleInitialSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+
+  // ----------------------------------------------------
+  // SSE CONNECTION (REAL TIME)
+  // ----------------------------------------------------
+  useEffect(() => {
+    if (!activeThread?.id) return;
+
+    const eventSource = new EventSource(
+      `/api/sse?threadId=${activeThread.id}`
+    );
+
+    eventSource.onmessage = (event) => {
+      const msg = JSON.parse(event.data);
+
+      setActiveThread((prev) => {
+        if (!prev) return prev;
+
+        return {
+          ...prev,
+          messages: [...prev.messages, msg],
+        };
+      });
+    };
+
+    return () => eventSource.close();
+  }, [activeThread?.id]);
+
+  // ----------------------------------------------------
+  // Auto scroll
+  // ----------------------------------------------------
+  useEffect(() => {
+    scrollContainerRef.current?.scrollTo({
+      top: scrollContainerRef.current.scrollHeight,
+      behavior: "smooth",
+    });
+  }, [activeThread?.messages?.length]);
+
+  // ----------------------------------------------------
+  // Start conversation
+  // ----------------------------------------------------
+  async function handleInitialSubmit(
+    e: React.SubmitEvent<HTMLFormElement>
+  ) {
+    e.preventDefault();
     setErrorText("");
 
-    const formData = new FormData(event.currentTarget);
-    const sender = formData.get("sender") as string;
-    const email = formData.get("email") as string;
+    const formData = new FormData(e.currentTarget);
+
+    const sender = String(formData.get("sender"));
+    const email = String(formData.get("email"));
 
     if (!messageContent.trim()) {
       setErrorText("Please enter a message.");
@@ -112,98 +164,48 @@ export default function ContactUsPage() {
     }
 
     startTransition(async () => {
-      const result = await receiveIncomingMessage({ sender, email, content: messageContent });
-      
-      if (result.success && result.thread) {
-        // Transition UI to the Chat App view
-        setActiveThread(result.thread);
-      } else {
-        setErrorText("Failed to send message. Please try again.");
+      const res = await receiveIncomingMessage({
+        sender,
+        email,
+        content: messageContent,
+      });
+
+      if (!res.success) {
+        setErrorText("Failed to send message.");
+        return;
       }
+
+      setActiveThread(res.thread ?? null);
     });
   }
 
-  // Handles quick replies once the chat view is active
+  // ----------------------------------------------------
+  // Send reply (chat mode)
+  // ----------------------------------------------------
   async function handleChatReply() {
     if (!activeThread || !replyText.trim()) return;
-    
+
     startTransition(async () => {
-      const result = await receiveIncomingMessage({ 
-        sender: activeThread.sender, 
-        email: activeThread.email, 
-        content: replyText 
+      const res = await receiveIncomingMessage({
+        sender: activeThread.sender,
+        email: activeThread.email,
+        content: replyText,
       });
-      
-      if (result.success && result.thread) {
-        setActiveThread(result.thread);
-        setReplyText(""); // Clear the text area on success
+
+      if (res.success) {
+        setReplyText("");
       }
     });
   }
 
-  // Create a helper function to trigger the scroll
-  const scrollToBottom = () => {
-    if (scrollContainerRef.current) {
-      const container = scrollContainerRef.current;
-      // Tell the container to scroll to its maximum internal height
-      container.scrollTo({
-        top: container.scrollHeight,
-        behavior: "smooth",
-      });
-    }
-  };
-
-  // Watch the active thread's messages. Whenever the length changes, scroll down!
-  useEffect(() => {
-    scrollToBottom();
-  }, [activeThread?.messages?.length]);
-
-  useEffect(() => {
-    // 1. Escape early: Don't poll if the user hasn't started a chat yet
-    if (!activeThread?.id) return;
-
-    // 2. Track mounting status to prevent memory leaks if the user navigates away
-    let isMounted = true; 
-
-    const pollForMessages = async () => {
-      try {
-        const result = await getThreadById(activeThread.id);
-        
-        if (isMounted && result.success && result.thread) {
-          // 3. Functional state update: safely compare the new data against the MOST RECENT state
-          setActiveThread((prevThread) => {
-            // If the thread is null, or if the message count has changed, update it!
-            if (!result.thread) {
-              return prevThread;
-            }
-            if (!prevThread || prevThread.messages.length !== result.thread.messages.length) {
-              return result.thread;
-            }
-            // IMPORTANT: Return the exact same 'prevThread' object if nothing changed.
-            // This tells React to skip rendering, preventing UI flicker.
-            return prevThread; 
-          });
-        }
-      } catch (error) {
-        console.error("Failed to poll for new messages:", error);
-      }
-    };
-
-    // 4. Set the interval (e.g., every 3 seconds)
-    const intervalId = setInterval(pollForMessages, 3000);
-
-    // 5. Cleanup function: clear the interval when the component unmounts
-    return () => {
-      isMounted = false;
-      clearInterval(intervalId);
-    };
-
-  }, [activeThread?.id]); // ONLY re-run this effect if the thread ID itself changes
+  const isChatMode = !!activeThread;
 
   return (
     <Container size="4" px="4" mt={{ initial: "4", md: "8" }} pb="8" className="bg-gray-100 dark:bg-zinc-800 dark:text-gray-300">
-      <Section size="3">{/* Page Header is hidden if chatting to make it feel like a focused app */}
-        {!activeThread && (
+      <Section size="3">
+        
+        {/* Page Header is hidden if chatting to make it feel like a focused app */}
+        {!isChatMode && (
           <Box mb="6" className="text-center md:text-left">
             <Heading as="h1" size="8" mb="2">Get in Touch</Heading>
             <Text as="p" size="4" color="gray">
@@ -215,7 +217,7 @@ export default function ContactUsPage() {
         <Grid columns={{ initial: "1", md: "2" }} gap="6" align="start">
           
           {/* THE DYNAMIC LEFT SIDE: Shows Form OR Chat */}
-          {!activeThread ? (
+          {!isChatMode ? (
             <Card size="4" variant="surface">
               {errorText && (
                 <Text color="ruby" size="2" mb="4" as="div">{errorText}</Text>
@@ -261,13 +263,13 @@ export default function ContactUsPage() {
               <Box className="flex-1 flex flex-col gap-4 bg-(--gray-a2)">
                 <ScrollArea type="hover" scrollbars="vertical" style={{ height: 392, padding: "16px" }} ref={scrollContainerRef}>
 
-                  {activeThread.messages.map((msg) => {
+                  {activeThread?.messages?.map((msg) => {
                     // For the USER, an "incoming" message in the DB means THEY sent it. 
                     // "outgoing" means the ADMIN sent it to them.
-                    const isUserMessage = msg.direction === "incoming";
+                    const isUserMessage = msg?.direction === "incoming";
                     
                     return (
-                      <Flex key={msg.id} direction="column" align={isUserMessage ? "end" : "start"} className="w-full">
+                      <Flex key={msg?.id} direction="column" align={isUserMessage ? "end" : "start"} className="w-full">
                         <Box 
                           className={`max-w-[85%] md:max-w-[75%] px-3 py-3 rounded-2xl ${
                             isUserMessage 
@@ -276,11 +278,11 @@ export default function ContactUsPage() {
                           }`}
                         >
                           <Text size="2" className="leading-relaxed">
-                            {msg.content}
+                            {msg?.content}
                           </Text>
                         </Box>
                         <Text size="1" color="gray" mt="1" className={isUserMessage ? "mr-1" : "ml-1"}>
-                          {formatTime(msg.timestamp)}
+                          {/*formatTime(msg.timestamp)*/}
                         </Text>
                       </Flex>
                     );

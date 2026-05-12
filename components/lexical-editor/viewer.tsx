@@ -42,9 +42,6 @@ function LoadContent({ content }: { content: string }) {
         console.warn("Viewer hydration failed. Injecting safe fallback.", error);
         editor.update(() => {
           const root = $getRoot();
-          //if (root.getChildrenSize() === 0) {
-          //  root.append($createParagraphNode());
-          //}
           root.clear(); 
 
           // Clear any default nodes
@@ -63,7 +60,8 @@ function LoadContent({ content }: { content: string }) {
   return null;
 }
 
-export function PostViewer({ content }: { content: string }) {// ✨ 2. Add the same theme used in your editor to retain styles
+export function PostViewer({ content }: { content: string }) {
+  // ✨ 2. Add the same theme used in your editor to retain styles
   const theme = {
     heading: {
       h1: 'mb-2 text-3xl font-bold',
@@ -91,6 +89,7 @@ export function PostViewer({ content }: { content: string }) {// ✨ 2. Add the 
     editable: false, // 👈 important
     theme, // 👈 ensures it actually looks like the post they created
     onError: (e: Error) => console.error(e),
+    
     // ✨ 3. MUST register the same nodes, or they will be deleted on load
     nodes: [HeadingNode, QuoteNode, ListNode, ListItemNode, LinkNode], 
   };

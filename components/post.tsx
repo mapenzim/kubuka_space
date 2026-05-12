@@ -1,26 +1,37 @@
 "use client";
 
-import Form from "next/form";
+import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useFormStatus } from "react-dom";
-import { publishPost, saveDraft } from "@/app/actions/postActions.server";
-import { useMemo, useRef, useState } from "react";
-import { redirect, useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { useSession } from "next-auth/react";
+import { toast } from "sonner";
+import { useFormStatus } from "react-dom";
+
+import { publishPost, saveDraft } from "@/app/actions/postActions.server";
 import LexicalEditor from "./lexical-editor/editor";
 
-const debounce = (func: (...args: any[]) => void, wait: number) => {
-  let timeout: NodeJS.Timeout;
-  return (...args: any[]) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func.apply(null, args), wait);
-  };
-};
+import {
+  Button,
+  Flex,
+  Text,
+  Box,
+  Heading,
+  Card,
+} from "@radix-ui/themes";
+import Form from "next/form";
 
-function SubmitButton({ isPublished, postId, content }: { isPublished?: boolean; postId: string; content: string }) {
+function SubmitButton({
+  isPublished,
+  postId,
+  content,
+}: {
+  isPublished?: boolean;
+  postId?: string;
+  content: string;
+}) {
   const { pending } = useFormStatus();
   const { data: session } = useSession();
+  const router = useRouter();
 
   const handleDraft = async (formData: FormData) => {
     formData.set("content", content);
@@ -31,34 +42,35 @@ function SubmitButton({ isPublished, postId, content }: { isPublished?: boolean;
       return;
     }
 
-    toast.success("The draft was saved successfully.");
-
+    toast.success("Draft saved successfully.");
     if (postId) {
-      redirect(`/posts/${postId}/read`);
+      router.push(`/posts/${postId}/read`);
+    } else {
+      router.push(`/authors/${session?.user.id}`);
     }
-
-    redirect(`/authors/${session?.user.id}`);
   };
- 
+
   return (
-    <div className="flex gap-4">
-      <button
+    <Flex gap="3">
+      <Button
         type="submit"
         disabled={pending}
-        className="bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+        color="blue"
+        variant="solid"
       >
         {isPublished ? "Update Post" : "Publish Post"}
-      </button>
+      </Button>
       {!isPublished && (
-        <button
+        <Button
           formAction={handleDraft}
           disabled={pending}
-          className="bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 text-gray-700 px-6 py-2 rounded-lg font-medium transition-colors"
+          color="gray"
+          variant="soft"
         >
           Save as Draft
-        </button>
+        </Button>
       )}
-    </div>
+    </Flex>
   );
 }
 
@@ -77,94 +89,101 @@ interface PostFormProps {
 
 export function PostForm({ post }: PostFormProps) {
   const [content, setContent] = useState(post?.content || "");
+  const contentRef = useRef(content);
   const router = useRouter();
   const { data: session } = useSession();
-  const contentRef = useRef("");
 
   const handleSubmit = async (formData: FormData) => {
     formData.set("content", contentRef.current);
     const res = await publishPost(formData);
 
-    if ( "error" in res) {
+    if ("error" in res) {
       toast.error(res.error.message);
+      return;
     }
 
-    toast.success("The post was saved successfully.");
-
-    if (post?.id) return redirect(`/posts/${post?.id}/read`);
-
-    return redirect("/posts");
+    toast.success("Post saved successfully.");
+    if (post?.id) {
+      router.push(`/posts/${post.id}/read`);
+    } else {
+      router.push("/posts");
+    }
   };
 
   const isPublished = post?.published;
 
-  if (
-    post && session?.user.id !== post?.authorId 
-  ) { 
+  if (post && session?.user.id !== post.authorId) {
     toast.error("You don't have permission to edit this post.");
-    redirect("/posts")
+    router.push("/posts");
+    return null;
   }
 
   return (
-    <div className="min-h-screen py-14 px-4">
-      <div className="max-w-2xl mx-auto px-4">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">
+    <Box className="min-h-screen py-14 px-4">
+      <Box className="max-w-2xl mx-auto px-4">
+        <Flex justify="between" align="center" mb="6">
+          <Heading size="6">
             {!post ? "Create New Post" : "Edit Post"}
-          </h1>
+          </Heading>
           {!!post && (
-            <Link
-              href={`#`}
-              className="text-gray-600 hover:text-gray-800 font-medium transition-colors"
+            <Button
+              variant="ghost"
+              color="gray"
               onClick={() => router.back()}
             >
               Cancel
-            </Link>
+            </Button>
           )}
-        </div>
-      </div>
-      <div className="rounded-xl shadow-sm border border-gray-100 p-4">
-        <Form action={handleSubmit} className="space-y-6">
+        </Flex>
+      </Box>
+
+      <Card className="max-w-2xl mx-auto" variant="surface" style={{ padding: "2rem" }}>
+        <Form action={handleSubmit}>
           {post && <input type="hidden" name="postId" value={post.id} />}
-          {post?.id && <input type="hidden" name="authorId" value={post.authorId} />}
-          
-          <div>
-            <label
-              htmlFor="title"
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              Title
-            </label>
-            <input
-              type="text"
-              id="title"
-              name="title"
-              required
-              defaultValue={post?.title}
-              placeholder="Enter your post title"
-              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow"
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="content"
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              Content
-            </label>
-            <LexicalEditor 
-              key={post?.id} 
-              initialValue={post?.content as string} 
-              onChange={(val) => {
-                contentRef.current = val;
-              }} 
-            />
-          </div>
-          <div className="flex justify-end pt-4">
-            <SubmitButton isPublished={isPublished} postId={post?.id as string} content={contentRef.current} />
-          </div>
+          {post?.id && (
+            <input type="hidden" name="authorId" value={post.authorId} />
+          )}
+
+          <Flex direction="column" gap="4">
+            <Box>
+              <Text as="label" htmlFor="title" size="2" weight="medium">
+                Title
+              </Text>
+              <input
+                type="text"
+                id="title"
+                name="title"
+                required
+                defaultValue={post?.title}
+                placeholder="Enter your post title"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
+              />
+            </Box>
+
+            <Box>
+              <Text as="label" htmlFor="content" size="2" weight="medium">
+                Content
+              </Text>
+              <LexicalEditor
+                key={post?.id}
+                initialValue={post?.content as string}
+                onChange={(val) => {
+                  contentRef.current = val;
+                  setContent(val);
+                }}
+              />
+            </Box>
+
+            <Flex justify="end" pt="4">
+              <SubmitButton
+                isPublished={isPublished}
+                postId={post?.id}
+                content={contentRef.current}
+              />
+            </Flex>
+          </Flex>
         </Form>
-      </div>
-    </div>
+      </Card>
+    </Box>
   );
 }
