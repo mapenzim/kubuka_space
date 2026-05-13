@@ -13,6 +13,7 @@ import { useEffect, useRef } from "react";
 import { $getRoot, $createParagraphNode, $createTextNode } from "lexical";
 import { ListNode, ListItemNode } from "@lexical/list";
 import { LinkNode } from "@lexical/link";
+import editortheme from "./editorTheme";
 
 // ✨ 1. Upgraded to the bulletproof hydration logic
 function LoadContent({ content }: { content: string }) {
@@ -61,33 +62,11 @@ function LoadContent({ content }: { content: string }) {
 }
 
 export function PostViewer({ content }: { content: string }) {
-  // ✨ 2. Add the same theme used in your editor to retain styles
-  const theme = {
-    heading: {
-      h1: 'mb-2 text-3xl font-bold',
-      h2: 'mb-2 text-2xl font-bold',
-      h3: 'mb-1 text-xl font-semibold',
-      h4: 'mb-1 text-lg font-semibold',
-      h5: 'mb-1 text-md font-semibold',
-    },
-    paragraph: 'my-0',
-    quote:
-      'my-2 border-l-4 [border-left-style:solid] border-zinc-300 pl-4 italic text-zinc-500 dark:border-zinc-600 dark:text-zinc-400',
-    text: {
-      bold: 'font-bold',
-      italic: 'italic',
-      underline: 'underline',
-    },
-    list: {
-      ul: "list-disc ml-6",
-      ol: "list-decimal ml-6",
-    },
-  };
 
   const config = {
     namespace: "Viewer",
     editable: false, // 👈 important
-    theme, // 👈 ensures it actually looks like the post they created
+    theme: editortheme, // 👈 ensures it actually looks like the post they created
     onError: (e: Error) => console.error(e),
     
     // ✨ 3. MUST register the same nodes, or they will be deleted on load
@@ -98,7 +77,7 @@ export function PostViewer({ content }: { content: string }) {
     <LexicalComposer initialConfig={config}>
       <div className="prose dark:prose-invert dark:text-zinc-400">
         <RichTextPlugin
-          contentEditable={<ContentEditable className="outline-none" />}
+          contentEditable={<ContentEditable className=" text-zinc-600 dark:text-zinc-600" />}
           placeholder={null}
           ErrorBoundary={LexicalErrorBoundary}
         />

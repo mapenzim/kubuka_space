@@ -36,12 +36,12 @@ export default async function Posts() {
   const isEmpty = posts.length === 0;
 
   return (
-    <Box className="min-h-screen bg-white dark:bg-zinc-950 transition-colors duration-200 py-12 px-6" mb={'8'}>
+    <Box className="min-h-screen bg-white dark:bg-zinc-950 transition-colors duration-200 pt-16 py-32 px-6">
       <Container size="4">
         
         {/* Header */}
         <Flex justify="between" align="center" mb="8">
-          <Heading as="h1" size="8" color="gray" highContrast>
+          <Heading as="h1" size="8" color="gray" className="dark:text-zinc-400!" highContrast>
             Blog
           </Heading>
           
@@ -89,7 +89,7 @@ export default async function Posts() {
                   <Heading as="h2" size="4" className="line-clamp-2 leading-snug">
                     <Link 
                       href={`/posts/${post.id}/read`}
-                      className="text-zinc-900 dark:text-zinc-100 hover:text-(--iris-11) transition-colors before:absolute before:inset-0"
+                      className="text-zinc-900 dark:text-zinc-700 hover:text-(--iris-11) transition-colors before:absolute before:inset-0"
                     >
                       {post.title}
                     </Link>
@@ -104,11 +104,11 @@ export default async function Posts() {
                     </Text>
 
                     {session?.user?.email === post.author.email && (
-                      <Button variant="ghost" size="1" color="gray" className="relative z-10 cursor-pointer" asChild >
+                      <Text size="2" color="gray" className="relative z-10 hover:underline dark:hover:text-teal-600" asChild >
                         <Link href={`/posts/${post.id}`}>
                           Update
                         </Link>
-                      </Button>
+                      </Text>
                     )}
                   </Flex>
                   

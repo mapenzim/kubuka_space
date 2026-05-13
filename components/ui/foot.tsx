@@ -82,7 +82,7 @@ export default function Footer() {
                 </svg>
               </a>
               <a
-                className="bg-white text-gray-900 dark:bg-zinc-400 dark:text-gray-900 shadow-lg font-normal items-center justify-center align-center rounded-full outline-none focus:outline-none p-3"
+                className="bg-white text-gray-900 dark:bg-zinc-400 dark:text-gray-900 shadow-lg font-normal items-center justify-center align-middle rounded-full outline-none focus:outline-none p-3"
                 href="#"
               >
                 <svg

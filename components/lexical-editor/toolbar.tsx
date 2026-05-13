@@ -6,7 +6,6 @@
  *
  */
 
-import { INSERT_ORDERED_LIST_COMMAND, INSERT_UNORDERED_LIST_COMMAND, REMOVE_LIST_COMMAND } from '@lexical/list';
 import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
 import {
   $createHeadingNode,
@@ -31,6 +30,7 @@ import {
 } from 'lexical';
 import { AlignCenterIcon, AlignJustifyIcon, AlignLeft, AlignRightIcon, Bold, ItalicIcon, ListIcon, ListOrderedIcon, RedoIcon, UnderlineIcon, UndoIcon } from 'lucide-react';
 import {useCallback, useEffect, useRef, useState} from 'react';
+import { ListButtons } from './list-btns';
 
 const BLOCK_TYPES = [
   {label: 'Normal', value: 'paragraph'},
@@ -219,47 +219,8 @@ export function ToolbarPlugin() {
       </button>
       <Divider />
 
-      <button
-        type="button"
-        onClick={() => {
-          editor.dispatchCommand(
-            INSERT_UNORDERED_LIST_COMMAND,
-            undefined
-          );
-        }}
-        className={`${btnBase} ${btnInactive} mr-0.5`}
-        aria-label="Bullet List"
-      >
-        <ListIcon className={`${iconBase} opacity-70`} />
-      </button>
-
-      <button
-        type="button"
-        onClick={() => {
-          editor.dispatchCommand(
-            INSERT_ORDERED_LIST_COMMAND,
-            undefined
-          );
-        }}
-        className={`${btnBase} ${btnInactive} mr-0.5`}
-        aria-label="Numbered List"
-      >
-        <ListOrderedIcon className={`${iconBase} opacity-70`} />
-      </button>
-
-      <button
-        type="button"
-        onClick={() => {
-          editor.dispatchCommand(
-            REMOVE_LIST_COMMAND,
-            undefined
-          );
-        }}
-        className={`${btnBase} ${btnInactive}`}
-        aria-label="Remove List"
-      >
-        Clear
-      </button>
+      {/** LISTS */}
+      <ListButtons />
       <Divider />
       <button
         type="button"

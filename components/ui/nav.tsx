@@ -37,8 +37,8 @@ const NavigationApp = () => {
     <nav
       className={`fixed top-0 left-0 w-full flex items-center justify-between px-6 md:px-16 lg:px-24 xl:px-32 transition-all duration-500 z-50 
       ${isScrolled 
-        ? "bg-white/80 dark:bg-gray-900 dark:text-gray-300 shadow-md dark:shadow-orange-500/50 text-gray-700 backdrop-blur-lg py-3 md:py-4" 
-        : "bg-indigo-500 dark:bg-gray-900 dark:text-zinc-400 py-4 md:py-6"}`
+        ? "bg-white/80 dark:bg-gray-900 dark:text-gray-300 shadow-md dark:shadow-orange-500/50 text-gray-700 backdrop-blur-lg py-1 md:py-2" 
+        : "bg-indigo-500 dark:bg-gray-900 dark:text-zinc-400 py-2 md:py-4"}`
       }
     >
       {/* Logo */}
@@ -69,7 +69,7 @@ const NavigationApp = () => {
       </div>
 
       {/* Right side: Cart + Login */}
-      <div className="hidden md:flex items-center gap-6">
+      <div className="hidden md:flex justify-center items-center gap-6">
         <CartStatus isScrolled={isScrolled} />
         {user 
           ? (	

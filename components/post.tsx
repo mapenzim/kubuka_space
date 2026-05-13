@@ -122,7 +122,7 @@ export function PostForm({ post }: PostFormProps) {
     <Box className="min-h-screen py-14 px-4">
       <Box className="max-w-2xl mx-auto px-4">
         <Flex justify="between" align="center" mb="6">
-          <Heading size="6">
+          <Heading size="6" className="text-zinc-700 dark:text-zinc-300">
             {!post ? "Create New Post" : "Edit Post"}
           </Heading>
           {!!post && (

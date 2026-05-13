@@ -201,14 +201,14 @@ export default function ContactUsPage() {
   const isChatMode = !!activeThread;
 
   return (
-    <Container size="4" px="4" mt={{ initial: "4", md: "8" }} pb="8" className="bg-gray-100 dark:bg-zinc-800 dark:text-gray-300">
+    <Container size="4" px="4" mt={{ initial: "4", md: "8" }} pb="8" className="bg-gray-100 dark:bg-zinc-800! dark:text-gray-300">
       <Section size="3">
         
         {/* Page Header is hidden if chatting to make it feel like a focused app */}
         {!isChatMode && (
           <Box mb="6" className="text-center md:text-left">
             <Heading as="h1" size="8" mb="2">Get in Touch</Heading>
-            <Text as="p" size="4" color="gray">
+            <Text as="p" size="4" color="gray" className="dark:text-zinc-400!">
               We'd love to hear from you. Fill out the form or reach out directly.
             </Text>
           </Box>
@@ -218,7 +218,7 @@ export default function ContactUsPage() {
           
           {/* THE DYNAMIC LEFT SIDE: Shows Form OR Chat */}
           {!isChatMode ? (
-            <Card size="4" variant="surface">
+            <Card size="4" variant="surface" className="dark:bg-zinc-800!">
               {errorText && (
                 <Text color="ruby" size="2" mb="4" as="div">{errorText}</Text>
               )}
@@ -246,7 +246,7 @@ export default function ContactUsPage() {
             // ==========================================
             // THE CHAT APP VIEW
             // ==========================================
-            <Card size="1" variant="surface" className="flex flex-col h-150 overflow-hidden shadow-lg mx-auto w-full max-w-3xl">
+            <Card size="1" variant="surface" className="flex flex-col h-150 overflow-hidden shadow-lg mx-auto w-full max-w-3xl dark:bg-zinc-900!">
               
               {/* Chat Header */}
               <Flex align="center" justify="between" className="p-4 border-b border-(--gray-a6) bg-(--color-panel) shrink-0">

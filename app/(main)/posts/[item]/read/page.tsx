@@ -88,31 +88,25 @@ export default async function ReadPage({ params }: { params: Promise<{ item: str
               </Flex>
 
               {/* Title */}
-              <Heading as="h1" size="7" weight="bold" className="text-zinc-900 dark:text-zinc-100 mb-6">
+              <Heading as="h1" size="7" weight="bold" className="text-zinc-900 dark:text-zinc-600 mb-6">
                 {post.title}
               </Heading>
-
-              {/* Lexical Editor Viewer */}
-              {/* Note: Wrapped in a prose div to ensure internal Lexical tags inherit good typography styles if needed */}
-              <Box className="prose dark:prose-invert max-w-none text-zinc-800 dark:text-zinc-300">
-                <ClientViewer content={post.content as string} />
-              </Box>
 
               {/* Footer Metadata */}
               <Flex 
                 align="center" 
                 gap="3" 
-                mt="6" 
-                pt="4" 
+                mt="1" 
+                pt="1" 
                 wrap="wrap"
                 className="border-t border-zinc-200 dark:border-zinc-800"
               >
                 {/* Read Time */}
-                <Flex align="center" gap="1" className="text-zinc-500 dark:text-zinc-400">
+                <Flex align="center" gap="1" className="text-zinc-500 dark:text-zinc-300">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <Text size="2" weight="medium">{readTime}</Text>
+                  <Text size="2" weight="medium" className="text-orange-500/50">{readTime}</Text>
                 </Flex>
 
                 <Text className="hidden sm:block text-zinc-300 dark:text-zinc-700" aria-hidden="true">
@@ -121,15 +115,21 @@ export default async function ReadPage({ params }: { params: Promise<{ item: str
 
                 {/* Author Info */}
                 <Text size="2" className="text-zinc-500 dark:text-zinc-400">
-                  Featuring —{" "}
+                  <span className="text-indigo-500">Featuring —</span>{" "}
                   <Link 
                     href={`/authors/${post.authorId}`} 
-                    className="text-zinc-700 dark:text-zinc-300 font-medium hover:text-(--iris-11) dark:hover:text-(--iris-11) hover:underline transition-colors"
+                    className="text-zinc-700 dark:text-zinc-500 font-medium hover:text-(--iris-11) dark:hover:text-(--iris-11) hover:underline transition-colors"
                   > 
                     {formatName(post.author.name ?? "User")}
                   </Link>
                 </Text>
               </Flex>
+
+              {/* Lexical Editor Viewer */}
+              {/* Note: Wrapped in a prose div to ensure internal Lexical tags inherit good typography styles if needed */}
+              <Box className="max-w-none" mt="6">
+                <ClientViewer content={post.content as string} />
+              </Box>
 
             </Flex>
           </Flex>
