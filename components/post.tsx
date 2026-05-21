@@ -119,7 +119,10 @@ export function PostForm({ post }: PostFormProps) {
   }
 
   return (
-    <Box className="min-h-screen py-14 px-4">
+    <Box 
+      className="w-full flex flex-col items-center justify-center min-h-screen px-4"
+      my="8"
+    >
       <Box className="max-w-2xl mx-auto px-4">
         <Flex justify="between" align="center" mb="6">
           <Heading size="6" className="text-zinc-700 dark:text-zinc-300">
@@ -137,7 +140,11 @@ export function PostForm({ post }: PostFormProps) {
         </Flex>
       </Box>
 
-      <Card className="max-w-2xl mx-auto" variant="surface" style={{ padding: "2rem" }}>
+      <Card 
+        className="flex w-full max-w-2xl" 
+        variant="ghost" 
+        style={{ padding: "2rem", marginInline: "auto" }}
+      >
         <Form action={handleSubmit}>
           {post && <input type="hidden" name="postId" value={post.id} />}
           {post?.id && (
@@ -146,7 +153,7 @@ export function PostForm({ post }: PostFormProps) {
 
           <Flex direction="column" gap="4">
             <Box>
-              <Text as="label" htmlFor="title" size="2" weight="medium">
+              <Text as="label" htmlFor="title" size="2" weight="medium" className="dark:text-zinc-400">
                 Title
               </Text>
               <input
@@ -156,12 +163,12 @@ export function PostForm({ post }: PostFormProps) {
                 required
                 defaultValue={post?.title}
                 placeholder="Enter your post title"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none dark:text-zinc-500"
               />
             </Box>
 
             <Box>
-              <Text as="label" htmlFor="content" size="2" weight="medium">
+              <Text as="label" htmlFor="content" size="2" weight="medium" className="dark:text-zinc-400">
                 Content
               </Text>
               <LexicalEditor

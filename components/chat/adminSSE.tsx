@@ -20,7 +20,7 @@ export default function AdminUI() {
       <div>
         {messages.map((m, i) => (
           <p key={i}>
-            <b>{m.from}:</b> {m.text}
+            <b>{m.role}:</b> {m.content}
           </p>
         ))}
       </div>
@@ -31,4 +31,4 @@ export default function AdminUI() {
       </button>
     </div>
   );
-}
+} 

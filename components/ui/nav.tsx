@@ -68,7 +68,7 @@ const NavigationApp = () => {
         ))}
       </div>
 
-      {/* Right side: Cart + Login */}
+      {/* Right side: Cart + Login */} 
       <div className="hidden md:flex justify-center items-center gap-6">
         <CartStatus isScrolled={isScrolled} />
         {user 

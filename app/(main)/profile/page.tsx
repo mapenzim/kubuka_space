@@ -3,6 +3,7 @@ import { getAllOrdersByUser } from "@/app/actions/cartActions.server";
 import { getOwnPosts } from "@/app/actions/postActions.server";
 import { auth } from "@/auth";
 import { DeleteUserExperience } from "@/components/buttons/delete-experience-btn";
+import { CartLink } from "@/components/cart/components/cart_status";
 import { AddUpdateBioPopover } from "@/components/poper/add-update-bio";
 import { AddUpdateExperiencePopover } from "@/components/poper/add-update-experience";
 import { AddUpdateSkillPopover } from "@/components/poper/add-update-skills";
@@ -35,7 +36,7 @@ const ProfilePage = async () => {
           <Flex direction="column" gap="6" className="md:col-span-4 md:sticky ">
             
             {/* Profile Card */}
-            <Card size="4" className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 shadow-sm rounded-2xl text-center">
+            <Card size="1" variant="ghost" className="dark:bg-zinc-800! border-zinc-200 dark:border-zinc-800 shadow-sm rounded-2xl text-center">
               <Flex direction="column" align="center" gap="4">
                 <Avatar
                   size="8"
@@ -47,22 +48,22 @@ const ProfilePage = async () => {
                 />
                 
                 <Box>
-                  <Heading as="h1" size="6" weight="bold" className="text-zinc-900 dark:text-zinc-100">
+                  <Heading as="h1" size="6" weight="bold" className="text-zinc-900 dark:text-zinc-300">
                     {user?.name}
                   </Heading>
-                  <Text as="p" size="2" color="gray" mt="1">
+                  <Text as="p" size="2" color="gray" mt="1" className="dark:text-zinc-500!">
                     {user?.email}
                   </Text>
                 </Box>
 
-                <Button size="2" variant="soft" color="iris" className="w-full mt-2" asChild>
+                <Button size="2" variant="soft" color="iris" className="w-full mt-2 dark:text-indigo-400!" asChild>
                   <Link href="/profile">Edit Profile</Link>
                 </Button>
               </Flex>
             </Card>
 
             {/* Skills Card */}
-            <Card size="3" className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 shadow-sm rounded-2xl">
+            <Card size="1" variant="ghost" className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 shadow-sm rounded-2xl">
               <Flex align="center" justify="between" mb="4">
                 <Heading as="h3" size="4" className="text-zinc-900 dark:text-zinc-100">
                   Skills
@@ -98,52 +99,52 @@ const ProfilePage = async () => {
               ========================================= */}
           <Flex direction="column" gap="6" className="md:col-span-8">
             
-            <Card size="4" className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 shadow-sm rounded-2xl">
+            <Card size="1" variant="ghost" className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 shadow-sm rounded-2xl">
               <Flex direction="column" gap="8">
 
                 {/* --- About Me Section --- */}
                 <Box>
                   <Flex align="center" justify="between" mb="3">
-                    <Heading as="h3" size="5" className="text-zinc-900 dark:text-zinc-100">About Me</Heading>
+                    <Heading as="h3" size="5" className="text-zinc-900 dark:text-zinc-300">About Me</Heading>
                     <AddUpdateBioPopover bio={bio} />
                   </Flex>
                   <Text as="div" size="3" className="text-zinc-600 dark:text-zinc-400 leading-relaxed">
                     {bio?.text ? (
                       <span className="whitespace-pre-wrap">{bio.text}</span>
                     ) : (
-                      <Text size="2" color="gray" className="italic block p-4 border border-dashed border-zinc-200 dark:border-zinc-700 rounded-lg text-center">
+                      <Text size="2" color="gray" className="italic block p-4 border border-dashed border-zinc-200 dark:border-zinc-700 rounded-lg text-center dark:text-zinc-500!">
                         Add something about yourself...
                       </Text>
                     )}
                   </Text>
                 </Box>
 
-                <Separator size="4" className="bg-zinc-200 dark:bg-zinc-800" />
+                <Separator size="4" className="bg-zinc-200 dark:bg-zinc-600!" />
 
                 {/* --- Social Media Section --- */}
                 <Box className="text-center">
-                  <Heading as="h4" size="3" weight="medium" color="gray" mb="4" className="uppercase tracking-wider">
+                  <Heading as="h4" size="3" weight="medium" color="gray" mb="4" className="uppercase tracking-wider dark:text-zinc-400!">
                     Connect With Me
                   </Heading>
                   <Flex justify="center" gap="4">
-                    <Button variant="soft" color="gray" radius="full" className="w-10 h-10 p-0 cursor-pointer hover:text-blue-600 transition-colors">
+                    <Button variant="soft" color="gray" radius="full" className="w-10 h-10 p-0 cursor-pointer text-indigo-500! hover:text-blue-600! transition-colors">
                       <FacebookIcon size={20} />
                     </Button>
-                    <Button variant="soft" color="gray" radius="full" className="w-10 h-10 p-0 cursor-pointer hover:text-sky-500 transition-colors">
+                    <Button variant="soft" color="gray" radius="full" className="w-10 h-10 p-0 cursor-pointer text-indigo-400! hover:text-sky-500! transition-colors">
                       <TwitterIcon size={20} />
                     </Button>
-                    <Button variant="soft" color="gray" radius="full" className="w-10 h-10 p-0 cursor-pointer hover:text-zinc-900 dark:hover:text-white transition-colors">
+                    <Button variant="soft" color="gray" radius="full" className="w-10 h-10 p-0 cursor-pointer hover:text-zinc-900! dark:hover:text-white! text-gray-200! transition-colors">
                       <GithubIcon size={20} />
                     </Button>
                   </Flex>
                 </Box>
 
-                <Separator size="4" className="bg-zinc-200 dark:bg-zinc-800" />
+                <Separator size="4" className="bg-zinc-200 dark:bg-zinc-800!" />
 
                 {/* --- Work Experience Section --- */}
                 <Box>
                   <Flex align="center" justify="between" mb="5">
-                    <Heading as="h3" size="5" className="text-zinc-900 dark:text-zinc-100">Work Experience</Heading>
+                    <Heading as="h3" size="5" className="text-zinc-900 dark:text-zinc-300">Work Experience</Heading>
                     <AddUpdateExperiencePopover workExperience={null} />
                   </Flex>
                   
@@ -176,30 +177,30 @@ const ProfilePage = async () => {
                         </Box>
                       ))
                     ) : (
-                      <Text size="2" color="gray" className="italic p-6 border border-dashed border-zinc-200 dark:border-zinc-700 rounded-lg text-center">
+                      <Text size="2" color="gray" className="italic p-6 border border-dashed border-zinc-200 dark:border-zinc-700 dark:text-zinc-600! rounded-lg text-center">
                         No work experience added yet.
                       </Text>
                     )}
                   </Flex>
                 </Box>
 
-                <Separator size="4" className="bg-zinc-200 dark:bg-zinc-800" />
+                <Separator size="4" className="bg-zinc-200 dark:bg-zinc-800!" />
 
                 {/* --- Publications Section --- */}
                 <Box>
                   <Flex align="center" justify="between" mb="4">
-                    <Heading as="h3" size="5" className="text-zinc-900 dark:text-zinc-100">Publications</Heading>
+                    <Heading as="h3" size="5" className="text-zinc-900 dark:text-zinc-300">Publications</Heading>
                     <Button size="1" variant="ghost" asChild>
-                      <Link href="/blog">Visit blog area &rarr;</Link>
+                      <Link href="/posts" className="dark:text-indigo-400!">Visit blog area &rarr;</Link>
                     </Button>
                   </Flex>
 
                   <Grid columns={{ initial: "1", sm: "2" }} gap="4">
                     {posts.length ? (
                       posts.map((post) => (
-                        <Card key={post.id} size="2" className="bg-zinc-50 dark:bg-zinc-950/50 border border-zinc-200 dark:border-zinc-800">
+                        <Card key={post.id} variant="ghost" size="2" className="bg-zinc-50 dark:bg-zinc-950/50 border border-zinc-200 dark:border-zinc-800" m="4">
                           <Flex direction="column" justify="between" className="h-full">
-                            <Heading as="h4" size="3" className="line-clamp-2 text-zinc-800 dark:text-zinc-200 mb-3">
+                            <Heading as="h4" size="3" className="line-clamp-2 text-zinc-800 dark:text-zinc-400 mb-3">
                               {post.title}
                             </Heading>
                             <Box>
@@ -211,31 +212,31 @@ const ProfilePage = async () => {
                         </Card>
                       ))
                     ) : (
-                      <Text size="2" color="gray" className="col-span-full italic p-6 border border-dashed border-zinc-200 dark:border-zinc-700 rounded-lg text-center">
+                      <Text size="2" color="gray" className="col-span-full italic p-6 border border-dashed border-zinc-200 dark:border-zinc-700 rounded-lg text-center dark:text-zinc-600!">
                         No publications found.
                       </Text>
                     )}
                   </Grid>
                 </Box>
 
-                <Separator size="4" className="bg-zinc-200 dark:bg-zinc-800" />
+                <Separator size="4" className="bg-zinc-200 dark:bg-zinc-800!" />
 
                 {/* --- Orders Section --- */}
                 <Box>
                   <Flex align="center" justify="between" mb="4">
-                    <Heading as="h3" size="5" className="text-zinc-900 dark:text-zinc-100">Shopping & Orders</Heading>
+                    <Heading as="h3" size="5" className="text-zinc-900 dark:text-zinc-300">Shopping & Orders</Heading>
                     <Button size="1" variant="ghost" asChild>
-                      <Link href="/store/cart">View Cart &rarr;</Link>
+                    <CartLink />
                     </Button>
                   </Flex>
 
                   <Flex direction="column" gap="4">
                     {orders.length ? (
                       orders.map((order) => (
-                        <Card key={order.id} size="2" className="bg-zinc-50 dark:bg-zinc-950/50 border border-zinc-200 dark:border-zinc-800">
+                        <Card key={order.id} variant="ghost" size="2" className="bg-zinc-500 dark:bg-zinc-900! border border-zinc-200 dark:border-zinc-800" m={{ sm: "1", md: "4" }}>
                           <Flex justify="between" align="center" wrap="wrap" gap="4" mb="3">
-                            <Text size="2" weight="bold" className="text-zinc-700 dark:text-zinc-300">
-                              Order #{String(order.id).slice(-6).toUpperCase()}
+                            <Text size="2" weight="bold" className="text-zinc-700 dark:text-zinc-600">
+                              Order #: {String(order.id).slice(-6).toUpperCase()}
                             </Text>
                             <Flex gap="2" align="center">
                               <Badge color="blue" variant="soft">${Number(order.totalAmount).toFixed(2)}</Badge>
@@ -245,7 +246,7 @@ const ProfilePage = async () => {
                             </Flex>
                           </Flex>
                           
-                          <Flex direction="column" gap="1" className="text-sm text-zinc-600 dark:text-zinc-400">
+                          <Flex direction="column" gap="1" className="text-sm text-zinc-600 dark:text-zinc-500">
                             {order.items.map((itm) => (
                               <Flex key={itm.id} justify="between" className="border-t border-zinc-200 dark:border-zinc-800/50 pt-1 mt-1">
                                 <Text size="1" className="line-clamp-1">{itm.title}</Text>

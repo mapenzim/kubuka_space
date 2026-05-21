@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 // ⚠️ Update this import path to wherever your Prisma client instance lives
 import prisma from "@/lib/prisma"; 
 import { ulidId } from "@/lib/server-utils";
+import { broadcastToThread } from "@/server/sse/broadcast";
+import { clearFallbackTimer, startFallbackTimer } from "@/server/chat/fallbackBot";
 
 type ChatEvent =
   | { type: "message"; role: "user" | "admin" | "bot"; content: string }
@@ -65,61 +67,138 @@ export async function getThreadById(threadId: string) {
  * If a thread with their email already exists and isn't archived, it appends to it.
  * Otherwise, it creates a brand new thread.
  */
-export async function receiveIncomingMessage(data: { sender: string; email: string; content: string }) {
+export async function receiveIncomingMessage(data: {
+  sender: string;
+  email: string;
+  content: string;
+}) {
   try {
-    // Try to find an existing active thread for this email
-    const thread = await prisma.thread.findFirst({
-      where: { email: data.email, archived: false },
+    const safeContent = data.content.trim();
+
+    if (!safeContent) {
+      return {
+        success: false,
+        error: "Message cannot be empty",
+      };
+    }
+
+    // ---------------------------------------------
+    // FIND EXISTING THREAD
+    // ---------------------------------------------
+    const existingThread = await prisma.thread.findFirst({
+      where: {
+        email: data.email,
+        archived: false,
+      },
     });
 
     let finalThread;
+    let createdMessage;
 
-    if (thread) {
-      // Append to existing thread and mark as unread
+    // ---------------------------------------------
+    // UPDATE EXISTING THREAD
+    // ---------------------------------------------
+    if (existingThread) {
+      createdMessage = {
+        id: ulidId(),
+        direction: "incoming" as const,
+        content: safeContent,
+      };
+
       finalThread = await prisma.thread.update({
-        where: { id: thread.id },
+        where: {
+          id: existingThread.id,
+        },
+
         data: {
           status: "unread",
           updatedAt: new Date(),
+
           messages: {
-            create: {
-              id: ulidId(),
-              direction: "incoming",
-              content: data.content,
+            create: createdMessage,
+          },
+        },
+
+        include: {
+          messages: {
+            orderBy: {
+              timestamp: "asc",
             },
           },
         },
-        include: { messages: {
-          orderBy: { timestamp: "asc" },
-        } }, // Include messages to return the updated thread with the new message
-      });
-    } else {
-      // Create a brand new thread
-      finalThread = await prisma.thread.create({
-        data: {
-          id: ulidId(),
-          sender: data.sender,
-          email: data.email,
-          status: "unread",
-          messages: {
-            create: {
-              id: ulidId(),
-              direction: "incoming",
-              content: data.content,
-            },
-          },
-        },
-        include: { messages: {
-          orderBy: { timestamp: "asc" }, // Ensure messages are in the correct order
-        } }, // Include messages to return the new thread with its message
       });
     }
 
+    // ---------------------------------------------
+    // CREATE THREAD
+    // ---------------------------------------------
+    else {
+      createdMessage = {
+        id: ulidId(),
+        direction: "incoming" as const,
+        content: safeContent,
+      };
+
+      finalThread = await prisma.thread.create({
+        data: {
+          id: ulidId(),
+
+          sender: data.sender,
+          email: data.email,
+
+          status: "unread",
+
+          messages: {
+            create: createdMessage,
+          },
+        },
+
+        include: {
+          messages: {
+            orderBy: {
+              timestamp: "asc",
+            },
+          },
+        },
+      });
+    }
+
+    // ---------------------------------------------
+    // REALTIME BROADCAST
+    // ---------------------------------------------
+    const latestMessage =
+      finalThread.messages[
+        finalThread.messages.length - 1
+      ];
+
+    broadcastToThread(finalThread.id, {
+      id: latestMessage.id,
+      direction: latestMessage.direction,
+      content: latestMessage.content,
+      timestamp: latestMessage.timestamp,
+    });
+
+    // ---------------------------------------------
+    // START BOT FALLBACK TIMER
+    // ---------------------------------------------
+    startFallbackTimer(finalThread.id);
+
     revalidatePath("/admin/messages");
-    return { success: true, thread: finalThread };
+
+    return {
+      success: true,
+      thread: finalThread,
+    };
   } catch (error) {
-    console.error("Failed to receive message:", error);
-    return { success: false, error: "Failed to process incoming message" };
+    console.error(
+      "Failed to receive message:",
+      error
+    );
+
+    return {
+      success: false,
+      error: "Failed to process message",
+    };
   }
 }
 
@@ -157,47 +236,88 @@ export async function replyToThread(threadId: string, content: string) {
 
 // Adjust these imports to match your project structure
 
-export async function sendAdminReply(data: { threadId: string; content: string }) {
+export async function sendAdminReply(data: {
+  threadId: string;
+  content: string;
+}) {
   try {
-    // 1. Sanitize the input
-    const safeContent = data.content ? data.content.trim() : "";
+    const safeContent = data.content.trim();
 
     if (!safeContent) {
-      return { success: false, error: "Reply content cannot be empty." };
+      return {
+        success: false,
+        error: "Reply cannot be empty",
+      };
     }
 
-    // 2. Update the thread and inject the new outgoing message
-    const updatedThread = await prisma.thread.update({
-      where: { id: data.threadId },
-      data: {
-        // Change the status so the admin knows they've handled it. 
-        // (Adjust "replied" to "read" or whatever matches your schema)
-        status: "read", 
-        messages: {
-          create: {
-            id: ulidId(), // Safeguard against the NullConstraintViolation we saw earlier
-            direction: "outgoing", // "outgoing" means it came from the Admin
-            content: safeContent,
+    // ---------------------------------------------
+    // UPDATE THREAD
+    // ---------------------------------------------
+    const updatedThread =
+      await prisma.thread.update({
+        where: {
+          id: data.threadId,
+        },
+
+        data: {
+          status: "read",
+          updatedAt: new Date(),
+
+          messages: {
+            create: {
+              id: ulidId(),
+              direction: "outgoing",
+              content: safeContent,
+            },
           },
         },
-      },
-      // Return the updated messages array so the client UI can append it
-      include: {
-        messages: {
-          orderBy: { timestamp: "asc" },
+
+        include: {
+          messages: {
+            orderBy: {
+              timestamp: "asc",
+            },
+          },
         },
-      },
+      });
+
+    // ---------------------------------------------
+    // CLEAR FALLBACK TIMER
+    // ADMIN RESPONDED
+    // ---------------------------------------------
+    clearFallbackTimer(data.threadId);
+
+    // ---------------------------------------------
+    // REALTIME BROADCAST
+    // ---------------------------------------------
+    const latestMessage =
+      updatedThread.messages[
+        updatedThread.messages.length - 1
+      ];
+
+    broadcastToThread(data.threadId, {
+      id: latestMessage.id,
+      direction: latestMessage.direction,
+      content: latestMessage.content,
+      timestamp: latestMessage.timestamp,
     });
 
-    // 3. Purge the Next.js router cache for the admin dashboard
-    // This ensures the sidebar thread list and active chat update instantly
     revalidatePath("/admin/messages");
 
-    return { success: true, thread: updatedThread };
-    
+    return {
+      success: true,
+      thread: updatedThread,
+    };
   } catch (error) {
-    console.error("Failed to send admin reply:", error);
-    return { success: false, error: "Failed to send reply. Please try again." };
+    console.error(
+      "Failed to send admin reply:",
+      error
+    );
+
+    return {
+      success: false,
+      error: "Failed to send reply",
+    };
   }
 }
 

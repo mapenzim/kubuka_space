@@ -128,7 +128,7 @@ export default function AdminStorePage() {
       </Flex>
 
       {/* 3. The Tabs Component managing the categories */}
-      <Tabs.Root defaultValue="paid" className="bg-sky-900">
+      <Tabs.Root defaultValue="paid" className="bg-sky-900 rounded-b-md">
         <Tabs.List size="2">
           {/* Active Carts */}
           <Tabs.Trigger value="cart" style={{ cursor: "pointer", color: "var(--gray-2)" }}>

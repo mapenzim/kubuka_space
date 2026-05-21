@@ -77,7 +77,7 @@ export function PostViewer({ content }: { content: string }) {
     <LexicalComposer initialConfig={config}>
       <div className="prose dark:prose-invert dark:text-zinc-400">
         <RichTextPlugin
-          contentEditable={<ContentEditable className=" text-zinc-600 dark:text-zinc-600" />}
+          contentEditable={<ContentEditable className=" text-zinc-600 dark:text-zinc-400" />}
           placeholder={null}
           ErrorBoundary={LexicalErrorBoundary}
         />

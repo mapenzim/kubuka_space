@@ -56,8 +56,8 @@ export const AddUpdateExperiencePopover = ({ workExperience }: WorkExperience) =
         <Button variant="ghost" size={"1"}>
           <Tooltip content={!workExperience ? statement("Add") : statement("Update")}>
             {!workExperience?.id
-              ? <PlusIcon className="w-4 h-auto text-zinc-800" />
-              : <FileEditIcon className="w-4 h-auto text-zinc-700" />
+              ? <PlusIcon className="w-4 h-auto text-zinc-800 dark:text-zinc-400" />
+              : <FileEditIcon className="w-4 h-auto text-zinc-700 dark:text-zinc-400" />
             }
           </Tooltip>
         </Button>

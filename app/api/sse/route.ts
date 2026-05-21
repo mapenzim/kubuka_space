@@ -1,63 +1,70 @@
 import { NextRequest } from "next/server";
-import { sseConnections } from "@/server/state/chatState";
 
-export const runtime = "nodejs"; // IMPORTANT: SSE needs Node runtime
+import { registerSSE } from "@/server/sse/register";
+import { removeSSE } from "@/server/sse/cleanup";
+import { Role } from "@/server/state/chatState";
+
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// -----------------------------------------
-// SSE CONNECTION HANDLER
-// -----------------------------------------
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
+
   const threadId = searchParams.get("threadId");
+  const role = searchParams.get("role") as Role ?? "user";
 
   if (!threadId) {
-    return new Response("Missing threadId", { status: 400 });
+    return new Response("Missing threadId", {
+      status: 400,
+    });
   }
 
-  // -----------------------------------------
-  // SET UP STREAM
-  // -----------------------------------------
+  const clientId = crypto.randomUUID();
+
   const stream = new ReadableStream({
     start(controller) {
-      // store controller so server actions can push events
-      sseConnections.set(threadId, controller);
+      registerSSE(
+        threadId,
+        clientId,
+        controller,
+        role
+      );
 
-      // send initial handshake
       controller.enqueue(
         `data: ${JSON.stringify({
           type: "connected",
-          threadId,
         })}\n\n`
       );
 
-      // keep-alive ping (prevents Vercel proxy timeout)
       const keepAlive = setInterval(() => {
-        controller.enqueue(`: ping\n\n`);
+        try {
+          controller.enqueue(`: ping\n\n`);
+        } catch {}
       }, 25000);
 
-      // cleanup on abort
       req.signal.addEventListener("abort", () => {
         clearInterval(keepAlive);
-        sseConnections.delete(threadId);
-        controller.close();
+
+        removeSSE(threadId, clientId);
+
+        try {
+          controller.close();
+        } catch {}
       });
     },
 
     cancel() {
-      // fallback cleanup
-      sseConnections.delete(threadId);
+      removeSSE(threadId, clientId);
     },
   });
 
-  // -----------------------------------------
-  // RETURN SSE RESPONSE
-  // -----------------------------------------
   return new Response(stream, {
     headers: {
       "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache, no-transform",
+      "Cache-Control":
+        "no-cache, no-transform",
       Connection: "keep-alive",
+      "X-Accel-Buffering": "no",
     },
   });
 }

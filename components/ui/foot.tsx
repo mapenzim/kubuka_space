@@ -116,15 +116,14 @@ export default function Footer() {
                     <Link 
                       className="text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-600 font-[400px] block pb-2 text-sm"
                       href="/posts"
-                      scroll={true}
                     >
                         Blog
                     </Link>
                   </li>
                   <li>
-                    <Link className="text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-600 font-[400px] block pb-2 text-sm"
+                    <Link 
+                      className="text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-600 font-[400px] block pb-2 text-sm"
                       href="/store"
-                      scroll={true}
                     >
                       Products
                     </Link>
@@ -132,7 +131,6 @@ export default function Footer() {
                   <li>
                     <Link className="text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-600 font-[400px] block pb-2 text-sm"
                       href="/contact_us"
-                      scroll={false}
                     >
                       Contact Us
                     </Link>

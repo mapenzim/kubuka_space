@@ -65,6 +65,8 @@ export default async function Posts() {
               <Card 
                 key={post.id} 
                 size="2" 
+                variant="ghost"
+                m={"4"}
                 className="bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:shadow-md transition-shadow"
               >
                 {/* Image Cover */}
@@ -89,7 +91,7 @@ export default async function Posts() {
                   <Heading as="h2" size="4" className="line-clamp-2 leading-snug">
                     <Link 
                       href={`/posts/${post.id}/read`}
-                      className="text-zinc-900 dark:text-zinc-700 hover:text-(--iris-11) transition-colors before:absolute before:inset-0"
+                      className="text-zinc-900 dark:text-zinc-400 hover:text-(--iris-11) transition-colors before:absolute before:inset-0"
                     >
                       {post.title}
                     </Link>
@@ -97,14 +99,14 @@ export default async function Posts() {
 
                   {/* Footer (Author & Actions) */}
                   <Flex direction="row" justify="between" align="center" mt="auto">
-                    <Text size="2" color="gray" weight="medium" className="relative z-10 hover:underline">
+                    <Text size="2" color="gray" weight="medium" className="relative z-10 hover:underline dark:text-zinc-500!">
                       <Link href={`/authors/${post.author.id}`}>
                         {formatName(post.author.name)}
                       </Link>
                     </Text>
 
                     {session?.user?.email === post.author.email && (
-                      <Text size="2" color="gray" className="relative z-10 hover:underline dark:hover:text-teal-600" asChild >
+                      <Text size="2" color="gray" className="relative z-10 hover:underline dark:text-zinc-500! dark:hover:text-teal-600!" asChild >
                         <Link href={`/posts/${post.id}`}>
                           Update
                         </Link>

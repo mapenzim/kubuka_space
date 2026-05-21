@@ -33,14 +33,14 @@ export const AddUpdateBioPopover = ({
     router.refresh();
   }
 
-  const statement = (word: string) => `${word} Bio status`;
+  const statement = (word: string) => `${word} Bio statement`;
 
   return (
     <Popover.Root>
       <Popover.Trigger>
         <Button variant="ghost" size={"1"}>
           <Tooltip  content={bio?.id ? statement("Update") : statement("Add")}>
-            <PlusIcon className="w-4 h-auto text-zinc-800" />
+            <PlusIcon className="w-4 h-auto text-zinc-800 dark:text-zinc-300" />
           </Tooltip>
         </Button>
       </Popover.Trigger>

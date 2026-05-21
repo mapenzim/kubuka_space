@@ -1,24 +1,27 @@
 export type Role = "user" | "admin" | "bot";
 
+export type MessageDirection =
+  | "incoming"
+  | "outgoing";
+
 export type ChatMessageEvent = {
   id: string;
-  role: Role;
   content: string;
+  direction?: MessageDirection;
+  role?: Role;
   timestamp?: Date;
 };
 
-export type ClientConnection = {
-  threadId: string;
-  role: Role;
-};
-
-export const clients = new Map<string, ClientConnection>();
-
-// threadId → SSE controller
-export const sseConnections = new Map<
+// threadId -> timer
+export const pendingTimers = new Map<
   string,
-  ReadableStreamDefaultController
+  NodeJS.Timeout
 >();
 
-// threadId → fallback bot timer
-export const pendingTimers = new Map<string, NodeJS.Timeout>();
+export type SSEClient = {
+  controller: ReadableStreamDefaultController;
+  role: "user" | "admin" | "bot";
+  clientId: string;
+};
+
+export const sseConnections = new Map<string, Map<string, SSEClient>>();

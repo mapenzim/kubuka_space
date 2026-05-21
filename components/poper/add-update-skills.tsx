@@ -48,7 +48,7 @@ export const AddUpdateSkillPopover = ({ skill }: UserSkill) => {
     <Popover.Root>
       <Popover.Trigger>
         <Button variant="ghost" size={"1"}>
-          <PlusIcon className="w-4 h-auto text-zinc-700" />
+          <PlusIcon className="w-4 h-auto text-zinc-700 dark:text-zinc-400" />
         </Button>
       </Popover.Trigger>
       <Popover.Content width={"520px"} side="right">

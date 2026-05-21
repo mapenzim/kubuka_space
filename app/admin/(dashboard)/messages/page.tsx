@@ -16,127 +16,91 @@ import {
   ScrollArea
 } from "@radix-ui/themes";
 import { getActiveThreads, getThreadById, sendAdminReply } from "@/app/actions/messageThreadAction";
-import { Thread } from "@/lib/interfaces";
-
-// Formatter for message timestamps 
-const formatTime = (dateString: Date | string) => {
-  return new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit", hour12: true }).format(new Date(dateString));
-};
+import { UIThread } from "@/lib/interfaces";
+import { toUIThread, useChat } from "@/hooks/sse";
+import { formatTime } from "@/lib/utils";
 
 const formatDate = (dateString: Date | string) => {
   return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(new Date(dateString));
 };
 
-export default function AdminMessagesPage() {
-  // State to track which conversation is currently active
+export default function AdminMessagesPage() {  
+  const [threads, setThreads] = useState<UIThread[]>([]);
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
-  const [errorText, setErrorText] = useState("");
-  const [threads, setThreads] = useState<Thread[]>([]);
   const [isPending, startTransition] = useTransition();
-  const [activeThread, setActiveThread] = useState<Thread | null>(null);
-  // States for the Form
-  const [messageContent, setMessageContent] = useState("");
+  const [thread, setThread] = useState<UIThread | null>(null); 
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  
-  // ----------------------------------------------------
-  // SSE CONNECTION (REAL TIME)
-  // ----------------------------------------------------
+  // Hook: subscribe to the selected thread
+  const { sendMessage } = useChat(selectedThreadId ?? "", "admin");
+  console.log("Selected Thread:", threads);
+
+  // Initial load of threads
   useEffect(() => {
-    if (!activeThread?.id) return;
-
-    const eventSource = new EventSource(
-      `/api/sse?threadId=${activeThread.id}`
-    );
-
-    eventSource.onmessage = (event) => {
-      const msg = JSON.parse(event.data);
-
-      setActiveThread((prev) => {
-        if (!prev) return prev;
-
-        return {
-          ...prev,
-          messages: [...prev.messages, msg],
-        };
-      });
-    };
-
-    return () => eventSource.close();
-  }, [activeThread?.id]);
-
-  // In a real implementation, this would fetch from the backend
-  const fetchThreads = async () => {
-    const response = await getActiveThreads();
-    setThreads(response.data || []);
-      
-    // Automatically select the first thread if none is selected
-    if (response.data && response.data.length > 0 && !selectedThreadId) {
-      setSelectedThreadId(response.data[0].id);
+    async function init() {
+      const res = await getActiveThreads();
+      if (res.success && res.data) {
+        const uiThreads = res.data.map(toUIThread);
+        setThreads(uiThreads);
+        if (!selectedThreadId && uiThreads.length > 0) {
+          setSelectedThreadId(uiThreads[0].id);
+        }
+      }
     }
-  };
-
-  useEffect(() => {
-    fetchThreads();
+    init();
   }, []);
 
-  // ----------------------------------------------------
-  // Auto scroll
-  // ----------------------------------------------------
+  // Keep threads updated when active thread changes
   useEffect(() => {
-    scrollContainerRef.current?.scrollTo({
-      top: scrollContainerRef.current.scrollHeight,
+    if (!thread) return;
+    setThreads(prev => {
+      const existing = prev.find(t => t.id === thread.id);
+      if (!existing) return [thread, ...prev];
+      const remaining = prev.filter(t => t.id !== thread.id);
+      return [thread, ...remaining]; // bubble to top
+    });
+  }, [thread]);
+
+  // Auto scroll
+  useEffect(() => {
+    if (!scrollRef.current) return;
+    scrollRef.current.scrollTo({
+      top: scrollRef.current.scrollHeight,
       behavior: "smooth",
     });
-  }, [activeThread?.messages?.length]);
+  }, [thread?.messages.length]);
 
-  // Add the form submission handler
-  async function handleReplySubmit(event: SubmitEvent<HTMLFormElement>) {
-    event.preventDefault();
-    
-    if (!activeThread || !replyText.trim()) return;
+  useEffect(() => {
+    async function loadThread() {
+      if (!selectedThreadId) return;
+      const res = await getThreadById(selectedThreadId);
+      if (res.success && res.thread) {
+        setThread(toUIThread(res.thread));
+      }
+    }
+    loadThread();
+  }, [selectedThreadId]);
+
+
+  // Send reply
+  async function handleReplySubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!thread?.id) return;
+
+    const content = replyText.trim();
+    if (!content) return;
 
     startTransition(async () => {
-      const result = await sendAdminReply({
-        threadId: activeThread.id,
-        content: replyText
-      });
-
-      if (result.success) {
+      const res = await sendAdminReply({ threadId: thread.id, content });
+      if (res.success && res.thread) {
         setReplyText("");
-        await fetchThreads(); 
-      } else {
-        console.error("Failed to send reply");
+        setThreads(prev =>
+          prev.map(t => (t.id === res.thread.id ? toUIThread(res.thread) : t))
+        );
       }
     });
   }
-
-  // Poll for updates and sync the threads array
-  useEffect(() => {
-    if (!selectedThreadId) return;
-
-    const pollInterval = setInterval(async () => {
-      const result = await getThreadById(selectedThreadId);
-      
-      if (result.success && result.thread) {
-        const updatedThread = result.thread;
-        setThreads(prevThreads => {
-          const currentThread = prevThreads.find(t => t.id === selectedThreadId);
-          
-          // Only update if the message count has changed to prevent UI flicker
-          if (currentThread && currentThread.messages.length !== updatedThread.messages.length) {
-            return prevThreads.map(t => t.id === selectedThreadId ? updatedThread : t);
-          }
-          return prevThreads;
-        });
-      }
-    }, 3000);
-
-    return () => clearInterval(pollInterval);
-  }, [selectedThreadId]);
-
-  const isChatMode = !!activeThread;
 
   return (
     <Flex direction="column" className="h-full overflow-hidden" gap="2">
@@ -165,19 +129,21 @@ export default function AdminMessagesPage() {
                 <Box 
                   key={thread.id} 
                   onClick={() => setSelectedThreadId(thread.id)}
-                  className={`p-4 border-b border-(--gray-a4) cursor-pointer transition-colors hover:bg-(--gray-a3) ${isActive ? 'bg-(--gray-a3)' : ''}`}
+                  className={`p-4 border-b cursor-pointer hover:bg-(--gray-a3) ${isActive ? 'bg-(--gray-a3)' : ''}`}
                 >
                   <Flex justify="between" align="start" mb="1">
                     <Flex align="center" gap="2">
-                      <Text weight={thread.status === "unread" ? "bold" : "medium"} size="2">
+                      <Text weight={thread.id === "unread" ? "bold" : "medium"} size="2">
                         {thread.sender}
                       </Text>
-                      {thread.status === "unread" && <Box className="w-2 h-2 rounded-full bg-indigo-500" />}
+                      {thread.id === "unread" && <Box className="w-2 h-2 rounded-full bg-indigo-500" />}
                     </Flex>
-                    <Text size="1" color="gray">{latestMessage ? formatDate(latestMessage.timestamp) : ""}</Text>
+                    <Text size="1" color="gray">
+                      {latestMessage ? formatDate(latestMessage.timestamp) : ""}
+                    </Text>
                   </Flex>
                   <Text size="2" color="gray" className="line-clamp-2">
-                    {latestMessage?.direction === "outgoing" ? "You: " : ""}{latestMessage?.content}
+                    {latestMessage?.role === "admin" ? "You: " : ""}{latestMessage?.content}
                   </Text>
                 </Box>
               );
@@ -188,15 +154,15 @@ export default function AdminMessagesPage() {
 
         {/* RIGHT PANE: Active Thread View */}
         <Card size="1" variant="surface" className="hidden md:flex flex-1 flex-col h-full overflow-hidden bg-sky-900">
-          {activeThread?.id ? (
+          {thread?.id ? (
             <>
               {/* Thread Header */}
               <Flex align="center" justify="between" className="px-4 py-1 border-b border-(--gray-a6) bg-(--color-panel) shrink-0">
                 <Flex align="center" gap="3">
-                  <Avatar size="3" fallback={activeThread.sender.charAt(0)} color="indigo" radius="full" />
+                  <Avatar size="3" fallback={thread.sender.charAt(0)} color="indigo" radius="full" />
                   <Box>
-                    <Text as="div" weight="bold" size="3">{activeThread.sender}</Text>
-                    <Text as="div" size="2" color="gray">{activeThread.email}</Text>
+                    <Text as="div" weight="bold" size="3">{thread.sender}</Text>
+                    <Text as="div" size="2" color="gray">{thread.email}</Text>
                   </Box>
                 </Flex>
                 <Flex gap="2">
@@ -208,11 +174,11 @@ export default function AdminMessagesPage() {
 
               {/* Chat History (Scrollable) */}
               <Box className="flex-1 flex flex-col gap-4 bg-(--gray-a2)">
-                <ScrollArea type="hover" scrollbars="vertical" style={{ height: "380px", padding: "8px" }} ref={scrollContainerRef}>
-                {activeThread.messages.map((msg) => {
-                  const isOutgoing = msg.direction === "outgoing";
+                <ScrollArea type="hover" scrollbars="vertical" style={{ height: "380px", padding: "8px" }} ref={scrollRef}>
+                {thread.messages.map((msg) => {
+                  const isOutgoing = msg.role === "admin";
                   return (
-                    <Flex key={msg.id} direction="column" align={isOutgoing ? "end" : "start"} className="w-full">
+                    <Flex key={msg.id} direction="column" mb={'2'} align={isOutgoing ? "end" : "start"} className="w-full">
                       <Box 
                         className={`max-w-[75%] px-2 py-1 rounded-2xl ${
                           isOutgoing 
@@ -224,7 +190,7 @@ export default function AdminMessagesPage() {
                           {msg.content}
                         </Text>
                       </Box>
-                      <Text size="1" color="gray" mt="1" className={isOutgoing ? "mr-1" : "ml-1"}>
+                      <Text size="1" color="gray" className={`${isOutgoing ? "mr-3!" : "ml-1!"} text-[9px]! mt-0.5!`}>
                         {formatTime(msg.timestamp)}
                       </Text>
                     </Flex>
@@ -243,7 +209,7 @@ export default function AdminMessagesPage() {
                       <TextArea 
                         size="3" 
                         color="grass"
-                        placeholder={`Reply to ${activeThread.sender} (${activeThread.email})...`}
+                        placeholder={`Reply to ${thread.sender} (${thread.email})...`}
                         value={replyText}
                         onChange={(e) => setReplyText(e.target.value)}
                         className="resize-none"

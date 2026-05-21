@@ -46,10 +46,14 @@ export default async function ReadPage({ params }: { params: Promise<{ item: str
   const readTime = calculateReadTime(post.content as string);
 
   return (
-    <Box className="min-h-screen bg-zinc-50 dark:bg-zinc-950 py-16 px-4 transition-colors duration-200">
+    <Box 
+      className="min-h-screen bg-zinc-50 dark:bg-zinc-950 py-16 px-4 transition-colors duration-200"
+    >
       <Container size="3">
         <Card 
-          size="4" 
+          size="2" 
+          variant="ghost"
+          my="8"
           className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 shadow-sm rounded-2xl"
         >
           <Flex gap={{ initial: "4", sm: "8" }} direction={{ initial: "column", sm: "row" }} align="start">
@@ -79,8 +83,8 @@ export default async function ReadPage({ params }: { params: Promise<{ item: str
                 </Badge>
                 
                 {isAuthor && (
-                  <Button size="1" color="iris" variant="soft" asChild className="cursor-pointer">
-                    <Link href={`/posts/${post.id}`}>
+                  <Button size="1" color="iris" variant="soft" asChild className="cursor-pointer dark:bg-amber-200/30!">
+                    <Link href={`/posts/${post.id}`} className="dark:text-orange-300!">
                       Edit Post
                     </Link>
                   </Button>
@@ -88,7 +92,7 @@ export default async function ReadPage({ params }: { params: Promise<{ item: str
               </Flex>
 
               {/* Title */}
-              <Heading as="h1" size="7" weight="bold" className="text-zinc-900 dark:text-zinc-600 mb-6">
+              <Heading as="h1" size="7" weight="bold" className="text-zinc-900 dark:text-zinc-400 mb-6">
                 {post.title}
               </Heading>
 

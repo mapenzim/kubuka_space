@@ -119,3 +119,9 @@ export default function CartStatus({ isScrolled }: { isScrolled: boolean }) {
     </HoverCard.Root>
   );
 }
+
+export const CartLink = () => {
+  const { cart } = useCart();
+
+  return <Link href={`/store/cart/${cart.id}`} className="dark:text-indigo-400! text-sm">View Cart &rarr;</Link>;
+}

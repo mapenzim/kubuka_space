@@ -50,11 +50,16 @@ export default async function AuthorProfile({
   const isEmpty = posts.length === 0;
   const fallbackLetter = user.name?.charAt(0) || user.email?.charAt(0) || "?";
 
-  return (<Box className="min-h-screen bg-zinc-50 dark:bg-zinc-950 py-16 px-4 transition-colors duration-200">
+  return (
+    <Box className="min-h-screen bg-zinc-50 dark:bg-zinc-950! py-16 px-4 transition-colors duration-200">
       <Container size="3">
         
         {/* 👤 Profile Header Card */}
-        <Card size="4" className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 shadow-sm mb-8 rounded-2xl">
+        <Card 
+          size="4" 
+          className="bg-white! dark:bg-zinc-900! border-zinc-200 dark:border-zinc-800! shadow-sm mb-8 rounded-2xl"
+          variant="ghost"
+        >
           <Flex align="center" gap="6">
             <Avatar
               size="7"
@@ -71,7 +76,7 @@ export default async function AuthorProfile({
               </Heading>
               <Link
                 href="/authors"
-                className="text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-[var(--iris-11)] dark:hover:text-[var(--iris-11)] transition-colors inline-flex items-center gap-1"
+                className="text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-(--iris-11) dark:hover:text-(--iris-11) transition-colors inline-flex items-center gap-1"
               >
                 &larr; Back to all authors
               </Link>
@@ -99,7 +104,10 @@ export default async function AuthorProfile({
           </Flex>
 
           {isEmpty ? (
-            <Card className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 py-12 text-center border-dashed">
+            <Card 
+              className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 py-12 text-center border-dashed"
+              m="4"
+            >
               <Text as="p" size="3" color="gray" mb={isOwnProfile ? "4" : "0"}>
                 {isOwnProfile
                   ? "You haven't published any posts yet."
@@ -109,7 +117,7 @@ export default async function AuthorProfile({
               {isOwnProfile && (
                 <Link
                   href="/posts/new"
-                  className="inline-flex items-center gap-1 text-[var(--iris-11)] hover:underline font-medium transition-colors"
+                  className="inline-flex items-center gap-1 text-(--iris-11) hover:underline font-medium transition-colors"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -125,8 +133,10 @@ export default async function AuthorProfile({
                 <Card 
                   key={post.id} 
                   size="2" 
+                  variant="ghost"
+                  m="4"
                   asChild 
-                  className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:shadow-md hover:scale-[1.02] transition-all duration-200 cursor-pointer min-h-[120px]"
+                  className="border-zinc-200 dark:border-zinc-800 hover:shadow-md hover:scale-[1.02] transition-all duration-200 cursor-pointer min-h-30"
                 >
                   <Link href={`/posts/${post.id}/read`} className="outline-none block h-full">
                     <Flex direction="column" justify="between" className="h-full">
@@ -146,7 +156,7 @@ export default async function AuthorProfile({
                           )}
                         </Box>
 
-                        <Text size="2" weight="medium" className="text-zinc-500 dark:text-zinc-500 group-hover:text-[var(--iris-11)] transition-colors">
+                        <Text size="2" weight="medium" className="text-zinc-500 dark:text-zinc-500 group-hover:text-(--iris-11) transition-colors">
                           Read &rarr;
                         </Text>
                       </Flex>

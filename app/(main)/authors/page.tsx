@@ -30,7 +30,7 @@ export default async function Authors() {
         
         {/* Header */}
         <Flex justify="between" align="center" mb="8">
-          <Heading as="h1" size="8" color="gray" highContrast>
+          <Heading as="h1" size="8" color="gray" highContrast className="dark:text-zinc-400!">
             Authors
           </Heading>
         </Flex>
@@ -52,8 +52,10 @@ export default async function Authors() {
               return (
                 <Card
                   key={author.id}
-                  size="3"
-                  className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:shadow-md hover:scale-[1.02] transition-all duration-200 cursor-pointer"
+                  size="1"
+                  className="bg-white dark:bg-zinc-900! border-zinc-200 dark:border-zinc-800 hover:shadow-md hover:scale-[1.02] transition-all duration-200 cursor-pointer"
+                  variant="ghost"
+                  m={"4"}
                   asChild
                 >
                   <Link href={`/authors/${author.id}`}>
@@ -71,11 +73,11 @@ export default async function Authors() {
 
                       {/* Author Info */}
                       <Flex direction="column">
-                        <Text size="4" weight="bold" className="text-zinc-900 dark:text-zinc-100 leading-tight">
+                        <Text size="4" weight="bold" className="text-zinc-900 dark:text-zinc-400 leading-tight">
                           {formatName(author.name ?? "User")}
                         </Text>
                         
-                        <Text size="2" color="gray" className="truncate max-w-50">
+                        <Text size="2" color="gray" className="truncate max-w-50 dark:text-zinc-500!">
                           {author.email}
                         </Text>
 

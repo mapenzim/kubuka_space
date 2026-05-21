@@ -44,6 +44,62 @@ export function formatDate(dateString: string | Date): string {
   }).format(date);
 }
 
+export const formatTime = (date: Date | string) => {
+  const input = new Date(date);
+  const now = new Date();
+
+  const isSameDay =
+    input.getFullYear() === now.getFullYear() &&
+    input.getMonth() === now.getMonth() &&
+    input.getDate() === now.getDate();
+
+  const diffMs = now.getTime() - input.getTime();
+
+  const seconds = Math.floor(diffMs / 1000);
+  const minutes = Math.floor(diffMs / (1000 * 60));
+  const hours = Math.floor(diffMs / (1000 * 60 * 60));
+
+  if (isSameDay) {
+    if (minutes < 1) {
+      return `${seconds} second${seconds !== 1 ? "s" : ""} ago`;
+    }
+
+    if (hours < 1) {
+      return `${minutes} minute${minutes !== 1 ? "s" : ""} ago`;
+    }
+
+    return `${hours} hour${hours !== 1 ? "s" : ""} ago`;
+  }
+
+  const isSameMonth =
+    input.getFullYear() === now.getFullYear() &&
+    input.getMonth() === now.getMonth();
+
+  if (isSameMonth) {
+    return new Intl.DateTimeFormat("en-US", {
+      day: "numeric",
+      month: "short",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    }).format(input);
+  }
+
+  const isSameYear = input.getFullYear() === now.getFullYear();
+
+  if (isSameYear) {
+    return new Intl.DateTimeFormat("en-US", {
+      day: "numeric",
+      month: "short",
+    }).format(input);
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    year: "numeric",
+  }).format(input);
+};
+
 /**
  * Recursively extracts raw text from a Lexical node tree.
  */
@@ -104,4 +160,17 @@ export function debounceQuery<F extends (...args: any[]) => void>(fn: F, delay: 
     clearTimeout(timer);
     timer = setTimeout(() => fn(...args), delay);
   };
+}
+
+// role (UI) → direction (DB)
+export function roleToDirection(role: "user" | "admin" | "bot"): "incoming" | "outgoing" {
+  if (role === "user") return "incoming";
+  if (role === "admin") return "outgoing";
+  return "outgoing"; // bot messages are system-originated, treat as outgoing
+}
+
+// direction (DB) → role (UI)
+export function directionToRole(direction: "incoming" | "outgoing"): "user" | "admin" | "bot" {
+  if (direction === "incoming") return "user";
+  return "admin"; // default; you can special-case bot if needed
 }

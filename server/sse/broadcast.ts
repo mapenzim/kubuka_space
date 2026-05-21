@@ -1,18 +1,27 @@
-import { sseConnections } from "@/server/state/chatState";
-import type { ChatMessageEvent } from "@/server/state/chatState";
+import {
+  ChatMessageEvent,
+  sseConnections,
+} from "@/server/state/chatState";
 
 export function broadcastToThread(
   threadId: string,
   payload: ChatMessageEvent
 ) {
-  const controller = sseConnections.get(threadId);
+  const threadConnections =
+    sseConnections.get(threadId);
 
-  if (!controller) return;
+  if (!threadConnections) return;
 
-  controller.enqueue(
-    `data: ${JSON.stringify({
-      type: "message",
-      ...payload,
-    })}\n\n`
-  );
+  const data = `data: ${JSON.stringify({
+    type: "message",
+    payload,
+  })}\n\n`;
+
+  for (const [, client] of threadConnections) {
+    try {
+      client.controller.enqueue(data);
+    } catch (err) {
+      console.error("SSE enqueue failed", err);
+    }
+  }
 }

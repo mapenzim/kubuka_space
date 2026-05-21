@@ -40,14 +40,14 @@ export default function LexicalEditor({
 
   return (
     <LexicalComposer initialConfig={initialConfig}>
-      <div className="flex w-full flex-col overflow-hidden rounded-2xl border border-black/10 dark:border-white/10 dark:bg-stone-800">
+      <div className="flex w-full flex-col overflow-hidden rounded-none border border-black/10 dark:border-white/10 dark:bg-stone-800">
         <ToolbarPlugin />
 
         <div className="relative">
           <RichTextPlugin
             contentEditable={
               <ContentEditable
-                className="min-h-55 overflow-y-auto p-4 text-base dark:text-zinc-300 leading-relaxed outline-none"
+                className="h-64 overflow-y-auto p-2 text-base dark:text-zinc-300 leading-relaxed outline-none"
                 aria-placeholder="Enter some text..."
                 placeholder={
                   <div className="pointer-events-none absolute top-4 left-4 text-zinc-400">

@@ -52,16 +52,15 @@ export const emptyCart: Cart = {
 export type ThreadStatus = "unread" | "read" | "archived";
 export type MessageDirection = "incoming" | "outgoing";
 
-// The Message Interface
+// Backend types
 export interface Message {
   id: string;
   threadId: string;
   direction: MessageDirection;
   content: string;
-  timestamp: Date; 
+  timestamp: Date;
 }
 
-// The Thread Interface
 export interface Thread {
   id: string;
   sender: string;
@@ -71,9 +70,10 @@ export interface Thread {
   updatedAt: Date;
   archived: boolean;
   dateArchived: Date | null;
-  messages: Message[]; // Array of messages attached to the thread
+  messages: Message[];
 }
 
+// UI type
 export interface UIThread {
   id: string;
   sender: string;
@@ -84,4 +84,4 @@ export interface UIThread {
     content: string;
     timestamp: string;
   }[];
-};
+}
