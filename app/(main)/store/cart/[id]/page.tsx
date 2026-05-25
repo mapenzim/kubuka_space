@@ -68,11 +68,6 @@ export default async function Page({ params }: PageProps) {
 
   // 2. Validate Cart Ownership (Redirect if it belongs to someone else)
   const session = await auth(); // Placeholder
-  
-  if (cart.userId && cart.userId !== session?.user?.id) {
-    // toast.error("You do not have access to this cart. Redirecting to store...");
-    redirect("/store");
-  }
 
   const safeCart = serializeDecimal(cart);
   const items: CartItem[] = safeCart.cartItems;
@@ -97,13 +92,21 @@ export default async function Page({ params }: PageProps) {
   const discount = DISCOUNT;
   const total = Math.max(0, inclusiveSubtotal - discount);
 
-  return (// Added min-h-screen and explicit dark mode backgrounds to the root wrapper
-    <Box className="w-full min-h-screen px-6 md:px-16 lg:px-16 xl:px-32 py-12 bg-white dark:bg-zinc-950 transition-colors duration-200">
+  if (cart.userId && cart.userId !== session?.user?.id) {
+    // toast.error("You do not have access to this cart. Redirecting to store...");
+    redirect("/store");
+  }
+
+  if (!session?.user) { return redirect('/store'); }
+
+  return (
+    // Added min-h-screen and explicit dark mode backgrounds to the root wrapper
+    <Box className="w-full min-h-screen px-6 md:px-16 lg:px-16 xl:px-32 py-12 dark:bg-transparent! transition-colors duration-200">
       <Container size="4">
         
         {/* Header */}
         <Box mb="6">
-          <Heading as="h1" size="8" color="gray" highContrast>
+          <Heading as="h1" size={{ initial: '4', md: "8"}} color="gray" className="dark:text-zinc-400!" highContrast>
             Your Cart
           </Heading>
         </Box>
@@ -113,7 +116,7 @@ export default async function Page({ params }: PageProps) {
 
           {/* ITEMS */}
           {!isEmpty ? (
-            <Flex direction="column" gap="2" className="w-full max-w-5xl">
+            <Flex direction="column" gap="2" className="w-full max-w-7xl">
               {items.map((item) => (
                 <Flex
                   key={item.id}
@@ -126,11 +129,11 @@ export default async function Page({ params }: PageProps) {
                   <CartButtons item={item} />
 
                   <Flex flexGrow="1" align="center" justify="between">
-                    <Text size="3" weight="medium" className="capitalize text-zinc-900 dark:text-zinc-100">
+                    <Text size="3" weight="medium" className="capitalize text-zinc-900 dark:text-indigo-400">
                       {item.merchandise.title}
                     </Text>
 
-                    <Text size="2" color="gray">
+                    <Text size="2" color="gray" className="dark:text-indigo-500!">
                       ${toNumber(item.merchandise.price).toFixed(2)}
                     </Text>
                   </Flex>
@@ -138,12 +141,12 @@ export default async function Page({ params }: PageProps) {
               ))}
             </Flex>
           ) : (
-            <Text color="gray" size="3">
+            <Text color="gray" size="3" className=" text-indigo-600! dark:text-indigo-400!">
               Empty cart — let’s go{" "}
               {/* Added dark:text and dark:hover for the link */}
               <Link 
                 href="/store" 
-                className="inline-flex items-center gap-1 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 hover:underline transition-colors"
+                className="inline-flex items-center gap-1 hover:text-indigo-700 dark:hover:text-indigo-300 hover:underline transition-colors"
               >
                 shopping <LinkIcon className="w-4 h-4" />
               </Link>
@@ -157,26 +160,26 @@ export default async function Page({ params }: PageProps) {
                 
                 <Flex direction="column" gap="2">
                   <Flex justify="between">
-                    <Text size="3" color="gray">Subtotal (Excl. VAT)</Text>
-                    <Text size="3" color="gray">${exclusiveSubtotal.toFixed(2)}</Text>
+                    <Text size="3" color="gray" className="dark:text-zinc-400!">Subtotal (Excl. VAT)</Text>
+                    <Text size="3" color="gray" className="dark:text-zinc-400!">${exclusiveSubtotal.toFixed(2)}</Text>
                   </Flex>
 
                   <Flex justify="between">
-                    <Text size="3" color="gray">VAT (15%)</Text>
-                    <Text size="3" color="gray">${vat.toFixed(2)}</Text>
+                    <Text size="3" color="gray" className="dark:text-zinc-400!">VAT (15%)</Text>
+                    <Text size="3" color="gray" className="dark:text-zinc-400!">${vat.toFixed(2)}</Text>
                   </Flex>
 
                   <Flex justify="between">
-                    <Text size="3" color="gray">Discount</Text>
-                    <Text size="3" color="gray">- ${discount.toFixed(2)}</Text>
+                    <Text size="3" color="gray" className="dark:text-zinc-400!">Discount</Text>
+                    <Text size="3" color="gray" className="dark:text-zinc-400!">- ${discount.toFixed(2)}</Text>
                   </Flex>
 
                   {/* Radix Separator automatically handles dark mode via the Theme provider */}
                   <Separator size="4" my="2" className="bg-zinc-200 dark:bg-zinc-800" />
 
                   <Flex justify="between" align="center">
-                    <Text size="4" weight="bold" highContrast>Total</Text>
-                    <Text size="4" weight="bold" highContrast>${total.toFixed(2)}</Text>
+                    <Text size="4" weight="bold" className="dark:text-zinc-400!" highContrast>Total</Text>
+                    <Text size="4" weight="bold" className="dark:text-zinc-400!" highContrast>${total.toFixed(2)}</Text>
                   </Flex>
                 </Flex>
 

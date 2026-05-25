@@ -16,6 +16,12 @@ const NavigationApp = () => {
     { name: "Docs", path: "/docs" },
     { name: "Contact Us", path: "/contact_us" },
   ];
+  const mobileNavLinks = [
+    { name: "Products", path: "/store" },
+    { name: "Blog", path: "/posts" },
+    { name: "Pricing", path: "/pricing" },
+    { name: "Docs", path: "/docs" },
+  ];
 
   const { data: session } = useSession();
                                                                                               
@@ -24,6 +30,13 @@ const NavigationApp = () => {
 
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+
+  const handleSignout = () => {
+    signOut({ redirect: false });
+    localStorage.removeItem("tempCart");
+    localStorage.removeItem("tempCartId");
+    router.refresh();
+  }
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -93,9 +106,9 @@ const NavigationApp = () => {
                   <DropdownMenu.Separator />
                   <DropdownMenu.Item shortcut="⌘ N">Archive</DropdownMenu.Item>
 
-                  <DropdownMenu.Separator />
+                  <DropdownMenu.Separator /> 
                             
-                  <DropdownMenu.Item onSelect={() => signOut({ redirect: false }).then(() => router.refresh())}>
+                  <DropdownMenu.Item onSelect={handleSignout}>
                     Sign Out
                   </DropdownMenu.Item>
                 </DropdownMenu.Content>
@@ -135,7 +148,7 @@ const NavigationApp = () => {
       
       {/* Mobile Side Menu */}
       <div
-        className={`fixed top-0 left-0 h-screen w-64 bg-white md:hidden flex flex-col items-start gap-6 font-medium text-gray-800 p-6 transition-transform duration-500 ease-in-out 
+        className={`fixed top-0 left-0 h-screen w-64 bg-white md:hidden flex flex-col items-start gap-6 font-medium text-gray-800 p-6 transition-transform duration-500 ease-in-out dark:bg-indigo-900 dark:text-zinc-400 
           ${isMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
         {/* Close button */}
@@ -157,12 +170,12 @@ const NavigationApp = () => {
         </button>
 
         {/* Nav links */}
-        {navLinks.map((link, i) => (
+        {mobileNavLinks.map((link, i) => (
           <Link
             key={i}
             href={link.path}
             onClick={() => setIsMenuOpen(false)}
-            className="hover:text-indigo-600 transition-colors"
+            className="hover:text-zinc-600 transition-colors"
           >
             {link.name}
           </Link>
@@ -170,11 +183,11 @@ const NavigationApp = () => {
 
         {/* Actions */}
         <Link 
-          href="#contact-us"
+          href="contact_us"
           className="border px-4 py-1 text-sm font-light rounded-full cursor-pointer transition-all"
           onClick={() => setIsMenuOpen(false)}
         >
-          Contact
+          Contact Us
         </Link>
 
         {user 

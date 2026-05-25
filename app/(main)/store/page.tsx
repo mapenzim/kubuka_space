@@ -14,9 +14,9 @@ const Page = async () => {
 
   // Wrap CartStatus in a client component that listens for updates
   return (
-    <div className="flex flex-col w-full px-4">
+    <div className="flex flex-col w-full px-4 mb-16">
 
-      <div className="grid md:grid-cols-3 md:gap-x-16 gap-y-8 md:px-16 mb-16 mt-16">
+      <div className="grid md:grid-cols-3 gap-y-4 md:gap-x-16 md:gap-y-8 md:px-16 md:my-16">
         {minifiedMerchandise.map((item) => (
           <MerchandiseCard
             key={item.id}

@@ -4,7 +4,7 @@ const PlanSection = () => {
   return (
     <section id="our-products" className="relative flex h-screen bg-indigo-300 dark:bg-slate-900 dark:border-b border-teal-400 w-full items-center justify-center">
       <div className="">
-        <div className="flex flex-col-reverse md:flex-row items-center gap-y-5">
+        <div className="flex flex-col-reverse md:flex-row items-center md:gap-y-5 gap-y-2">
           <div className="w-full md:w-4/12 mx-auto px-4">
             <Image
               alt="..."
@@ -14,7 +14,7 @@ const PlanSection = () => {
               height={400}
             />
           </div>
-          <div className="w-full md:w-5/12 mx-auto sm:mt-16 px-4">
+          <div className="w-full md:w-5/12 mx-auto px-4">
             <div className="md:pr-12">
               <div className="text-orange-600 p-3 text-center inline-flex items-center justify-center w-16 h-16 mb-6 shadow-lg rounded-full bg-green-400">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
@@ -25,7 +25,7 @@ const PlanSection = () => {
               <h3 className="text-3xl font-semibold dark:text-zinc-400">
                 A growing company
               </h3>
-              <p className="mt-4 text-lg leading-relaxed text-gray-600 dark:text-slate-400">
+              <p className="mt-4 text-sm md:text-lg leading-relaxed text-gray-600 dark:text-slate-400">
                 We are not stagnant but growing daily. Meet us along so that we also help your organisation to grow and reach levels you did not expect.
               </p>
               <ul className="list-none mt-6">

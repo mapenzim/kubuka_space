@@ -47,19 +47,19 @@ export default async function ReadPage({ params }: { params: Promise<{ item: str
 
   return (
     <Box 
-      className="min-h-screen bg-zinc-50 dark:bg-zinc-950 py-16 px-4 transition-colors duration-200"
+      className="min-h-screen bg-zinc-50 dark:bg-zinc-950 p-4 transition-colors duration-200"
     >
       <Container size="3">
         <Card 
           size="2" 
           variant="ghost"
-          my="8"
-          className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 shadow-sm rounded-2xl"
+          my={{ initial: "1", md: "8" }}
+          className=" dark:bg-transparent border-zinc-200 dark:border-zinc-800 shadow-sm rounded-2xl"
         >
-          <Flex gap={{ initial: "4", sm: "8" }} direction={{ initial: "column", sm: "row" }} align="start">
+          <Flex gap={{ initial: "4", sm: "8" }} direction={{ initial: "column", md: "row" }} align="start">
             
             {/* Left Column: Author Avatar */}
-            <Box className="hidden sm:flex shrink-0 place-content-center rounded-full border-2 border-(--iris-6) p-1">
+            <Box className="hidden! md:flex! shrink-0 place-content-center rounded-full border-2 border-(--iris-6) p-1">
               <Image
                 src="/images/kubuka-logo.png"
                 alt={formatName(post?.author?.name ?? "User")}

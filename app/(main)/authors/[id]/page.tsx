@@ -62,7 +62,7 @@ export default async function AuthorProfile({
         >
           <Flex align="center" gap="6">
             <Avatar
-              size="7"
+              size={{ initial: "4", sm: "7" }}
               src={user.image || undefined}
               fallback={fallbackLetter.toUpperCase()}
               color="iris"
@@ -71,7 +71,7 @@ export default async function AuthorProfile({
             />
             
             <Box>
-              <Heading as="h1" size="7" weight="bold" className="text-zinc-900 dark:text-zinc-100 mb-2">
+              <Heading as="h1" size={{ initial: "3", md: "7" }} weight="bold" className="text-zinc-900 dark:text-zinc-400 mb-2">
                 {formatName(user.name ?? "User")}
               </Heading>
               <Link
@@ -85,14 +85,13 @@ export default async function AuthorProfile({
         </Card>
 
         {/* 📝 Posts Section */}
-        <Box>
+        <Box mt='8'>
           <Flex align="center" justify="between" mb="5">
-            <Heading as="h2" size="6" className="text-zinc-900 dark:text-zinc-100">
+            <Heading as="h2" size="6" className="text-zinc-900 dark:text-zinc-400">
               {isOwnProfile ? "Your Posts" : "Published Posts"}
             </Heading>
-            
             {isOwnProfile && (
-              <Button size="2" asChild className="cursor-pointer">
+              <Button size="2" asChild className="cursor-pointer text-zinc-400!">
                 <Link href="/posts/new">
                   <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -142,7 +141,7 @@ export default async function AuthorProfile({
                     <Flex direction="column" justify="between" className="h-full">
                       
                       {/* Title clamped to 2 lines for uniform card heights */}
-                      <Heading as="h3" size="4" className="text-zinc-900 dark:text-zinc-200 line-clamp-2 mb-4 leading-snug">
+                      <Heading as="h3" size="4" className="text-zinc-900 dark:text-gray-500 line-clamp-2 mb-4 leading-snug">
                         {post.title}
                       </Heading>
                       

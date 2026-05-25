@@ -76,18 +76,19 @@ export default function CartStatus({ isScrolled }: { isScrolled: boolean }) {
         side="bottom" 
         align="end"
         style={{ maxHeight: "520px" }}
+        className="dark:bg-indigo-950!"
       >
         <Flex direction="column" gap="3">
-          <Text as="div" size="2" weight="bold">
+          <Text as="div" size="2" weight="bold" className="dark:text-gray-300!">
             Your Cart
           </Text>
 
           {/* Item List with Delete buttons */}
-          <Flex direction="column" gap="2" style={{ maxHeight: "480px", overflowY: "auto" }}>
+          <Flex direction="column" gap="2" style={{ height: "160px", width: '240px', overflowY: "auto", overflowX: "hidden" }}>
             {cart.cartItems.length > 0 ? (
               cart?.cartItems?.map((item: CartItem) => (
                 <Flex key={item.id} justify="between" align="center">
-                  <Text as="div" size="1" color="gray" truncate>
+                  <Text as="div" size="1" color="gray" className="dark:text-gray-400!" truncate>
                     {item.merchandise?.title || `Item`} x {item.quantity}
                   </Text>
                   <Button
@@ -96,6 +97,8 @@ export default function CartStatus({ isScrolled }: { isScrolled: boolean }) {
                     size="1"
                     onClick={() => removeItem(item.id)}
                     aria-label={`Remove ${item.merchandise?.title}`}
+                    className="flex! justify-center! items-center! dark:text-red-500!"
+                    asChild
                   >
                     <Trash2 size={14} />
                   </Button>
