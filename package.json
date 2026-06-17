@@ -83,16 +83,5 @@
     "tsx": "4.21.0",
     "typescript": "5.9.3"
   },
-  "packageManager": "pnpm@11.7.0+sha512.19cc852c120c7125760f2443ee6be0ca5b40f9f50598de1a09a1f177503e010e57c23c77646e01e761de59bf874fb22a3398c33ab9691fc13eb946b6f0f4d620",
-  "pnpm": {
-    "overrides": {
-      "@auth/core": "0.41.1"
-    },
-    "ignoredBuiltDependencies": [
-      "@prisma/engines",
-      "onnxruntime-node",
-      "prisma",
-      "protobufjs"
-    ]
-  }
+  "packageManager": "pnpm@11.7.0+sha512.19cc852c120c7125760f2443ee6be0ca5b40f9f50598de1a09a1f177503e010e57c23c77646e01e761de59bf874fb22a3398c33ab9691fc13eb946b6f0f4d620"
 }

@@ -1,13 +1,13 @@
 import "dotenv/config";
 import path from "node:path";
-import { defineConfig } from "@prisma/config";
+import { defineConfig, env } from "@prisma/config";
 
 export default defineConfig({
   schema: path.join("prisma", "schema.prisma"),
 
   datasource: {
     // Migrate still needs a plain URL
-    url: process.env.DATABASE_URL_KUBUKA!,
+    url: env("DATABASE_URL_KUBUKA")!,
   },
 
   migrations: {

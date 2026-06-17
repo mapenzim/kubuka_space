@@ -14,9 +14,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter({
     async getAdapter() {
       const prisma = await getPrisma();
-      return PrismaAdapter(prisma);
+      return prisma;
     },
-  } as any), // workaround for typing
+  } as any) as any, // workaround for typing
 
   providers: [
     CredentialsProvider({

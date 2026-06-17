@@ -1,13 +1,8 @@
 import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { Pool } from "pg";
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL_KUBUKA,
-});
-
-const adapter = new PrismaPg(pool);
+const adapter = new PrismaPg(process.env.DATABASE_URL_KUBUKA!);
 
 const prisma = new PrismaClient({
   adapter,
@@ -15,7 +10,6 @@ const prisma = new PrismaClient({
 
 export default prisma;
 
-// lib/prisma.ts or helper
 export function serializeDecimal(obj: any) {
   return JSON.parse(
     JSON.stringify(obj, (_, value) =>
