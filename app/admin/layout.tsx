@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { Flex, Box, Heading, Text, Separator, Button } from "@radix-ui/themes";
-import { MailPlus } from "lucide-react";
+import { AppWindowMacIcon, LayoutPanelTopIcon, MailPlus, NotebookTabs, StickyNote, Users } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -45,7 +45,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <Box p="5">
           <Flex align="center" gap="2">
             <div className="flex size-8 items-center justify-center rounded bg-indigo-500 text-white">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+              <AppWindowMacIcon size={18} />
             </div>
             <Heading as="h2" size="5" weight="bold" className="text-zinc-300">
               Kubuka Admin
@@ -63,17 +63,17 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <NavItem 
             href="/admin" 
             label="Dashboard" 
-            icon={<svg width="18" height="18" className="text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>} 
+            icon={<LayoutPanelTopIcon width={18} height={18} className="text-zinc-300" />}
           />
           <NavItem 
             href="/admin/posts" 
             label="All Posts" 
-            icon={<svg width="18" height="18" className="text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10.4 12.6a2 2 0 1 1 3 3L8 21l-4 1 1-4Z"/><path d="M18 21v-8a2 2 0 0 0-2-2h-1.5"/><path d="M4 11V4a2 2 0 0 1 2-2h8l6 6v3"/></svg>} 
+            icon={<NotebookTabs width={18} height={18} className="text-zinc-300" />}
           />
           <NavItem 
             href="/admin/users" 
             label="Users" 
-            icon={<svg width="18" height="18" className="text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>} 
+            icon={<Users width={18} height={18} className="text-zinc-300" />} 
           />
           <NavItem 
             href="/admin/store" 

@@ -64,7 +64,7 @@ export default async function AdminPostsPage() {
             </Table.Header>
 
             <Table.Body>
-              {formatedPosts.map((post) => (
+              {formatedPosts.length > 0 ? formatedPosts.map((post) => (
                 <Table.Row key={post.id} align="center">
                   
                   {/* Title & Excerpt Column */}
@@ -132,7 +132,17 @@ export default async function AdminPostsPage() {
                   </Table.Cell>
 
                 </Table.Row>
-              ))}
+              )) : (
+                <Table.Row>
+                  <Table.Cell colSpan={6} align="center">
+                    <Box py="8">
+                      <Text size="3" color="indigo" weight="bold">
+                        No posts found.
+                      </Text>
+                    </Box>
+                  </Table.Cell>
+                </Table.Row>
+              )}
             </Table.Body>
           </Table.Root>
         </Box>
@@ -140,4 +150,4 @@ export default async function AdminPostsPage() {
       
     </Flex>
   );
-} 
+}

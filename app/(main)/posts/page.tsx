@@ -55,7 +55,7 @@ export default async function Posts() {
         {/* Empty State */}
         {isEmpty ? (
           <Box py="9">
-            <Text size="4" color="gray">
+            <Text size="4" color="cyan" weight="medium" align="center" className="dark:text-orange-400!">
               No posts available right now. Check back later!
             </Text>
           </Box>
