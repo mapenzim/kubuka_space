@@ -16,7 +16,7 @@ export default function TermsAndConditionsPage() {
             </Text>
           </Box>
 
-          <Text as="p" size="3" className="leading-relaxed">
+          <Text as="p" size="1" className="leading-relaxed">
             Welcome to Kubuka ("we," "our," or "us"). These Terms and Conditions ("Terms") govern your access to and use of the Kubuka website, applications, and services (collectively, the "Service"). By accessing or using the Service, you agree to be bound by these Terms. If you disagree with any part of the terms, you may not access the Service.
           </Text>
 
@@ -136,7 +136,7 @@ export default function TermsAndConditionsPage() {
               7. Governing Law
             </Heading>
             <Text as="p" size="3" className="leading-relaxed">
-              These Terms shall be governed and construed in accordance with the laws of [Your Jurisdiction/Country], without regard to its conflict of law provisions.
+              These Terms shall be governed and construed in accordance with the laws of Zimbabwe, without regard to its conflict of law provisions.
             </Text>
           </Box>
 

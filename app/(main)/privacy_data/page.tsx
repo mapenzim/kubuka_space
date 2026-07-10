@@ -16,7 +16,7 @@ export default function PrivacyAndLicencePolicyPage() {
             </Text>
           </Box>
 
-          <Text as="p" size="3" className="leading-relaxed">
+          <Text as="p" size="1" className="leading-relaxed">
             At Kubuka ("we," "our," or "us"), we are committed to protecting your personal data and respecting your privacy. This policy outlines how we collect, use, store, and share your data, as well as the licensing terms governing your use of our platform and the content you create.
           </Text>
 

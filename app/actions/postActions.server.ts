@@ -191,3 +191,14 @@ export async function getPost (postId: string) {
     } }
   });
 }
+
+export async function deletePost(postId: string, path: string) {
+  try {
+    await prisma.post.delete({ where: {id: postId} });
+    revalidatePath(path);
+
+    return { success: true };
+  } catch (error) {
+    return { error: "Failed to delete post." }
+  }
+}

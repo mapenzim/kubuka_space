@@ -16,7 +16,7 @@ export default function CookiesPolicyPage() {
             </Text>
           </Box>
 
-          <Text as="p" size="3" className="leading-relaxed">
+          <Text as="p" size="1" className="leading-relaxed">
             This Cookies Policy explains how Kubuka ("we," "our," or "us") uses cookies and similar technologies to recognize you when you visit our website and use our services (the "Service"). It explains what these technologies are and why we use them, as well as your rights to control our use of them.
           </Text>
 

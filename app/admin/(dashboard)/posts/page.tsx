@@ -1,4 +1,5 @@
 import { fetchAllPosts } from "@/app/actions/postActions.server";
+import { DeletePost } from "@/components/buttons/delete-post-btn";
 import { formatDate, generateLexicalExcerpt } from "@/lib/utils";
 import { 
   Flex, 
@@ -121,11 +122,11 @@ export default async function AdminPostsPage() {
                       </DropdownMenu.Trigger>
                       <DropdownMenu.Content size="2" align="end">
                         <DropdownMenu.Item asChild>
-                           <Link href={`/admin/posts/${post.id}/edit`}>Edit Post</Link>
+                          <Link href={`/admin/posts/${post.id}/edit`}>Edit Post</Link>
                         </DropdownMenu.Item>
                         <DropdownMenu.Item>View Live</DropdownMenu.Item>
                         <DropdownMenu.Separator />
-                        <DropdownMenu.Item color="ruby">Delete Post</DropdownMenu.Item>
+                        <DeletePost path="/admin/posts" postId={post.id} />
                       </DropdownMenu.Content>
                     </DropdownMenu.Root>
                   </Table.Cell>
@@ -139,4 +140,4 @@ export default async function AdminPostsPage() {
       
     </Flex>
   );
-}
+} 

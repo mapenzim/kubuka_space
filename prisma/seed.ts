@@ -17,17 +17,13 @@ async function main() {
     {
       name: "ADMIN",
       permissions: [
-        { path: "/" },
-        { path: "/dashboard" },
-        { path: "/profile" },
+        { path: "/*" },
       ],
     },
     {
       name: "EDITOR",
       permissions: [
         { path: "/" },
-        { path: "/dashboard/posts" },
-        { path: "/dashboard/comments" },
       ],
     },
     {
@@ -75,19 +71,9 @@ async function main() {
       id: ulid(),
       name: "Kubuka Space",
       email: "kubukahub@gmail.com",
-      password: await securePassword("hubtwabuka"),
+      password: await securePassword("kubuka1234"),
       role: { connect: { id: editorRole.id } },
-      posts: {
-        create: [
-          {
-            id: ulid(),
-            title: "Welcome to Kubuka Hub",
-            content:
-              "This hub is for the people who want to create content for the Binga Community. Feel free to connect to our channels for more.",
-            published: true,
-          },
-        ],
-      },
+      posts: {},
     },
     {
       id: ulid(),
@@ -95,23 +81,13 @@ async function main() {
       email: "hazelman@live.com",
       password: await securePassword("mapenzim"),
       role: { connect: { id: adminRole.id } },
-      posts: {
-        create: [
-          {
-            id: ulid(),
-            title: "Follow Kubuka for more information",
-            content:
-              "Kubuka is a community initiative to make sure the content we serve is visible throughout the universe. Follow us for more.",
-            published: true,
-          },
-        ],
-      },
+      posts: {},
     },
     {
       id: ulid(),
       name: "Super Admin",
       email: "superadmin@kubuka.space",
-      password: await securePassword("superkubuka"),
+      password: await securePassword("superadmin1234"),
       role: { connect: { id: superRole.id } },
     },
   ];
