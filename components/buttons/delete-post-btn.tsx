@@ -1,28 +1,45 @@
 "use client";
 
-import { deletePost } from "@/app/actions/postActions.server";
+import { useState } from "react";
 import { DropdownMenu } from "@radix-ui/themes";
-import RemoveAlert from "../modals/alert";
+import { deletePost } from "@/app/actions/postActions.server";
+import RemoveItemAlert from "../modals/admin-delete-alert";
 
-export const DeletePost = ({ postId, path}: { postId: string; path: string; }) => {
+export const DeletePost = ({
+  postId,
+  path,
+}: {
+  postId: string;
+  path: string;
+}) => {
+  const [open, setOpen] = useState(false);
 
   const makeDelete = async () => {
     await deletePost(postId, path);
-  }
+    setOpen(false);
+  };
+
   return (
-    <RemoveAlert
-      trigger={
-        <DropdownMenu.Item 
-          color="ruby"
-        >
-          Delete Post
-        </DropdownMenu.Item>
-      }
-      title="Permanently delete post"
-      description="This action cannot be undone. Are you sure?"
-      confirmText="Delete"
-      cancelText="Cancel"
-      onConfirm={makeDelete}
-    />
+    <>
+      <DropdownMenu.Item
+        color="ruby"
+        onSelect={(e) => {
+          e.preventDefault(); // Prevent the default select behavior
+          setOpen(true);
+        }}
+      >
+        Delete Post
+      </DropdownMenu.Item>
+
+      <RemoveItemAlert
+        open={open}
+        onOpenChange={setOpen}
+        title="Permanently delete post"
+        description="This action cannot be undone. Are you sure?"
+        confirmText="Confirm Delete"
+        cancelText="Cancel"
+        onConfirm={makeDelete}
+      />
+    </>
   );
-}
+};
