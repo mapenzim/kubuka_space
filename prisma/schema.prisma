@@ -409,6 +409,7 @@ model Message {
   thread    Thread          @relation(fields: [threadId], references: [id], onDelete: Cascade)
   direction MessageDirection  // "incoming" or "outgoing"
   content   String
+  readAt    DateTime?
 
   timestamp DateTime        @default(now())
 }

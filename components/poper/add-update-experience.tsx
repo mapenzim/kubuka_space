@@ -19,14 +19,14 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 type WorkExperience = {
-  workExperience: {
+  workExperience?: {
     id: string;
     jobTitle: string;
     companyName: string;
     dates: string;
     duties: string;
     userId: string;
-  } | null;
+  };
 }
 
 export const AddUpdateExperiencePopover = ({ workExperience }: WorkExperience) => {

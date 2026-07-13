@@ -1,22 +1,31 @@
-import { sseConnections, pendingTimers } from "@/server/state/chatState";
+import { sseManager } from "./manager";
 
-export function cleanupThread(threadId: string) {
-  sseConnections.delete(threadId);
-
-  const timer = pendingTimers.get(threadId);
-  if (timer) clearTimeout(timer);
-
-  pendingTimers.delete(threadId);
+export function removeSSE(
+  threadId: string,
+  clientId: string
+) {
+  sseManager.remove(
+    threadId,
+    clientId
+  );
 }
 
-export function removeSSE(threadId: string, clientId: string) {
-  const threadClients = sseConnections.get(threadId);
+export function removeThreadSSE(
+  threadId: string
+) {
+  const clients =
+    sseManager.getThreadClients(
+      threadId
+    );
 
-  if (!threadClients) return;
-
-  threadClients.delete(clientId);
-
-  if (threadClients.size === 0) {
-    sseConnections.delete(threadId);
+  for (const client of clients.values()) {
+    sseManager.remove(
+      threadId,
+      client.clientId
+    );
   }
+}
+
+export function clearSSE() {
+  sseManager.clear();
 }

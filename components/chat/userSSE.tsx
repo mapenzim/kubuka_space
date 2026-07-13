@@ -1,328 +1,531 @@
 "use client";
 
-import { LexicalComposer } from "@lexical/react/LexicalComposer";
-import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
-import { ContentEditable } from "@lexical/react/LexicalContentEditable";
-import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
-import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
-import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
-import { getThreadById, receiveIncomingMessage } from "@/app/actions/messageThreadAction";
-import { toUIThread, useChat } from "@/hooks/sse";
-import { UIThread } from "@/lib/interfaces";
-import { Avatar, Box, Button, Card, Flex, ScrollArea, Separator, Text, TextField } from "@radix-ui/themes";
-import { useState, useEffect, useRef, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
+
+import {
+  Avatar,
+  Box,
+  Button,
+  Card,
+  Flex,
+  Heading,
+  ScrollArea,
+  Separator,
+  Text,
+  TextField,
+} from "@radix-ui/themes";
+
+import {
+  receiveIncomingMessage,
+  findThread,
+} from "@/app/actions/messageThreadAction";
+
+import { useThread } from "@/hooks/useThread";
+
 import { formatTime } from "@/lib/utils";
 
+import FormLexicalEditor from "./FormLexicalEditor";
+import { toUIThread } from "@/lib/mappers";
 
-// ======================================================
-// TYPES
-// ======================================================
-
-interface SSEMessage {
+type AuthUser = {
   id: string;
-  content: string;
-  direction: "incoming" | "outgoing";
-  timestamp: Date | string;
-}
-
-// ======================================================
-// LEXICAL CONFIG
-// ======================================================
-
-const theme = {
-  paragraph: "mb-2 text-gray-900 dark:text-zinc-300",
+  name: string | null;
+  email: string | null;
 };
 
-function onError(error: Error) {
-  console.error("Lexical Error:", error);
-}
+type Props = {
+  user: AuthUser | null;
+};
 
-function FormLexicalEditor({
-  onChange,
-  placeholder = "Write a message...",
-}: {
-  onChange: (text: string) => void;
-  placeholder?: string;
-}) {
-  const initialConfig = {
-    namespace: crypto.randomUUID(),
-    theme,
-    onError,
-  };
+export default function UserChat({
+  user,
+}: Props) {
 
-  return (
-    <LexicalComposer initialConfig={initialConfig}>
-      <div className="relative flex min-h-28 w-full flex-col rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-3 text-sm transition-colors focus-within:ring-2 focus-within:ring-indigo-500">
-        <RichTextPlugin
-          contentEditable={
-            <ContentEditable className="h-full w-full flex-1 outline-none text-zinc-800 dark:text-zinc-300" />
-          }
-          placeholder={
-            <div className="pointer-events-none absolute top-3 left-3 text-zinc-400">
-              {placeholder}
-            </div>
-          }
-          ErrorBoundary={LexicalErrorBoundary}
-        />
+  //---------------------------------------------------------
+  // State
+  //---------------------------------------------------------
 
-        <HistoryPlugin />
+  const [initialThread, setInitialThread] =
+    useState<typeof undefined | any>(null);
 
-        <OnChangePlugin
-          onChange={(editorState) => {
-            editorState.read(() => {
-              const root = editorState._nodeMap.get("root");
+  const [guestName, setGuestName] =
+    useState("");
 
-              onChange(root ? root.getTextContent() : "");
-            });
-          }}
-        />
-      </div>
-    </LexicalComposer>
-  );
-}
+  const [guestEmail, setGuestEmail] =
+    useState("");
 
-export default function UserChat({ userId, sender, email }: { userId: string; sender: string; email: string }) {
-  const [thread, setThread] = useState<UIThread | null>(null);
-  const [messageContent, setMessageContent] = useState("");
-  const [replyText, setReplyText] = useState("");
-  const [errorText, setErrorText] = useState("");
-  const [isPending, startTransition] = useTransition();
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [messageContent, setMessageContent] =
+    useState("");
 
-  // Subscribe to SSE for this thread
-  const { sendMessage } = useChat(userId, "user");
+  const [replyText, setReplyText] =
+    useState("");
 
-  // Initial load
+  const [errorText, setErrorText] =
+    useState("");
+
+  const [isPending, startTransition] =
+    useTransition();
+
+  const scrollRef =
+    useRef<HTMLDivElement>(null);
+
+  const typingClientId =
+    useRef(crypto.randomUUID());
+
+  //---------------------------------------------------------
+  // User
+  //---------------------------------------------------------
+
+  const sender =
+    user?.name ??
+    guestName;
+
+  const email =
+    user?.email ??
+    guestEmail;
+
+  //---------------------------------------------------------
+  // Chat
+  //---------------------------------------------------------
+
+  const {
+    thread,
+    setThread,
+    connected,
+    typing,
+    online,
+    sendMessage,
+    startTyping,
+    stopTyping,
+  } = useThread({
+    thread: initialThread,
+    role: "user",
+  });
+
+  //---------------------------------------------------------
+  // Load Existing Thread
+  //---------------------------------------------------------
+
   useEffect(() => {
-    async function init() {
-      const res = await getThreadById(userId);
-      if (res.success && res.thread) {
-        setThread(toUIThread(res.thread));
+    if (!email) {
+      return;
+    }
+
+    async function load() {
+      const result =
+        await findThread(
+          email
+        );
+
+      if (
+        !result.success ||
+        !result.thread
+      ) {
+        return;
+      }
+
+      const uiThread =
+        toUIThread(
+          result.thread
+        );
+
+      setInitialThread(
+        uiThread
+      );
+
+      setThread(
+        uiThread
+      );
+
+      if (!user) {
+        setGuestName(
+          uiThread.sender
+        );
+
+        setGuestEmail(
+          uiThread.email
+        );
       }
     }
-    init();
-  }, [userId]);
 
-  // Auto scroll
+    load();
+  }, [
+    email,
+    user,
+    setThread,
+  ]);
+
+    //---------------------------------------------------------
+  // Auto Scroll
+  //---------------------------------------------------------
+
   useEffect(() => {
-    if (!scrollRef.current) return;
+    if (!scrollRef.current) {
+      return;
+    }
+
     scrollRef.current.scrollTo({
       top: scrollRef.current.scrollHeight,
       behavior: "smooth",
     });
-  }, [thread?.messages.length]);
+  }, [thread?.messages]);
 
-  // Start conversation
-  async function handleInitialSubmit(e: React.FormEvent<HTMLFormElement>) {
+  //---------------------------------------------------------
+  // Start Conversation
+  //---------------------------------------------------------
+
+  async function handleInitialSubmit(
+    e: React.FormEvent<HTMLFormElement>
+  ) {
     e.preventDefault();
-    setErrorText("");
 
     if (!messageContent.trim()) {
-      setErrorText("Please enter a message.");
+      setErrorText(
+        "Please enter a message."
+      );
+
       return;
     }
 
     startTransition(async () => {
-      const res = await receiveIncomingMessage({ sender, email, content: messageContent });
-      if (!res.success || !res.thread) {
-        setErrorText("Failed to start conversation.");
+      const result =
+        await receiveIncomingMessage(
+          sender,
+          email,
+          messageContent
+        );
+
+      if (
+        !result.success ||
+        !result.thread
+      ) {
+        setErrorText(
+          "Unable to start conversation."
+        );
+
         return;
       }
-      setThread(toUIThread(res.thread));
+
+      const uiThread =
+        toUIThread(
+          result.thread
+        );
+
+      setThread(
+        uiThread
+      );
+
       setMessageContent("");
+
+      setErrorText("");
     });
   }
 
-  // Send reply
-  async function handleChatReply(e: React.FormEvent<HTMLFormElement>) {
+  //---------------------------------------------------------
+  // Send Reply
+  //---------------------------------------------------------
+
+  async function handleReplySubmit(
+    e: React.FormEvent<HTMLFormElement>
+  ) {
     e.preventDefault();
-    if (!thread || !replyText.trim()) return;
 
-    const outgoing = {
-      id: crypto.randomUUID(),
-      role: "user" as const,
-      content: replyText,
-      timestamp: new Date().toISOString(),
-    };
+    if (!thread) {
+      return;
+    }
 
-    // Optimistic update
-    setThread(prev => prev ? { ...prev, messages: [...prev.messages, outgoing] } : prev);
+    if (!replyText.trim()) {
+      return;
+    }
+
+    const text =
+      replyText.trim();
+
     setReplyText("");
 
-    startTransition(async () => {
-      await receiveIncomingMessage({ sender, email, content: outgoing.content });
+    await sendMessage({
+      sender,
+
+      email,
+
+      role: "user",
+
+      text,
     });
+  }
+
+  //---------------------------------------------------------
+  // Typing
+  //---------------------------------------------------------
+
+  function handleTyping(
+    value: string
+  ) {
+    setReplyText(value);
+
+    if (!thread) {
+      return;
+    }
+
+    if (value.trim()) {
+      startTyping(
+        typingClientId.current
+      );
+    } else {
+      stopTyping(
+        typingClientId.current
+      );
+    }
+  }
+
+    //---------------------------------------------------------
+  // UI
+  //---------------------------------------------------------
+
+  if (!thread) {
+    return (
+      <Card>
+        <Heading mb="4">
+          Start Conversation
+        </Heading>
+
+        <form onSubmit={handleInitialSubmit}>
+          <Flex direction="column" gap="4">
+
+            {!user && (
+              <>
+                <Box>
+                  <Text>Full Name</Text>
+
+                  <TextField.Root
+                    value={guestName}
+                    onChange={(e) =>
+                      setGuestName(
+                        e.target.value
+                      )
+                    }
+                    required
+                  />
+                </Box>
+
+                <Box>
+                  <Text>Email</Text>
+
+                  <TextField.Root
+                    type="email"
+                    value={guestEmail}
+                    onChange={(e) =>
+                      setGuestEmail(
+                        e.target.value
+                      )
+                    }
+                    required
+                  />
+                </Box>
+              </>
+            )}
+
+            {user && (
+              <Box>
+                <Text size="2">
+                  Signed in as
+                </Text>
+
+                <Text weight="bold">
+                  {user.name}
+                </Text>
+
+                <Text color="gray">
+                  {user.email}
+                </Text>
+              </Box>
+            )}
+
+            <FormLexicalEditor
+              placeholder="How can we help?"
+              onChange={setMessageContent}
+            />
+
+            <Button
+              type="submit"
+              loading={isPending}
+            >
+              Start Conversation
+            </Button>
+
+            {errorText && (
+              <Text color="red">
+                {errorText}
+              </Text>
+            )}
+          </Flex>
+        </form>
+      </Card>
+    );
   }
 
   return (
-    <div className="flex flex-col h-full">
-    <Card size="4" className="bg-(--gray-a11)" variant="ghost">
-      {errorText && (
-        <Text color="ruby" size="2">
-          {errorText}
-        </Text>
-      )}
+    <Card
+      variant="ghost"
+      className="flex flex-col h-160"
+    >
+      {/* Header */}
 
-      <form onSubmit={handleInitialSubmit}>
-        </form>
-      </Card>
-      {!thread ? (
-        <form onSubmit={handleInitialSubmit} className="p-4">
-                <Flex direction="column" gap="4">
-                  <Box>
-                    <Text as="label" size="2" weight="medium">
-                      Full Name
-                    </Text>
+      <Flex
+        align="center"
+        gap="3"
+        className="p-4 border-b"
+      >
+        <Avatar
+          radius="full"
+          fallback="K"
+        />
 
-                    <TextField.Root
-                      name="sender"
-                      placeholder="Jane Doe"
-                      size="3"
-                      required
-                      disabled={isPending}
-                    />
-                  </Box>
+        <Box>
+          <Text weight="bold">
+            Kubuka Support
+          </Text>
 
-                  <Box>
-                    <Text as="label" size="2" weight="medium">
-                      Email Address
-                    </Text>
+          <Flex
+            align="center"
+            gap="2"
+          >
+            <Text
+              size="1"
+              color={
+                connected
+                  ? "green"
+                  : "orange"
+              }
+            >
+              {connected
+                ? "Connected"
+                : "Connecting..."}
+            </Text>
 
-                    <TextField.Root
-                      name="email"
-                      type="email"
-                      placeholder="jane@example.com"
-                      size="3"
-                      required
-                      disabled={isPending}
-                    />
-                  </Box>
-
-                  <Box>
-                    <Text as="label" size="2" weight="medium">
-                      Your Message
-                    </Text>
-
-                    <FormLexicalEditor
-                      onChange={setMessageContent}
-                      placeholder="How can we help you today?"
-                    />
-                  </Box>
-
-                  <Button
-                    type="submit"
-                    size="3"
-                    loading={isPending}
-                  >
-                    Start Conversation
-                  </Button>
-                </Flex>
-          {errorText && <p className="text-red-500">{errorText}</p>}
-        </form>
-      ) : (
-            <Card className="flex flex-col h-160 overflow-hidden" variant="ghost">
-              {/* HEADER */}
-
-              <Flex
-                align="center"
-                gap="3"
-                className="p-4 border-b border-zinc-200 dark:border-zinc-800"
+            {online && (
+              <Text
+                size="1"
+                color="green"
               >
-                <Avatar
-                  size="3"
-                  fallback="K"
-                  color="indigo"
-                  radius="full"
-                />
+                • Online
+              </Text>
+            )}
 
-                <Box>
-                  <Text as="div" weight="bold">
-                    Kubuka Support
-                  </Text>
+            {typing && (
+              <Text
+                size="1"
+                color="gray"
+              >
+                • Typing...
+              </Text>
+            )}
+          </Flex>
 
-                  <Text size="2" color="gray">
-                    Connected
-                  </Text>
-                </Box>
-              </Flex>
+          <Text
+            size="1"
+            color="gray"
+          >
+            {thread.email}
+          </Text>
+        </Box>
+      </Flex>
 
-              {/* MESSAGES */}
+      {/* Messages */}
 
-              <Box className="flex-1 overflow-hidden bg-zinc-50 dark:bg-zinc-950">
-                <ScrollArea
-                  type="hover"
-                  scrollbars="vertical"
-                  style={{
-                    height: 392,
-                    padding: "16px",
-                  }}
-                  ref={scrollRef}
-                >
-                  <Flex direction="column" gap="3">
-                    {thread.messages.map((msg) => {
-                      const isUser =
-                        msg.role === "user";
+      <Box className="flex-1 overflow-hidden">
+        <ScrollArea
+          ref={scrollRef}
+          style={{
+            height: 390,
+            padding: 16,
+          }}
+        >
+          <Flex
+            direction="column"
+            gap="3"
+          >
+            {thread.messages.map(
+              (message) => {
+                const isUser =
+                  message.role ===
+                  "user";
 
-                      return (
-                        <Flex
-                          key={msg.id}
-                          direction="column"
-                          align={isUser ? "end" : "start"}
-                        >
-                          <Box
-                            className={`max-w-[80%] rounded-2xl px-4 py-2 ${
-                              isUser
-                                ? "bg-indigo-600 text-white rounded-br-sm"
-                                : "bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-bl-sm text-zinc-800 dark:text-zinc-300"
-                            }`}
-                          >
-                            <Text size="2">
-                              {msg.content}
-                            </Text>
-                          </Box>
-
-                          <Text
-                            size="1"
-                            color="gray"
-                            mt="1"
-                          >
-                            {formatTime(
-                              msg.timestamp ?? new Date()
-                            )}
-                          </Text>
-                        </Flex>
-                      );
-                    })}
-                  </Flex>
-                </ScrollArea>
-              </Box>
-
-              <Separator size="4" />
-
-              {/* INPUT */}
-
-              <Box className="p-3 bg-white dark:bg-zinc-950">
-                <form onSubmit={handleChatReply}>
-                <Flex gap="2" align="end">
-                  <Box className="flex-1">
-                    <FormLexicalEditor
-                      onChange={setReplyText}
-                      placeholder="Type your message..."
-                    />
-                  </Box>
-
-                  <Button
-                    size="3"
-                    disabled={!replyText.trim() || isPending}
-                    loading={isPending}
+                return (
+                  <Flex
+                    key={
+                      message.id
+                    }
+                    direction="column"
+                    align={
+                      isUser
+                        ? "end"
+                        : "start"
+                    }
                   >
-                    Send
-                  </Button>
-                </Flex>
-                </form>
-              </Box>
-            </Card>
-      )}
-    </div>
+                    <Box
+                      className={`max-w-[80%] rounded-2xl px-4 py-2 ${
+                        isUser
+                          ? "bg-indigo-600 text-white"
+                          : "border"
+                      }`}
+                    >
+                      <Text size="2">
+                        {
+                          message.content
+                        }
+                      </Text>
+                    </Box>
+
+                    <Text
+                      size="1"
+                      color="gray"
+                    >
+                      {formatTime(
+                        message.timestamp
+                      )}
+                    </Text>
+                  </Flex>
+                );
+              }
+            )}
+          </Flex>
+        </ScrollArea>
+      </Box>
+
+      <Separator />
+
+      {/* Composer */}
+
+      <Box className="p-3">
+        <form
+          onSubmit={
+            handleReplySubmit
+          }
+        >
+          <Flex gap="2">
+            <Box className="flex-1">
+              <FormLexicalEditor
+                value={replyText}
+                onChange={
+                  handleTyping
+                }
+                placeholder="Type your message..."
+              />
+            </Box>
+
+            <Button
+              type="submit"
+              loading={isPending}
+              disabled={
+                !replyText.trim()
+              }
+            >
+              Send
+            </Button>
+          </Flex>
+        </form>
+      </Box>
+    </Card>
   );
 }

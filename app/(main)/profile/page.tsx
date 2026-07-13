@@ -10,7 +10,7 @@ import { AddUpdateSkillPopover } from "@/components/poper/add-update-skills";
 import { Badge, Box, Button, Card, Flex, Grid, Heading, ScrollArea, Text, Avatar, Separator } from "@radix-ui/themes";
 import { FacebookIcon, GithubIcon, Tag, TwitterIcon } from "lucide-react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { redirect } from "next/navigation"; 
 
 const ProfilePage = async () => {
   const session = await auth();
@@ -145,7 +145,7 @@ const ProfilePage = async () => {
                 <Box>
                   <Flex align="center" justify="between" mb="5">
                     <Heading as="h3" size="5" className="text-zinc-900 dark:text-zinc-300">Work Experience</Heading>
-                    <AddUpdateExperiencePopover workExperience={null} />
+                    <AddUpdateExperiencePopover />
                   </Flex>
                   
                   <Flex direction="column" gap="4">
@@ -166,7 +166,6 @@ const ProfilePage = async () => {
                             </Box>
                             
                             <Flex gap="2">
-                              <AddUpdateExperiencePopover workExperience={exp} />
                               <DeleteUserExperience id={exp.id} />
                             </Flex>
                           </Flex>
@@ -257,7 +256,7 @@ const ProfilePage = async () => {
                         </Card>
                       ))
                     ) : (
-                      <Text size="2" color="gray" className="italic p-6 border border-dashed border-zinc-200 dark:border-zinc-700 rounded-lg text-center">
+                      <Text size="2" color="gray" className="col-span-full italic p-6 border border-dashed border-zinc-200 dark:border-zinc-700 rounded-lg text-center dark:text-zinc-600!">
                         Your order history is empty.
                       </Text>
                     )}

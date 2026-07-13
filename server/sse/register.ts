@@ -1,21 +1,32 @@
-import { sseConnections } from "../state/chatState";
+import type { Role } from "@/server/state/chatState";
+
+import {
+  sseManager,
+  SseClient,
+} from "./manager";
 
 export function registerSSE(
   threadId: string,
   clientId: string,
-  controller: ReadableStreamDefaultController,
-  role: "user" | "admin" | "bot" = "user"
+  role: Role,
+  controller: ReadableStreamDefaultController<string>
 ) {
-  let threadClients = sseConnections.get(threadId);
-
-  if (!threadClients) {
-    threadClients = new Map();
-    sseConnections.set(threadId, threadClients);
-  }
-
-  threadClients.set(clientId, {
-    controller,
-    role,
+  const client: SseClient = {
     clientId,
-  });
+
+    threadId,
+
+    role,
+
+    controller,
+
+    connectedAt: new Date(),
+  };
+
+  sseManager.register(
+    threadId,
+    client
+  );
+
+  return client;
 }

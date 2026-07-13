@@ -1,4 +1,3 @@
-
 export interface MerchandiseItem {
   id: string;
   title: string;
@@ -59,6 +58,7 @@ export interface Message {
   direction: MessageDirection;
   content: string;
   timestamp: Date;
+  readAt: Date | null;
 }
 
 export interface Thread {
@@ -84,4 +84,11 @@ export interface UIThread {
     content: string;
     timestamp: string;
   }[];
+}
+
+export interface UIMessage {
+  id: string;
+  role: "user" | "admin" | "bot";
+  content: string;
+  timestamp: string;
 }

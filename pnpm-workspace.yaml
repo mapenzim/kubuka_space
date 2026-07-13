@@ -1,8 +1,8 @@
 allowBuilds:
-  '@prisma/engines': false
-  esbuild: false
-  onnxruntime-node: false
+  '@prisma/engines': set this to true or false
+  esbuild: set this to true or false
+  onnxruntime-node: set this to true or false
   prisma: true
-  protobufjs: false
+  protobufjs: set this to true or false
   sharp: false
-  unrs-resolver: false
+  unrs-resolver: set this to true or false

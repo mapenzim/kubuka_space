@@ -1,27 +1,69 @@
-import {
-  ChatMessageEvent,
-  sseConnections,
-} from "@/server/state/chatState";
+import type { Role } from "@/server/state/chatState";
+
+import { sseManager } from "./manager";
+
+// =====================================================
+// BROADCAST TO THREAD
+// =====================================================
 
 export function broadcastToThread(
   threadId: string,
-  payload: ChatMessageEvent
+  event: unknown
 ) {
-  const threadConnections =
-    sseConnections.get(threadId);
+  sseManager.send(
+    threadId,
+    event
+  );
+}
 
-  if (!threadConnections) return;
+// =====================================================
+// BROADCAST TO ROLE
+// =====================================================
 
-  const data = `data: ${JSON.stringify({
-    type: "message",
-    payload,
-  })}\n\n`;
+export function broadcastToRole(
+  threadId: string,
+  role: Role,
+  event: unknown
+) {
+  sseManager.sendToRole(
+    threadId,
+    role,
+    event
+  );
+}
 
-  for (const [, client] of threadConnections) {
-    try {
-      client.controller.enqueue(data);
-    } catch (err) {
-      console.error("SSE enqueue failed", err);
-    }
+// =====================================================
+// BROADCAST TO ALL CLIENTS
+// =====================================================
+
+export function broadcastToAll(
+  event: unknown
+) {
+  const threads =
+    sseManager.getState();
+
+  for (const threadId of threads.keys()) {
+    sseManager.send(
+      threadId,
+      event
+    );
   }
+}
+
+// =====================================================
+// CONNECTION HELPERS
+// =====================================================
+
+export function hasSubscribers(
+  threadId: string
+) {
+  return (
+    sseManager.connectionCount(
+      threadId
+    ) > 0
+  );
+}
+
+export function totalConnections() {
+  return sseManager.connectionCount();
 }

@@ -6,10 +6,6 @@ import { ulidId } from "@/lib/server-utils";
 import { Prisma, PrismaClient } from "@prisma/client";
 import { revalidatePath } from "next/dist/server/web/spec-extension/revalidate";
 
-type AddToCartResult =
-  | { success: true }
-  | { error: { message: string } };
-
 async function getOrCreateCart(tx: Prisma.TransactionClient | PrismaClient, userId: string, cartId?: string) {
   // 1. Try to find by cartId first (if provided)
   if (cartId) {
@@ -33,7 +29,7 @@ async function getOrCreateCart(tx: Prisma.TransactionClient | PrismaClient, user
   if (!cart) {
     cart = await tx.cart.create({
       data: {
-        id: cartId,
+        id: ulidId(),
         userId,
       },
     });
@@ -53,6 +49,7 @@ export async function batchAddToCartAction({
   cartId,
   items,
 }: BatchAddInput): Promise<{ success?: boolean; error?: { message: string } }> {
+  
   if (!userId) return { error: { message: "User ID is required" } };
   if (!items || items.length === 0) return { error: { message: "No items provided" } };
 
@@ -89,6 +86,7 @@ export async function batchAddToCartAction({
     return { error: { message: err.message } };
   }
 }
+
 export async function getCartMeta(userId: string) {
   if (!userId) return { distinctCount: 0, totalCount: 0, cartId: null };
 
