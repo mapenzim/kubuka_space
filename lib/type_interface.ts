@@ -1,0 +1,198 @@
+import { SubmitEvent } from "react";
+import { ThreadDetailsDto } from "./dto/thread_details_dto";
+
+export interface MerchandiseItem {
+  id: string;
+  title: string;
+  body: string;
+  price: number;
+}
+
+export interface CartItem {
+  id: string;
+  merchandise: MerchandiseItem;
+  quantity: number;
+}
+
+export interface Cart {
+  id: string;
+  userId?: string;
+  cartItems: CartItem[];
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+}
+
+export type GuestCartItem = {
+  merchandise: MerchandiseItem;
+  quantity: number;
+};
+
+export type GuestCart = GuestCartItem[];
+
+export const initialCart: Cart = {
+  id: "guest",
+  userId: undefined,
+  cartItems: [],
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  deletedAt: null as any,
+};
+
+export type InitialCartInput = Cart | null | undefined;
+
+export const emptyCart: Cart = {
+  id: "guest",
+  userId: undefined,
+  cartItems: [],
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  deletedAt: null as any,
+};
+
+export * from "./interfaces/index";
+
+export interface AuthUser {
+  id: string;
+  name: string | null;
+  email: string | null;
+}
+
+export interface UserChatProps {
+  user: AuthUser | null;
+}
+
+export interface ChatHeaderProps {
+  thread: ThreadDetailsDto;
+  connected: boolean;
+  online: boolean;
+  typing: boolean;
+}
+
+export interface ChatMessagesProps {
+  thread: ThreadDetailsDto;
+  selfRole: "user" | "admin";
+}
+
+export interface ChatComposerProps {
+  value: string;
+  loading: boolean;
+  clearSignal: number;
+  placeholder: string;
+  disabled?: boolean;
+  onChange: (value: string) => void;
+  onSubmit: () => void;
+}
+
+export interface StartConversationFormProps {
+  user: AuthUser | null;
+  guestName: string;
+  guestEmail: string;
+  message: string;
+  error: string;
+  loading: boolean;
+  onGuestNameChange: (value: string) => void;
+  onGuestEmailChange: (value: string) => void;
+  onMessageChange: (value: string) => void;
+  onSubmit: (event: SubmitEvent<HTMLFormElement>) => void | Promise<void>;
+}
+
+/*
+// Enums mapped from your Prisma schema
+export type ThreadStatus = "unread" | "read" | "archived";
+export type MessageDirection = "incoming" | "outgoing";
+
+// Backend types
+export interface Message {
+  id: string;
+  threadId: string;
+  direction: MessageDirection;
+  content: string;
+  timestamp: Date;
+  readAt: Date | null;
+}
+
+export interface Thread {
+  id: string;
+  sender: string;
+  email: string;
+  status: ThreadStatus;
+  conversationKeyHash: string;
+  createdAt: Date;
+  updatedAt: Date;
+  archived: boolean;
+  dateArchived: Date | null;
+  messages: Message[];
+}
+
+// UI type
+export interface UIThread {
+  id: string;
+  sender: string;
+  email: string;
+  online: boolean;
+  messages: {
+    id: string;
+    role: string
+    content: string;
+    timestamp: string;
+  }[];
+}
+
+export interface UIMessage {
+  id: string;
+  threadId: string;
+  senderRole: "admin" | "user" | "bot";
+  content: string;
+  timestamp: string;
+}
+
+export type AuthUser = {
+  id: string;
+  name: string | null;
+  email: string | null;
+};
+
+export interface UserChatProps {
+  user: AuthUser | null;
+}
+
+export interface ChatHeaderProps {
+  thread: UIThread;
+  connected: boolean;
+  online: boolean;
+  typing: boolean;
+}
+
+export interface ChatMessagesProps {
+  thread: UIThread;
+  selfRole: "user" | "admin";
+}
+
+export interface ChatComposerProps {
+  value: string;
+  loading: boolean;
+  clearSignal: number;
+  placeholder: string;
+  disabled?: boolean;
+  onChange: (value: string) => void;
+  onSubmit: (
+    event: FormEvent<HTMLFormElement>
+  ) => void | Promise<void>;
+}
+
+export interface StartConversationFormProps {
+  user: AuthUser | null;
+  guestName: string;
+  guestEmail: string;
+  message: string;
+  error: string;
+  loading: boolean;
+  onGuestNameChange: (value: string) => void;
+  onGuestEmailChange: (value: string) => void;
+  onMessageChange: (value: string) => void;
+  onSubmit: (
+    event: FormEvent<HTMLFormElement>
+  ) => void | Promise<void>;
+}
+*/

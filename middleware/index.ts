@@ -2,6 +2,7 @@ import "dotenv/config";
 import prisma from "@/lib/prisma";
 import { getToken } from "next-auth/jwt";
 import { NextRequest, NextResponse } from "next/server";
+import { ulidId } from "@/lib/server-utils";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +34,7 @@ export async function middleware(req: NextRequest) {
       if (!hasAccess) {
         await prisma.log.create({
           data: {
+            id: ulidId(),
             action: "UNAUTHORIZED_ACCESS",
             details: { pathname, userRole },
           },

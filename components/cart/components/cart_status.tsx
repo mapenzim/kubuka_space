@@ -11,8 +11,8 @@ import {
   Box,
   Badge,
 } from "@radix-ui/themes";
-import { CartItem } from "@/lib/interfaces";
 import { ShoppingCartIcon, Trash2 } from "lucide-react";
+import { CartItem } from "@/lib/type_interface";
 
 export default function CartStatus({ isScrolled }: { isScrolled: boolean }) {
   const { cartCountTotal, cartId, cart, removeItem } = useCart();

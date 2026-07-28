@@ -39,7 +39,6 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           <Toaster position="bottom-right" richColors />
         </Provider>
         <ScrollToTopButton />
-        <AppCookieConsent />
         <SpeedInsights />
         <Analytics />
       </body>

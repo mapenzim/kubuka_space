@@ -1,0 +1,68 @@
+import { NextRequest } from "next/server";
+
+import { conversationHub } from "@/lib/container/runtime";
+import { ConversationClient } from "@/lib/sse/conversation_client";
+
+export const runtime = "nodejs";
+
+export async function GET(
+  request: NextRequest,
+) {
+  const clientId =
+    request.nextUrl.searchParams.get(
+      "clientId",
+    );
+
+  if (!clientId) {
+    return new Response(
+      "Missing clientId",
+      {
+        status: 400,
+      },
+    );
+  }
+
+  let heartbeat: any = null;
+  const stream =
+    new ReadableStream<string>({
+
+      start(controller) {
+        const client: ConversationClient =
+          {
+            id: clientId,
+            stream: controller,
+          };
+
+        conversationHub.add(
+          client,
+        );
+        controller.enqueue(
+          `event: connected\n` +
+          `data: {}\n\n`,
+        );
+        heartbeat = setInterval(() => {
+          controller.enqueue(
+            `: heartbeat\n\n`,
+          );
+        }, 30000);
+      },
+
+      cancel() {
+        clearInterval(heartbeat);
+
+        conversationHub.remove(clientId);
+      }
+    });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type":
+        "text/event-stream",
+
+      "Cache-Control":
+        "no-cache, no-transform",
+
+      Connection: "keep-alive",
+    },
+  });
+}

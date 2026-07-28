@@ -1,32 +1,16 @@
 "use client";
 
-import {
-  LexicalComposer,
-} from "@lexical/react/LexicalComposer";
-import {
-  RichTextPlugin,
-} from "@lexical/react/LexicalRichTextPlugin";
-import {
-  ContentEditable,
-} from "@lexical/react/LexicalContentEditable";
-import {
-  HistoryPlugin,
-} from "@lexical/react/LexicalHistoryPlugin";
-import {
-  LexicalErrorBoundary,
-} from "@lexical/react/LexicalErrorBoundary";
-import {
-  OnChangePlugin,
-} from "@lexical/react/LexicalOnChangePlugin";
-import {
-  ClearEditorPlugin,
-} from "@lexical/react/LexicalClearEditorPlugin";
+import { useEffect, useMemo } from "react";
 
-import {
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { LexicalComposer } from "@lexical/react/LexicalComposer";
+import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
+import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
+import { ContentEditable } from "@lexical/react/LexicalContentEditable";
+import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
+import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
+import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
+
+import { $getRoot } from "lexical";
 
 const theme = {
   paragraph: "mb-2 text-gray-900 dark:text-zinc-300",
@@ -42,8 +26,34 @@ type Props = {
   placeholder?: string;
   minHeight?: string;
   disabled?: boolean;
+
+  /**
+   * Increment this number after a successful submit
+   * to clear the editor.
+   */
   clearSignal?: number;
 };
+
+/**
+ * Clears the editor every time clearSignal changes.
+ */
+function ClearOnSignalPlugin({
+  clearSignal,
+}: {
+  clearSignal?: number;
+}) {
+  const [editor] = useLexicalComposerContext();
+
+  useEffect(() => {
+    if (clearSignal === undefined) return;
+
+    editor.update(() => {
+      $getRoot().clear();
+    });
+  }, [clearSignal, editor]);
+
+  return null;
+}
 
 export default function FormLexicalEditor({
   value = "",
@@ -61,15 +71,6 @@ export default function FormLexicalEditor({
     }),
     []
   );
-
-  const [shouldClear, setShouldClear] =
-    useState(false);
-
-  useEffect(() => {
-    if (clearSignal !== undefined) {
-      setShouldClear(true);
-    }
-  }, [clearSignal]);
 
   return (
     <LexicalComposer initialConfig={initialConfig}>
@@ -126,9 +127,7 @@ export default function FormLexicalEditor({
               {placeholder}
             </div>
           }
-          ErrorBoundary={
-            LexicalErrorBoundary
-          }
+          ErrorBoundary={LexicalErrorBoundary}
         />
 
         <HistoryPlugin />
@@ -136,23 +135,14 @@ export default function FormLexicalEditor({
         <OnChangePlugin
           onChange={(editorState) => {
             editorState.read(() => {
-              const root =
-                editorState._nodeMap.get(
-                  "root"
-                );
-
-              onChange(
-                root
-                  ? root.getTextContent()
-                  : ""
-              );
+              onChange($getRoot().getTextContent());
             });
           }}
         />
 
-        {shouldClear && (
-          <ClearEditorPlugin />
-        )}
+        <ClearOnSignalPlugin
+          clearSignal={clearSignal}
+        />
       </div>
     </LexicalComposer>
   );

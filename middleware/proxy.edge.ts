@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { PrismaClient } from "@prisma/client/edge";
 import { withAccelerate } from "@prisma/extension-accelerate";
+import { ulid } from "ulid";
 
 // const prisma = new PrismaClient().$extends(withAccelerate());
 export const dynamic = "force-dynamic";
@@ -52,6 +53,7 @@ export async function proxy(req: NextRequest) {
       if (!hasAccess) {
         await prisma.log.create({
           data: {
+            id: ulid(),
             action: "UNAUTHORIZED_ACCESS",
             details: { pathname, userRole },
           },

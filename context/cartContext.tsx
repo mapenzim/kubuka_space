@@ -19,16 +19,9 @@ import {
 } from "react";
 import { toast } from "sonner";
 
-import {
-  Cart,
-  CartItem,
-  emptyCart,
-  GuestCartItem,
-  InitialCartInput,
-  MerchandiseItem,
-} from "@/lib/interfaces";
 import { ulidId } from "@/lib/ulid";
 import { debounceQuery } from "@/lib/utils";
+import { Cart, CartItem, emptyCart, GuestCartItem, InitialCartInput, MerchandiseItem } from "@/lib/type_interface";
 
 /* ---------------------------
    🧱 CONSTANTS

@@ -24,7 +24,7 @@ datasource db {
 }
 
 model User {
-  id            String          @id @db.Char(26) @default(dbgenerated())
+  id            String          @id @db.Char(26) 
   name          String?
   email         String          @unique
   emailVerified DateTime?
@@ -55,14 +55,14 @@ model User {
 }
 
 model Role {
-  id          String          @id @db.Char(26) @default(dbgenerated())
+  id          String          @id @db.Char(26) 
   name        String          @unique
   permissions Permission[]
   users       User[]
 }
 
 model Bio {
-  id          String      @id @db.Char(26) @default(dbgenerated())
+  id          String      @id @db.Char(26) 
   text        String
 
   userId      String    @unique
@@ -70,7 +70,7 @@ model Bio {
 }
 
 model SocialLink {
-  id          String      @id @db.Char(26) @default(dbgenerated())
+  id          String      @id @db.Char(26) 
   name        String
   text        String
 
@@ -79,7 +79,7 @@ model SocialLink {
 }
 
 model Skill {
-  id          String      @id @db.Char(26) @default(dbgenerated())
+  id          String      @id @db.Char(26) 
   text        String
 
   userId      String    
@@ -89,7 +89,7 @@ model Skill {
 }
 
 model WorkExperience {
-  id            String      @id @db.Char(26) @default(dbgenerated())
+  id            String      @id @db.Char(26) 
   jobTitle      String
   companyName   String
   dates         String
@@ -122,7 +122,7 @@ model Account {
 }
 
 model Session {
-  id           String       @id @db.Char(26) @default(dbgenerated())
+  id           String       @id @db.Char(26) 
   sessionToken String       @unique
   userId       String
   expires      DateTime
@@ -132,7 +132,7 @@ model Session {
 }
 
 model Post {
-  id        String          @id @db.Char(26) @default(dbgenerated())
+  id        String          @id @db.Char(26) 
   title     String
   content   String?
   published Boolean         @default(false)
@@ -147,7 +147,7 @@ model Post {
 }
 
 model Notification {
-  id        String          @id @db.Char(26) @default(dbgenerated())
+  id        String          @id @db.Char(26) 
   title     String
   body      String
   read      Boolean         @default(false)
@@ -160,13 +160,13 @@ model Notification {
 
 model Permission {
   path   String
-  id     String             @id @db.Char(26) @default(dbgenerated())
+  id     String             @id @db.Char(26) 
   roleId String
   role   Role               @relation(fields: [roleId], references: [id])
 }
 
 model Privatemessage {
-  id        String   @id @db.Char(26) @default(dbgenerated())
+  id        String   @id @db.Char(26) 
   names     String
   email     String
   message   String
@@ -183,7 +183,7 @@ model Privatemessage {
 }
 
 model Cart {
-  id            String      @id @db.Char(26) @default(dbgenerated())
+  id            String      @id @db.Char(26) 
   user          User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId        String?
 
@@ -198,7 +198,7 @@ model Cart {
 }
 
 model CartItem {
-  id            String      @id @db.Char(26) @default(dbgenerated())
+  id            String      @id @db.Char(26) 
   cart          Cart        @relation(fields: [cartId], references: [id], onDelete: Cascade)
   cartId        String
   quantity      Int
@@ -213,7 +213,7 @@ model CartItem {
 }
 
 model Merchandise {
-  id        String          @id @db.Char(26) @default(dbgenerated())
+  id        String          @id @db.Char(26) 
   title     String          @unique
   price     Decimal         @db.Decimal(10, 2)
   body      String
@@ -229,7 +229,7 @@ model Merchandise {
 }
 
 model Order {
-  id              String        @id @db.Char(26) @default(dbgenerated())
+  id              String        @id @db.Char(26) 
 
   userId          String
   user            User          @relation(fields: [userId], references: [id])
@@ -260,7 +260,7 @@ model Order {
 }
 
 model OrderItem {
-  id            String      @id @default(dbgenerated())
+  id            String      @id  @db.Char(26) 
 
   orderId       String
   order         Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
@@ -277,7 +277,7 @@ model OrderItem {
 }
 
 model Payment {
-  id          String        @id @db.Char(26) @default(dbgenerated())
+  id          String        @id @db.Char(26) 
 
   order       Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
   orderId     String
@@ -302,7 +302,7 @@ model Payment {
 }
 
 model ShippingAddress {
-  id        String          @id @db.Char(26) @default(dbgenerated())
+  id        String          @id @db.Char(26) 
 
   order     Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
   orderId   String          @unique         
@@ -319,7 +319,7 @@ model ShippingAddress {
 }
 
 model Wishlist {
-  id        String          @id @db.Char(26) @default(dbgenerated())
+  id        String          @id @db.Char(26) 
 
   user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String
@@ -334,7 +334,7 @@ model Wishlist {
 }
 
 model Log {
-  id        String          @id @db.Char(26) @default(dbgenerated())
+  id        String          @id @db.Char(26) 
   action    String          // e.g. "USER_ROLE_CHANGE", "ORDER_PLACED"
   userId    String?
   user      User?           @relation(fields: [userId], references: [id])
@@ -347,7 +347,7 @@ model Log {
 }
 
 model Settings {
-  id        String          @id @db.Char(26) @default(dbgenerated())
+  id        String          @id @db.Char(26) 
   userId    String          @unique
   user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   theme     String          @default("light") // light/dark
@@ -358,7 +358,7 @@ model Settings {
 }
 
 model Address {
-  id          String   @id @default(dbgenerated())
+  id          String   @id  @db.Char(26) 
 
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -384,32 +384,35 @@ enum ThreadStatus {
   archived
 }
 
-enum MessageDirection {
-  incoming
-  outgoing
+enum SenderRole {
+  user
+  admin
+  bot
 }
 
 model Thread {
-  id        String          @id @db.Char(26) @default(dbgenerated())
+  id        String            @id @db.Char(26) 
   sender    String
   email     String
-  status    ThreadStatus    @default(unread)
+  status    ThreadStatus      @default(unread)
 
-  createdAt DateTime        @default(now())
-  updatedAt DateTime        @updatedAt @default(now())
-  archived  Boolean         @default(false)
-  dateArchived DateTime?     @default(now())
+  conversationKeyHash         String @unique
+
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt @default(now())
+  archived  Boolean           @default(false)
+  dateArchived DateTime?      
 
   messages   Message[]
 }
 
 model Message {
-  id        String          @id @db.Char(26) @default(dbgenerated())
-  threadId  String
-  thread    Thread          @relation(fields: [threadId], references: [id], onDelete: Cascade)
-  direction MessageDirection  // "incoming" or "outgoing"
-  content   String
-  readAt    DateTime?
+  id            String            @id @db.Char(26) 
+  threadId      String
+  thread        Thread            @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  senderRole    SenderRole
+  content       String
+  readAt        DateTime?
 
-  timestamp DateTime        @default(now())
+  timestamp     DateTime          @default(now())
 }

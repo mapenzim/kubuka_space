@@ -5,6 +5,7 @@ import { getToken } from "next-auth/jwt";
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import pkg from "pg";
+import { ulid } from "ulid";
 
 const { Pool } = pkg;
 
@@ -72,6 +73,7 @@ export async function middleware(req: NextRequest) {
       if (!hasAccess) {
         await prisma.log.create({
           data: {
+            id: ulid(),
             action: "UNAUTHORIZED_ACCESS",
             details: { pathname, userRole },
           },
