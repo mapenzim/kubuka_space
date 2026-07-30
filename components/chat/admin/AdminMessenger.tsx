@@ -14,8 +14,6 @@ import {
   Text,
 } from "@radix-ui/themes";
 
-import { useInbox } from "@/hooks/use_inbox";
-
 import { useChat } from "@/lib/chat/hooks/use_chat";
 import { useChatSession } from "@/lib/chat/session/use_chat_session";
 
@@ -23,12 +21,12 @@ import ConversationComposer from "./ConversationComposer";
 import ConversationHeader from "./ConversationHeader";
 import ConversationMessages from "./ConversationMessages";
 import InboxSidebar from "./InboxSidebar";
+import { useInbox } from "@/lib/chat/hooks/use_inbox";
 
 export default function AdminMessenger() {
   //--------------------------------------------------
   // Inbox
   //--------------------------------------------------
-
   const {
     connected: inboxConnected,
     threads,
@@ -40,24 +38,18 @@ export default function AdminMessenger() {
   //--------------------------------------------------
   // Chat Session
   //--------------------------------------------------
-
-  const session =
-    useChatSession();
+  const session = useChatSession();
 
   //--------------------------------------------------
   // Chat
   //--------------------------------------------------
-
   const {
     thread,
     loadThread,
-
     connected,
     isTyping,
     isOnline,
-
     sendMessage,
-
     startTyping,
     stopTyping,
   } = useChat();
@@ -65,14 +57,11 @@ export default function AdminMessenger() {
   //--------------------------------------------------
   // Pending
   //--------------------------------------------------
-
-  const [isPending, startTransition] =
-    useTransition();
+  const [isPending, startTransition] = useTransition();
 
   //--------------------------------------------------
   // Selected Thread
   //--------------------------------------------------
-
   useEffect(() => {
     session.setThreadId(
       selectedThreadId as string ?? '',
@@ -194,9 +183,7 @@ export default function AdminMessenger() {
                 thread={thread}
                 connected={connected}
                 online={isOnline('')}
-                typing={isTyping(
-                  "user",
-                )}
+                typing={isTyping("user")}
               />
 
               <ConversationMessages

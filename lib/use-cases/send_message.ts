@@ -27,11 +27,6 @@ export class SendMessage {
     const dto =
       MessageDtoMapper.toDto(message);
       
-    console.log(
-      "[SendMessage]",
-      "MESSAGE_CREATED",
-    );
-
     this.notificationService.publishThread({
       type:
         ThreadEventType.MESSAGE_CREATED,

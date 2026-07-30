@@ -1,4 +1,4 @@
-import { Thread as PrismaThread, Message as PrismaMessage } from "@prisma/client";
+import { Thread as PrismaThread, Message as PrismaMessage } from "@prisma/client/index";
 import { Thread } from "../interfaces/thread";
 import { MessageMapper } from "./message_mapper";
 

@@ -2,10 +2,10 @@
 
 import "server-only";
 
-import type { Role } from "@prisma/client";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { ulid } from "ulid";
+import { Role } from "./roles";
 
 export const dynamic = "force-dynamic";
 

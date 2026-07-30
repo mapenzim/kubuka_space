@@ -1,6 +1,8 @@
-import { SenderRole } from "@prisma/client";
+import { SenderRole } from "@/lib/interfaces";
+
 
 export interface PresenceParticipant {
+  threadId: string;
   clientId: string;
   role: SenderRole;
   online: boolean;
@@ -9,6 +11,7 @@ export interface PresenceParticipant {
 }
 
 interface PresenceConnectInput {
+  threadId: string;
   clientId: string;
   senderRole: SenderRole;
   online: boolean;
@@ -116,6 +119,7 @@ export class PresenceStore {
     this.participants.set(
       participant.clientId,
       {
+        threadId: participant.threadId,
         clientId:
           participant.clientId,
         role:

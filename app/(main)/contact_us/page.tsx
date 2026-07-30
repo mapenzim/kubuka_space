@@ -30,7 +30,7 @@ export default function ContactUsPage() {
     <Container
       size="4"
       px="4"
-      mt={{ initial: "4", md: "8" }}
+      mt={{ initial: "2", md: "8" }}
       pb="8"
       className="dark:bg-zinc-950"
     >

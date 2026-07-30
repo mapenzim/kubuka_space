@@ -2,6 +2,7 @@
 
 import {
   useCallback,
+  useRef,
   useSyncExternalStore,
 } from "react";
 
@@ -16,12 +17,6 @@ import {
 
 import { ActivityType } from "@/lib/activity/activity";
 import { chatStores } from "../stores";
-
-const isActivityRole = (
-  role: string | undefined,
-): role is "user" | "admin" =>
-  role === "user" ||
-  role === "admin";
 
 export function useActivity() {
   //--------------------------------------------------------
@@ -64,15 +59,6 @@ export function useActivity() {
           },
         );
 
-        activity.setActivity({
-          clientId:
-            session.clientId,
-
-          senderRole:
-            session.role,
-
-          activity: activityType,
-        });
       },
       [session],
     );
@@ -80,33 +66,34 @@ export function useActivity() {
   //--------------------------------------------------------
   // Helpers
   //--------------------------------------------------------
+  const typingRef = useRef(false);
 
-  const startTyping =
-    useCallback(async () => {
-      await setActivity(
-        ActivityType.TYPING,
-      );
-    }, [setActivity]);
+  const startTyping = useCallback(async () => {
+    if (typingRef.current) {
+      return;
+    }
+    typingRef.current = true;
+    await setActivity(ActivityType.TYPING);
+  }, [setActivity]);
 
-  const stopTyping =
-    useCallback(async () => {
-      await setActivity(
-        ActivityType.IDLE,
-      );
-    }, [setActivity]);
+  const stopTyping = useCallback(async () => {
+    console.trace("[useActivity] stopTyping");
+    if (!typingRef.current) {
+      return;
+    }
+    typingRef.current = false;
+    await setActivity(ActivityType.IDLE);
+  }, [setActivity]);
 
   //--------------------------------------------------------
   // Public API
   //--------------------------------------------------------
   return {
     participants: snapshot.participants,
-
     setActivity,
     startTyping,
     stopTyping,
-
     getActivity: activity.getActivity.bind(activity),
-
     isTyping: activity.isTyping.bind(activity),
   };
 

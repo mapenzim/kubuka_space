@@ -11,6 +11,7 @@ import { Badge, Box, Button, Card, Flex, Grid, Heading, ScrollArea, Text, Avatar
 import { FacebookIcon, GithubIcon, Tag, TwitterIcon } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation"; 
+import { Key, ReactElement, JSXElementConstructor, ReactNode, ReactPortal } from "react";
 
 const ProfilePage = async () => {
   const session = await auth();
@@ -74,7 +75,7 @@ const ProfilePage = async () => {
               <ScrollArea type="auto" scrollbars="vertical" className="max-h-64 pr-3">
                 <Flex direction="column" gap="2">
                   {userSkill?.length > 0 ? (
-                    userSkill.map((skill) => (
+                    userSkill.map((skill: { id: Key | null | undefined; text: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; }) => (
                       <Flex key={skill.id} align="center" gap="2" className="bg-zinc-100 dark:bg-zinc-800/50 p-2 rounded-lg">
                         <Tag className="w-4 h-4 text-(--iris-11)" />
                         <Text size="2" weight="medium" className="text-zinc-700 dark:text-zinc-300">
@@ -150,7 +151,7 @@ const ProfilePage = async () => {
                   
                   <Flex direction="column" gap="4">
                     {workExperience.length ? (
-                      workExperience.map((exp) => (
+                      workExperience.map((exp: { id: string; jobTitle: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; companyName: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; dates: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; duties: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; }) => (
                         <Box key={exp.id} className="relative pl-6 border-l-2 border-zinc-200 dark:border-zinc-800 pb-2 last:pb-0">
                           {/* Timeline dot */}
                           <div className="absolute w-3 h-3 bg-(--iris-9) rounded-full -left-1.75 top-1.5 ring-4 ring-white dark:ring-zinc-900" />
@@ -196,7 +197,7 @@ const ProfilePage = async () => {
 
                   <Grid columns={{ initial: "1", sm: "2" }} gap="4">
                     {posts.length ? (
-                      posts.map((post) => (
+                      posts.map((post: { id: Key | null | undefined; title: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; published: any; }) => (
                         <Card key={post.id} variant="ghost" size="2" className="bg-zinc-50 dark:bg-zinc-950/50 border border-zinc-200 dark:border-zinc-800" m="4">
                           <Flex direction="column" justify="between" className="h-full">
                             <Heading as="h4" size="3" className="line-clamp-2 text-zinc-800 dark:text-zinc-400 mb-3">
@@ -231,7 +232,7 @@ const ProfilePage = async () => {
 
                   <Flex direction="column" gap="4">
                     {orders.length ? (
-                      orders.map((order) => (
+                      orders.map((order: { id: Key | null | undefined; totalAmount: any; status: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; items: any[]; }) => (
                         <Card key={order.id} variant="ghost" size="2" className="bg-zinc-500 dark:bg-zinc-900! border border-zinc-200 dark:border-zinc-800" m={{ sm: "1", md: "4" }}>
                           <Flex justify="between" align="center" wrap="wrap" gap="4" mb="3">
                             <Text size="2" weight="bold" className="text-zinc-700 dark:text-zinc-600">
@@ -246,7 +247,7 @@ const ProfilePage = async () => {
                           </Flex>
                           
                           <Flex direction="column" gap="1" className="text-sm text-zinc-600 dark:text-zinc-500">
-                            {order.items.map((itm) => (
+                            {order.items.map((itm: { id: Key | null | undefined; title: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; price: any; }) => (
                               <Flex key={itm.id} justify="between" className="border-t border-zinc-200 dark:border-zinc-800/50 pt-1 mt-1">
                                 <Text size="1" className="line-clamp-1">{itm.title}</Text>
                                 <Text size="1" weight="medium">${Number(itm.price).toFixed(2)}</Text>

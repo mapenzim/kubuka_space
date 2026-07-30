@@ -1,5 +1,3 @@
-// lib/utils.ts ✅ SAFE
-
 import {
   RegExpMatcher,
   englishDataset,

@@ -45,7 +45,7 @@ export default async function AuthorProfile({
   // Filter posts depending on who is viewing
   const posts: Post[] = isOwnProfile
     ? user.posts as unknown as Post[] // Type assertion depending on your Prisma schema
-    : user.posts.filter((post) => post.published) as unknown as Post[];
+    : user.posts.filter((post: { published: any; }) => post.published) as unknown as Post[];
 
   const isEmpty = posts.length === 0;
   const fallbackLetter = user.name?.charAt(0) || user.email?.charAt(0) || "?";

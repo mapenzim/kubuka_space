@@ -11,16 +11,13 @@ import { useEventStream } from "./use_event_stream";
 
 export function useThreadEvents() {
   const session = useChatSession();
-
   const { presence, activity } = chatStores;
 
   //----------------------------------------------------------
   // Dispatch every event to the correct store
   //----------------------------------------------------------
-
   const handleEvent = useCallback(
     (event: ChatEvent) => {
-      console.log("[ThreadEvents]", event.type, event);
       switch (event.type) {
         case ChatEventType.MESSAGE_CREATED:
           conversationStore.appendMessage(
@@ -28,18 +25,13 @@ export function useThreadEvents() {
           );
           break; 
 
-        case ChatEventType.PRESENCE_CHANGED:
-          if (event.payload.online) {
-            presence.connect({
-              clientId: event.payload.clientId,
-              senderRole: event.payload.senderRole,
-              online: true,
-            });
-          } else {
-            presence.disconnect(
-              event.payload.clientId,
-            );
-          }
+        case ChatEventType.ACTIVITY_CHANGED:
+          activity.setActivity({
+            clientId: event.payload.clientId,
+            senderRole: event.payload.senderRole,
+            activity: event.payload.activity,
+          });
+
           break;
 
         case ChatEventType.ACTIVITY_CHANGED:

@@ -16,7 +16,7 @@ interface UseTypingIndicatorOptions {
   throttleMs?: number;
 
   /**
-   * How long after the last keypress
+   * How long after the last keypress 
    * before becoming idle.
    */
   idleMs?: number;
@@ -25,8 +25,7 @@ interface UseTypingIndicatorOptions {
 export function useTypingIndicator({
   startTyping,
   stopTyping,
-  throttleMs = 1000,
-  idleMs = 1500,
+  idleMs = 4500,
 }: UseTypingIndicatorOptions) {
   //--------------------------------------------------------
   // Refs
@@ -39,7 +38,7 @@ export function useTypingIndicator({
     );
 
   //--------------------------------------------------------
-  // Input Handler
+  // Input Handler 
   //--------------------------------------------------------
   const onInput =
     useCallback(() => {
@@ -47,14 +46,11 @@ export function useTypingIndicator({
       //----------------------------------------------------
       // Throttle typing updates
       //----------------------------------------------------
-      if (
-        now -
-          lastTypingRef.current >= throttleMs
-      ) {
-        lastTypingRef.current = now;
+      if (!typingRef.current) {
         startTyping();
         typingRef.current = true;
       }
+      lastTypingRef.current = now;
 
       //----------------------------------------------------
       // Reset idle timer
@@ -75,7 +71,6 @@ export function useTypingIndicator({
     }, [
       startTyping,
       stopTyping,
-      throttleMs,
       idleMs,
     ]);
 
@@ -96,18 +91,6 @@ export function useTypingIndicator({
   //--------------------------------------------------------
   // Cleanup
   //--------------------------------------------------------
-  useEffect(() => {
-    return () => {
-      if (idleTimerRef.current) {
-        clearTimeout(
-          idleTimerRef.current,
-        );
-      }
-
-      stopTyping();
-    };
-  }, [stopTyping]);
-
   useEffect(() => {
     return () => {
       forceIdle();

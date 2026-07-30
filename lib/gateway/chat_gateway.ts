@@ -1,12 +1,11 @@
 import { ActivityType } from "../activity/activity";
 import { ActivityService } from "../activity/activity_service";
-import { MessageDto, ThreadDto } from "../dto";
+import { MessageDto } from "../dto";
 import { ThreadDetailsDto } from "../dto/thread_details_dto";
 import { ThreadSummaryDto } from "../dto/thread_summary_dto";
 import { ConversationEventType } from "../events/conversation/conversation_event_type";
 import { ThreadEventType } from "../events/thread/thread_event_type";
 import { SenderRole } from "../interfaces/sender_role";
-import { ThreadSummary } from "../interfaces/thread_summary";
 import { NotificationService } from "../notifications/notification_service";
 import { PresenceService } from "../presence/presence_service";
 import { ActivityUseCase } from "../use-cases/activity_use_case";

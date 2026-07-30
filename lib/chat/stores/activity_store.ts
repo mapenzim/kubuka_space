@@ -1,6 +1,5 @@
-import { SenderRole } from "@prisma/client";
-
-import { ActivityType } from "@/hooks/chat/use_chat";
+import { ActivityType } from "@/lib/activity/activity";
+import { SenderRole } from "@/lib/interfaces";
 
 export interface ActivityParticipant {
   clientId: string;

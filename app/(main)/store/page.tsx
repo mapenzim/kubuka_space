@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 const Page = async () => {
   const merchandise = await prisma.merchandise.findMany();
-  const minifiedMerchandise = merchandise.map((item) => ({
+  const minifiedMerchandise = merchandise.map((item: { id: any; title: any; body: any; price: any; }) => ({
     id: item.id,
     title: item.title,
     body: item.body,

@@ -4,6 +4,7 @@ import CheckoutForm from "@/components/cart/components/checkout_form";
 import prisma from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";
 import { Box, Flex, Heading, Text, Separator, Card } from "@radix-ui/themes";
+import { Key, ReactElement, JSXElementConstructor, ReactNode, ReactPortal } from "react";
 
 export const dynamic = "force-dynamic";
 
@@ -59,7 +60,7 @@ export default async function Page({ params }: Props) {
    * ---------------------------
    */
   // DB Price is INCLUSIVE of 15% VAT
-  const inclusiveSubtotal = cart.cartItems.reduce((sum, item) => {
+  const inclusiveSubtotal = cart.cartItems.reduce((sum: number, item: { quantity: any; merchandise: { price: any; }; }) => {
     const quantity = Number(item.quantity) || 0;
     const price = Number(item.merchandise?.price) || 0;
     return sum + quantity * price;
@@ -86,7 +87,7 @@ export default async function Page({ params }: Props) {
             
             {/* Items List */}
             <Flex direction="column" className="divide-y divide-zinc-200 dark:divide-zinc-700">
-              {cart.cartItems.map((item) => (
+              {cart.cartItems.map((item: { id: string; quantity: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; merchandise: { title: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; price: any; }; }) => (
                 <Flex key={item.id} justify="between" align="center" p="4">
                   <Box>
                     <Text as="div" size="2" weight="medium" className="text-zinc-700 dark:text-zinc-300">

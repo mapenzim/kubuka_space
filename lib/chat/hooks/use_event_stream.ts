@@ -30,8 +30,6 @@ export function useEventStream<TEvent>({
   //--------------------------------------------------------
   // State
   //--------------------------------------------------------
-  console.count("useEventStream render");
-
   const [connected, setConnected] =
     useState(false);
 
@@ -76,7 +74,6 @@ export function useEventStream<TEvent>({
   //--------------------------------------------------------
 
   useEffect(() => {
-    console.count("useEventStream effect");
     const isThread =
       !!threadId;
 
@@ -132,16 +129,6 @@ export function useEventStream<TEvent>({
           clientId,
         );
       }
-
-      console.log(
-        "[SSE] opening",
-        params.toString(),
-      );
-
-      console.log("Creating EventSource", {
-        threadId,
-        clientId,
-      });
       
       source =
         new EventSource(
@@ -156,10 +143,6 @@ export function useEventStream<TEvent>({
         if (disposed) {
           return;
         }
-
-        console.log(
-          "[SSE] connected",
-        );
 
         setConnected(
           true,
@@ -207,10 +190,6 @@ export function useEventStream<TEvent>({
           return;
         }
 
-        console.log(
-          "[SSE] disconnected",
-        );
-
         setConnected(
           false,
         );
@@ -241,11 +220,6 @@ export function useEventStream<TEvent>({
 
     return () => {
       disposed = true;
-
-      console.log(
-        "[SSE] cleanup",
-      );
-      console.count("useEventStream cleanup");
 
       if (
         reconnectTimer

@@ -24,7 +24,7 @@
     "@lexical/selection": "^0.43.0",
     "@lexical/utils": "^0.43.0",
     "@prisma/adapter-pg": "^7.5.0",
-    "@prisma/client": "7.5.0",
+    "@prisma/client": "7.9.1",
     "@prisma/extension-accelerate": "^3.0.1",
     "@radix-ui/react-alert-dialog": "^1.1.15",
     "@radix-ui/react-dialog": "^1.1.15",
@@ -78,10 +78,10 @@
     "eslint": "10.1.0",
     "eslint-config-next": "16.2.1",
     "postcss": "8.5.8",
-    "prisma": "7.8.0",
+    "prisma": "7.9.1",
     "tailwindcss": "4.2.2",
     "tsx": "4.21.0",
     "typescript": "5.9.3"
   },
-  "packageManager": "pnpm@11.9.0+sha512.bd682d5d03fe525ef7c9fd6780c6884d1e756ac4c9c9fe00c538782824310dcf90e3ddc4f53835f06dfaebd5085e41855e0bcbb3b60de2ac5bbab89e5036f03b"
+  "packageManager": "pnpm@11.17.0+sha512.cca3cea332ad254bb84145f966d19f4879615210346fc92c79a047f23a0d7b3cca3c3792f0076ba1f1831d277efbcf0a9119b31a9a60eca7fb3d6231f331ef72"
 }

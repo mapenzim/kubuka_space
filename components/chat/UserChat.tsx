@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  useEffect,
   useState,
   useTransition,
 } from "react";
@@ -22,33 +21,20 @@ export default function UserChat({
   //--------------------------------------------------
   // UI
   //--------------------------------------------------
-  console.count("UserChat render");
-  const [isPending, startTransition] =
-    useTransition();
-
-  const [guestName, setGuestName] =
-    useState("");
-
-  const [guestEmail, setGuestEmail] =
-    useState("");
-
-  const [message, setMessage] =
-    useState("");
-
-  const [error, setError] =
-    useState("");
+  const [isPending, startTransition] = useTransition();
+  const [guestName, setGuestName] = useState("");
+  const [guestEmail, setGuestEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
   //--------------------------------------------------
   // Chat
   //--------------------------------------------------
-
   const {
     thread,
     connected,
-
     startConversation,
     sendMessage,
-
     startTyping,
     stopTyping,
     isTyping,
@@ -57,9 +43,8 @@ export default function UserChat({
   //--------------------------------------------------
   // Start Conversation
   //--------------------------------------------------
-
   async function createConversation(
-    event: React.FormEvent<HTMLFormElement>,
+    event: React.SubmitEvent<HTMLFormElement>,
   ) {
     event.preventDefault();
 
@@ -111,18 +96,9 @@ export default function UserChat({
     });
   }
 
-  useEffect(() => {
-    console.log("UserChat mounted");
-
-    return () => {
-      console.log("UserChat unmounted");
-    };
-  }, []);
-
   //--------------------------------------------------
   // Send Message
   //--------------------------------------------------
-
   function handleSend(
     content: string,
   ) {
@@ -134,7 +110,6 @@ export default function UserChat({
   //--------------------------------------------------
   // No Conversation
   //--------------------------------------------------
-
   if (!thread) {
     return (
       <StartConversationForm
@@ -163,7 +138,6 @@ export default function UserChat({
   //--------------------------------------------------
   // Conversation
   //--------------------------------------------------
-
   return (
     <Card
       variant="ghost"
@@ -185,7 +159,9 @@ export default function UserChat({
         placeholder={`Reply to ${thread.sender}...`}
         disabled={isPending}
         onSend={handleSend}
+        onTypingStart={startTyping}
+        onTypingStop={stopTyping}
       />
     </Card>
   );
-}
+} 

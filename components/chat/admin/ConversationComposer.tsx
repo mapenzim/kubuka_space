@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   Box,
@@ -9,6 +9,7 @@ import {
 } from "@radix-ui/themes";
 
 import FormLexicalEditor from "../FormLexicalEditor";
+import { useTypingIndicator } from "@/hooks/chat/use_typing_indicator";
 
 interface ConversationComposerProps {
   placeholder: string;
@@ -28,38 +29,48 @@ export default function ConversationComposer({
   //--------------------------------------------------------
   // State
   //--------------------------------------------------------
+  const [value, setValue] = useState("");
+  const [clearSignal, setClearSignal] = useState(0);
 
-  const [value, setValue] =
-    useState("");
+  //--------------------------------------------------------
+  // Typing Indicator
+  //--------------------------------------------------------
+  const startTyping = useCallback(() => {
+    onTypingStart?.();
+  }, [onTypingStart]);
 
-  const [clearSignal, setClearSignal] =
-    useState(0);
+  const stopTyping = useCallback(() => {
+    onTypingStop?.();
+  }, [onTypingStop]);
+
+  const { onInput, forceIdle } = useTypingIndicator({
+    startTyping,
+    stopTyping,
+  });
 
   //--------------------------------------------------------
   // Editor
   //--------------------------------------------------------
-
   const handleChange =
     useCallback(
       (content: string) => {
         setValue(content);
 
         if (content.trim()) {
-          onTypingStart?.();
+          onInput();
         } else {
-          onTypingStop?.();
+          forceIdle();
         }
       },
       [
-        onTypingStart,
-        onTypingStop,
+        onInput,
+        forceIdle,
       ],
     );
 
   //--------------------------------------------------------
   // Submit
   //--------------------------------------------------------
-
   const handleSubmit =
     useCallback(
       async (
@@ -79,7 +90,7 @@ export default function ConversationComposer({
 
         await onSend(content);
 
-        onTypingStop?.();
+        forceIdle();
 
         setValue("");
 
@@ -96,10 +107,21 @@ export default function ConversationComposer({
       ],
     );
 
+  const forceIdleRef = useRef(forceIdle);
+
+  useEffect(() => {
+    forceIdleRef.current = forceIdle;
+  }, [forceIdle]);
+
+  useEffect(() => {
+    return () => {
+      forceIdleRef.current();
+    };
+  }, []);
+
   //--------------------------------------------------------
   // Render
   //--------------------------------------------------------
-
   return (
     <Box className="p-4">
       <form

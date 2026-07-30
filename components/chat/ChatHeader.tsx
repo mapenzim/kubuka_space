@@ -19,7 +19,7 @@ export default function ChatHeader({
     <Flex
       align="center"
       gap="3"
-      className="border-b p-4"
+      className="border-b px-4 pb-1"
     >
       <Avatar
         radius="full"
@@ -32,18 +32,18 @@ export default function ChatHeader({
         <Text weight="bold">
           {thread.sender}
         </Text>
-
-        <Text
-          size="1"
-          color="gray"
-        >
-          {thread.email}
-        </Text>
+        <Flex align='start'>
+          <Text
+            size="1"
+            color="gray"
+          >
+            {thread.email}
+          </Text>
+        </Flex>
 
         <Flex
           align="center"
-          gap="2"
-          mt="1"
+          gap="1"
         >
           <Text
             size="1"
@@ -77,7 +77,7 @@ export default function ChatHeader({
               size="1"
               color="blue"
             >
-              • Typing…
+              • An admin is typing …
             </Text>
           )}
         </Flex>

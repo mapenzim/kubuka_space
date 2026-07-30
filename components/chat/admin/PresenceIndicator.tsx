@@ -14,7 +14,7 @@ export default function PresenceIndicator({
   typing,
 }: PresenceIndicatorProps) {
   return (
-    <Flex gap="2" wrap="wrap">
+    <Flex gap="1" wrap="wrap">
       <Text
         size="1"
         color={connected ? "green" : "orange"}

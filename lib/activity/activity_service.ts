@@ -1,4 +1,3 @@
-import { ChatEventType } from "../events/chat_event_type";
 import { ThreadEventType } from "../events/thread/thread_event_type";
 import { NotificationService } from "../notifications/notification_service";
 import { Activity } from "./activity";
@@ -9,7 +8,7 @@ export class ActivityService {
     private readonly state: ActivityState,
     private readonly notificationService: NotificationService,
   ) {}
-
+ 
   setActivity(
     activity: Activity,
   ): void {
