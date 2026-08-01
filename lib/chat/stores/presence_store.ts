@@ -88,6 +88,17 @@ export class PresenceStore {
     );
   }
 
+  getParticipantByRole(
+    threadId: string | undefined,
+    role: SenderRole,
+  ) {
+    return Array.from(this.participants.values()).find(
+      (participant) =>
+        participant.threadId === threadId &&
+        participant.role === role,
+    );
+  }
+
   isOnline(
     clientId: string,
   ) {
@@ -180,6 +191,21 @@ export class PresenceStore {
       },
     );
 
+    this.notify();
+  }
+
+  setPresence(participant: {
+    clientId: string;
+    threadId: string;
+    role: SenderRole;
+    online: boolean;
+    lastSeen: string;
+  }) {
+    const current = this.participants.get(participant.clientId);
+    this.participants.set(participant.clientId, {
+      ...participant,
+      connectedAt: current?.connectedAt ?? participant.lastSeen,
+    });
     this.notify();
   }
 

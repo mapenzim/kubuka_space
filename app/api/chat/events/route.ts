@@ -1,5 +1,11 @@
-import { threadHub } from "@/lib/container/runtime";
+import {
+  presenceService,
+  threadHub,
+} from "@/lib/container/runtime";
+import { ThreadEventType } from "@/lib/events/thread/thread_event_type";
 import { NextRequest } from "next/server";
+
+export const runtime = "nodejs";
 
 export async function GET(
   request: NextRequest,
@@ -27,14 +33,17 @@ export async function GET(
   const stream =
     new ReadableStream<string>({
       start(controller) {
-        console.log(
-          "[SSE] stream started",
-          clientId,
-          threadId,
-        );
-
+        const connectionId = crypto.randomUUID();
+        const heartbeat = setInterval(() => {
+          try {
+            controller.enqueue(": heartbeat\n\n");
+          } catch {
+            clearInterval(heartbeat);
+          }
+        }, 25000);
         threadHub.add({
           id: clientId,
+          connectionId,
           threadId,
           stream: controller,
         });
@@ -44,10 +53,26 @@ export async function GET(
           'data: {"connected":true}\n\n',
         );
 
+        for (const participant of presenceService.getParticipants(threadId)) {
+          controller.enqueue(
+            `data: ${JSON.stringify({
+              type: ThreadEventType.PRESENCE_CHANGED,
+              threadId,
+              timestamp: participant.lastSeen.toISOString(),
+              payload: {
+                clientId: participant.clientId,
+                senderRole: participant.senderRole,
+                online: true,
+              },
+            })}\n\n`,
+          );
+        }
+
         request.signal.addEventListener(
           "abort",
           () => {
-            threadHub.remove(clientId);
+            clearInterval(heartbeat);
+            threadHub.remove(connectionId);
           },
         );
       },

@@ -4,6 +4,7 @@ import { SSEConnection } from "@/lib/sse/sse_connection";
 import { ConversationEvent } from "../events/conversation/conversation_event";
 
 interface HubClient {
+  clientId: string;
   connection: SSEConnection;
 }
 
@@ -30,24 +31,24 @@ export class ConversationHub {
   add(
     client: ConversationClient,
   ): void {
-    this.clients.set(client.id, {
+    this.clients.set(client.connectionId, {
+      clientId: client.id,
       connection: new SSEConnection(client),
     });
   }
 
   remove(
-    clientId: string,
+    connectionId: string,
   ): void {
     const client =
-      this.clients.get(clientId);
+      this.clients.get(connectionId);
 
     if (!client) {
       return;
     }
 
+    this.clients.delete(connectionId);
     client.connection.close();
-
-    this.clients.delete(clientId);
   }
 
   //--------------------------------------------------------
@@ -58,7 +59,7 @@ export class ConversationHub {
     event: ConversationEvent,
   ): void {
     for (const [
-      clientId,
+      connectionId,
       client,
     ] of this.clients) {
       try {
@@ -66,11 +67,11 @@ export class ConversationHub {
       } catch (error) {
         console.error(
           "[ConversationHub]",
-          clientId,
+          connectionId,
           error,
         );
 
-        this.remove(clientId);
+          this.remove(connectionId);
       }
     }
   }

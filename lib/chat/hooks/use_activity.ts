@@ -14,7 +14,6 @@ import {
   useChatSession,
 } from "@/lib/chat/session";
 
-
 import { ActivityType } from "@/lib/activity/activity";
 import { chatStores } from "../stores";
 
@@ -77,7 +76,6 @@ export function useActivity() {
   }, [setActivity]);
 
   const stopTyping = useCallback(async () => {
-    console.trace("[useActivity] stopTyping");
     if (!typingRef.current) {
       return;
     }

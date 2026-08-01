@@ -72,9 +72,25 @@ export function useConversation() {
       async (
         request: StartConversationRequest,
       ) => {
+        const storageKey =
+          `kubuka:conversation-key:${request.email.trim().toLowerCase()}`;
+        let conversationKey =
+          window.localStorage.getItem(storageKey);
+
+        if (!conversationKey) {
+          conversationKey = crypto.randomUUID();
+          window.localStorage.setItem(
+            storageKey,
+            conversationKey,
+          );
+        }
+
         const response =
           await conversationClient.startConversation(
-            request,
+            {
+              ...request,
+              conversationKey,
+            },
           );
 
         conversation.setThread(

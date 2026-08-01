@@ -10,7 +10,6 @@ async function securePassword(password: string) {
 }
 
 async function main() {
-  console.log("🌱 Seeding database...");
 
   // --- 1️⃣ Roles & Permissions ---
   const rolesData = [
@@ -54,7 +53,6 @@ async function main() {
     });
   }
 
-  console.log("✅ Roles & permissions seeded.");
 
   // --- 2️⃣ Fetch roles ---
   const adminRole = await prisma.role.findUnique({ where: { name: "ADMIN" } });
@@ -100,7 +98,6 @@ async function main() {
     });
   }
 
-  console.log("✅ Users seeded.");
 
   // --- 4️⃣ Merchandise ---
   const offers = [
@@ -146,7 +143,6 @@ async function main() {
     });
   }
 
-  console.log("✅ Merchandise seeded.");
 
   // --- 5️⃣ Settings ---
   const users = await prisma.user.findMany();
@@ -164,7 +160,6 @@ async function main() {
     });
   }
 
-  console.log("✅ Settings seeded.");
 
   // --- Log entry ---
   await prisma.log.create({
@@ -175,12 +170,10 @@ async function main() {
     },
   });
 
-  console.log("✅ Log entry created.");
 }
 
 main()
   .then(async () => {
-    console.log("🌿 Seeding complete!");
     await prisma.$disconnect();
   })
   .catch(async (err) => {

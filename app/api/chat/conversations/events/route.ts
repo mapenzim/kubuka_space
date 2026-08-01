@@ -23,13 +23,16 @@ export async function GET(
   }
 
   let heartbeat: any = null;
+  let connectionId: string | undefined;
   const stream =
     new ReadableStream<string>({
 
       start(controller) {
+        connectionId = crypto.randomUUID();
         const client: ConversationClient =
           {
             id: clientId,
+            connectionId,
             stream: controller,
           };
 
@@ -41,16 +44,22 @@ export async function GET(
           `data: {}\n\n`,
         );
         heartbeat = setInterval(() => {
-          controller.enqueue(
-            `: heartbeat\n\n`,
-          );
+          try {
+            controller.enqueue(
+              `: heartbeat\n\n`,
+            );
+          } catch {
+            clearInterval(heartbeat);
+          }
         }, 30000);
       },
 
       cancel() {
         clearInterval(heartbeat);
 
-        conversationHub.remove(clientId);
+        if (connectionId) {
+          conversationHub.remove(connectionId);
+        }
       }
     });
 

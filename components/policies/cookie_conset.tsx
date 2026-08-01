@@ -57,12 +57,8 @@ export default function AppCookieConsent() {
           bottom: "10px",
         }}
         expires={365}
-        onAccept={() => {
-          console.log("Cookies accepted");
-        }}
-        onDecline={() => {
-          console.log("Cookies declined");
-        }}
+        onAccept={() => undefined}
+        onDecline={() => undefined}
       >
         <div className="flex flex-col items-center w-full bg-transparent text-sm pb-10">
           {/* Header */}

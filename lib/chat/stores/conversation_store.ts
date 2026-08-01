@@ -15,6 +15,8 @@ export class ConversationStore {
 
   private thread?: ThreadDetailsDto;
 
+  private pendingMessages = new Map<string, MessageDto>();
+
   private snapshotState: ConversationSnapshot =
     {
       thread: undefined,
@@ -45,11 +47,6 @@ export class ConversationStore {
         this.thread?.messages ?? [],
     };
 
-    console.log(
-      "[ConversationStore]",
-      this.snapshotState.messages.length,
-    );
-
     this.listeners.forEach(
       (listener) => listener(),
     );
@@ -73,12 +70,29 @@ export class ConversationStore {
   setThread(
     thread: ThreadDetailsDto,
   ) {
-    this.thread = thread;
+    const messages = [...thread.messages];
+    for (const message of this.pendingMessages.values()) {
+      if (
+        message.threadId === thread.id &&
+        !messages.some((current) => current.id === message.id)
+      ) {
+        messages.push(message);
+      }
+      if (message.threadId === thread.id) {
+        this.pendingMessages.delete(message.id);
+      }
+    }
+
+    this.thread = {
+      ...thread,
+      messages,
+    };
     this.notify();
   }
 
   clear() {
     this.thread = undefined;
+    this.pendingMessages.clear();
     this.notify();
   }
 
@@ -90,6 +104,15 @@ export class ConversationStore {
     message: MessageDto,
   ) {
     if (!this.thread) {
+      this.pendingMessages.set(message.id, message);
+      return;
+    }
+
+    if (
+      this.thread.messages.some(
+        (current) => current.id === message.id,
+      )
+    ) {
       return;
     }
 

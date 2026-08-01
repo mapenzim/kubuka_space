@@ -34,13 +34,16 @@ export function useThreadEvents() {
 
           break;
 
-        case ChatEventType.ACTIVITY_CHANGED:
-          activity.setActivity({
+        case ChatEventType.PRESENCE_CHANGED:
+          presence.setPresence({
             clientId: event.payload.clientId,
-            senderRole: event.payload.senderRole,
-            activity: event.payload.activity,
+            threadId: event.threadId,
+            role: event.payload.senderRole,
+            online: event.payload.online,
+            lastSeen: event.timestamp,
           });
           break;
+
       }
     },
     [presence, activity],

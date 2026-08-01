@@ -31,11 +31,6 @@ export class AuditService {
     // TODO:
     // Persist to database or external logging service.
 
-    console.log(
-      "[AUDIT]",
-      record
-    );
-
     return {
       success: true,
     };
@@ -45,11 +40,6 @@ export class AuditService {
     threadId: string
   ) {
     // Placeholder until persistence is added.
-
-    console.log(
-      "[AUDIT] Fetch",
-      threadId
-    );
 
     return [];
   }

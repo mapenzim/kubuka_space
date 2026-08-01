@@ -8,12 +8,14 @@ import {
 } from "@radix-ui/themes";
 
 import { ChatHeaderProps } from "@/lib/type_interface";
+import { formatLastSeen } from "@/lib/utils";
 
 export default function ChatHeader({
   thread,
   connected,
   online,
   typing,
+  lastSeen,
 }: ChatHeaderProps) {
   return (
     <Flex
@@ -39,6 +41,12 @@ export default function ChatHeader({
           >
             {thread.email}
           </Text>
+
+          {lastSeen && (
+            <Text size="1" color="gray">
+              • Last seen {formatLastSeen(lastSeen)}
+            </Text>
+          )}
         </Flex>
 
         <Flex

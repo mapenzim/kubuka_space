@@ -26,7 +26,11 @@ export function usePresence() {
 
   const session = useChatSession();
   const { presence } = chatStores;
-
+  const snapshot = useSyncExternalStore(
+    presence.subscribe,
+    presence.snapshot,
+    presence.snapshot,
+  );
   //--------------------------------------------------------
   // Connect
   //--------------------------------------------------------
@@ -133,6 +137,14 @@ export function usePresence() {
     ) {
       return presence.isOnline(
         clientId,
+      );
+    },
+
+    getParticipantByRole(role: "admin" | "user") {
+      return snapshot.participants.find(
+        (participant) =>
+          participant.threadId === session.threadId &&
+          participant.role === role,
       );
     },
   };

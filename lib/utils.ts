@@ -98,6 +98,28 @@ export const formatTime = (date: Date | string) => {
   }).format(input);
 };
 
+export function formatLastSeen(date: Date | string): string {
+  const elapsedSeconds = Math.max(
+    0,
+    Math.floor((Date.now() - new Date(date).getTime()) / 1000),
+  );
+
+  if (elapsedSeconds < 60) return "Now";
+
+  const minutes = Math.floor(elapsedSeconds / 60);
+  if (minutes < 60) {
+    return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
+  }
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) {
+    return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+  }
+
+  const days = Math.floor(hours / 24);
+  return `${days} day${days === 1 ? "" : "s"} ago`;
+}
+
 /**
  * Recursively extracts raw text from a Lexical node tree.
  */

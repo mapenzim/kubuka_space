@@ -20,13 +20,6 @@ export async function POST(
       activity,
     } = body;
 
-    console.log("[Activity API]", {
-      threadId,
-      clientId,
-      activity,
-      senderRole,
-    });
-
     return apiHandler(
       async () => await activityUsecase.execute(
         threadId,

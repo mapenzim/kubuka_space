@@ -67,6 +67,7 @@ export interface ChatHeaderProps {
   connected: boolean;
   online: boolean;
   typing: boolean;
+  lastSeen?: string;
 }
 
 export interface ChatMessagesProps {

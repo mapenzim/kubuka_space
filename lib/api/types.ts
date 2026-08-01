@@ -25,6 +25,7 @@ export interface StartConversationRequest {
   sender: string;
   email: string;
   content: string;
+  conversationKey?: string;
 }
 
 export interface ConnectRequest {

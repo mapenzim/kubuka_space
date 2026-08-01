@@ -7,8 +7,6 @@ export async function POST(
   const body =
     await request.json();
 
-  console.log(body);
-
   return apiHandler(() =>
     sendMessageUseCase.execute(body),
   );

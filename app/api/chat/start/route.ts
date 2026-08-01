@@ -1,5 +1,5 @@
 import { apiHandler } from "@/lib/api/api_handler";
-import { startConversationUseCase } from "@/lib/container/runtime";
+import { chatGateway } from "@/lib/container/runtime";
 
 export async function POST(
   request: Request,
@@ -8,6 +8,11 @@ export async function POST(
     await request.json();
 
   return apiHandler(() =>
-    startConversationUseCase.execute(body),
+    chatGateway.startConversation(
+      body.sender,
+      body.email,
+      body.content,
+      body.conversationKey,
+    ),
   );
 }

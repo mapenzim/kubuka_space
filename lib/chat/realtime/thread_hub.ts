@@ -3,6 +3,7 @@ import { SSEClient } from "@/lib/sse/sse_client";
 import { SSEConnection } from "@/lib/sse/sse_connection";
 
 interface HubClient {
+  clientId: string;
   threadId: string;
   connection: SSEConnection;
 }
@@ -28,22 +29,23 @@ export class ThreadHub {
   // Client Management
   //--------------------------------------------------------
   add(client: SSEClient): void {
-    this.clients.set(client.id, {
+    this.clients.set(client.connectionId, {
+      clientId: client.id,
       threadId: client.threadId,
       connection: new SSEConnection(client),
     });
   }
 
-  remove(clientId: string): void {
+  remove(connectionId: string): void {
     const client =
-      this.clients.get(clientId);
+      this.clients.get(connectionId);
 
     if (!client) {
       return;
     }
 
     client.connection.close();
-    this.clients.delete(clientId);
+    this.clients.delete(connectionId);
   }
 
   //--------------------------------------------------------
@@ -54,7 +56,7 @@ export class ThreadHub {
     event: unknown,
   ): void {
     for (const [
-      clientId,
+      connectionId,
       client,
     ] of this.clients) {
       if (
@@ -66,7 +68,7 @@ export class ThreadHub {
       try {
         client.connection.send(event);
       } catch (error) {
-        this.remove(clientId);
+        this.remove(connectionId);
       }
     }
   }

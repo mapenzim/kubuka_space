@@ -15,6 +15,7 @@ interface ConversationHeaderProps {
   connected: boolean;
   online: boolean;
   typing: boolean;
+  lastSeen?: string;
 }
 
 export default function ConversationHeader({
@@ -22,6 +23,7 @@ export default function ConversationHeader({
   connected,
   online,
   typing,
+  lastSeen,
 }: ConversationHeaderProps) {
   return (
     <Flex
@@ -48,11 +50,12 @@ export default function ConversationHeader({
           >
             {thread.email}
           </Text>
-
-          <PresenceIndicator
-            connected={connected}
+ 
+              <PresenceIndicator
+            connected={online}
             online={online}
             typing={typing}
+            lastSeen={lastSeen}
           />
         </Flex>
       </Flex>

@@ -143,12 +143,14 @@ export class ChatGateway {
     sender: string,
     email: string,
     content: string,
+    conversationKey?: string,
   ): Promise<ThreadDetailsDto> {
     const thread =
       await this.startConversationUseCase.execute({
         sender,
         email,
         content,
+        conversationKey,
       });
 
     const summary =
@@ -159,7 +161,9 @@ export class ChatGateway {
     if (summary) {
       this.notificationService.publishConversation({
         type:
-          ConversationEventType.CONVERSATION_CREATED,
+          thread.messages.length > 1
+            ? ConversationEventType.CONVERSATION_UPDATED
+            : ConversationEventType.CONVERSATION_CREATED,
         timestamp: new Date().toISOString(),
         payload: {
           thread: summary,

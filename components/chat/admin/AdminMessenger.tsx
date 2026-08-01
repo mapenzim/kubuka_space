@@ -48,7 +48,7 @@ export default function AdminMessenger() {
     loadThread,
     connected,
     isTyping,
-    isOnline,
+    getParticipantByRole,
     sendMessage,
     startTyping,
     stopTyping,
@@ -182,9 +182,10 @@ export default function AdminMessenger() {
               <ConversationHeader
                 thread={thread}
                 connected={connected}
-                online={isOnline('')}
+                online={getParticipantByRole("user")?.online ?? false}
                 typing={isTyping("user")}
-              />
+                lastSeen={getParticipantByRole("user")?.lastSeen}
+              /> 
 
               <ConversationMessages
                 messages={

@@ -84,7 +84,10 @@ export default function ChatMessages({
                         : "border"
                     }`}
                   >
-                    <Text size="2">
+                    <Text
+                      size="2"
+                      className="whitespace-pre-wrap break-words leading-tight"
+                    >
                       {message.content}
                     </Text>
                   </Box>

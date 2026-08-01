@@ -38,6 +38,7 @@ export default function UserChat({
     startTyping,
     stopTyping,
     isTyping,
+    getParticipantByRole,
   } = useChat();
 
   //--------------------------------------------------
@@ -148,6 +149,7 @@ export default function UserChat({
         connected={connected}
         online={connected}
         typing={isTyping("admin")}
+        lastSeen={getParticipantByRole("admin")?.lastSeen}
       />
 
       <ChatMessages

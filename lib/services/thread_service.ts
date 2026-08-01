@@ -36,6 +36,10 @@ export class ThreadService {
     return this.threadRepository.findById(threadId);
   }
 
+  async findAll() {
+    return this.threadRepository.findAll();
+  }
+
   async markThreadRead(
     threadId: string,
   ): Promise<void> {

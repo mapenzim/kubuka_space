@@ -1,6 +1,6 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useEffect, useState } from "react";
 
 import {
   Card,
@@ -9,8 +9,8 @@ import {
   Text,
 } from "@radix-ui/themes";
 
-import { formatDate } from "@/lib/utils";
 import { ThreadSummaryDto } from "@/lib/dto/thread_summary_dto";
+import { formatTime } from "@/lib/utils";
 
 interface InboxSidebarProps {
   threads: ThreadSummaryDto[];
@@ -22,12 +22,14 @@ interface InboxSidebarItemProps {
   thread: ThreadSummaryDto;
   selected: boolean;
   onSelect: (threadId: string) => void;
+  now: number;
 }
 
 const InboxSidebarItem = memo(function InboxSidebarItem({
   thread,
   selected,
   onSelect,
+  now,
 }: InboxSidebarItemProps) {
   return (
     <button
@@ -61,7 +63,7 @@ const InboxSidebarItem = memo(function InboxSidebarItem({
 
         {thread.lastMessageAt && (
           <Text size="1" color="gray">
-            {formatDate(thread.lastMessageAt)}
+            {formatTime(thread.lastMessageAt)}
           </Text>
         )}
       </Flex>
@@ -83,6 +85,18 @@ export default function InboxSidebar({
   selectedThreadId,
   onSelect,
 }: InboxSidebarProps) {
+  const [now, setNow] = useState(0);
+
+  useEffect(() => {
+    setNow(Date.now());
+
+    const timer = window.setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, []);
+
   return (
     <Card className="w-full md:w-80 flex flex-col overflow-hidden">
       <ScrollArea className="flex-1">
@@ -103,6 +117,7 @@ export default function InboxSidebar({
               thread={thread}
               selected={selectedThreadId === thread.id}
               onSelect={onSelect}
+              now={now}
             />
           ))
         )}

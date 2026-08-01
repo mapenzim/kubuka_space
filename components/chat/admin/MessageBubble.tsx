@@ -1,6 +1,7 @@
 "use client";
 
 import { Box, Flex, Text } from "@radix-ui/themes";
+import { useEffect, useState } from "react";
 
 import { formatTime } from "@/lib/utils";
 import { MessageDto } from "@/lib/dto";
@@ -15,6 +16,15 @@ export default function MessageBubble({
   selfRole,
 }: MessageBubbleProps) {
   const mine = message.senderRole === selfRole;
+  const [, refresh] = useState(0);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      refresh((value) => value + 1);
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, []);
 
   return (
     <Flex
@@ -28,13 +38,16 @@ export default function MessageBubble({
             : "border"
         }`}
       >
-        <Text size="2">
+        <Text
+          size="2"
+          className="whitespace-pre-wrap break-words leading-tight"
+        >
           {message.content}
         </Text>
       </Box>
 
       <Text size="1" color="gray">
-        {formatTime(message.timestamp)}
+        {mine ? "Sent" : "Received"} {formatTime(message.timestamp)}
       </Text>
     </Flex>
   );

@@ -29,11 +29,6 @@ export class EmailService {
     // TODO:
     // Integrate Resend, Nodemailer, SendGrid, etc.
 
-    console.log(
-      "[EMAIL] Support Notification",
-      email
-    );
-
     return {
       success: true,
     };
@@ -48,11 +43,6 @@ export class EmailService {
   ) {
     // TODO:
     // Integrate Resend, Nodemailer, SendGrid, etc.
-
-    console.log(
-      "[EMAIL] Customer Notification",
-      email
-    );
 
     return {
       success: true,

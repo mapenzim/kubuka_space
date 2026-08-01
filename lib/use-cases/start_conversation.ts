@@ -7,6 +7,7 @@ interface StartConversationRequest {
   sender: string;
   email: string;
   content: string;
+  conversationKey?: string;
 }
 
 export class StartConversation {
@@ -18,7 +19,32 @@ export class StartConversation {
   async execute(
     request: StartConversationRequest,
   ): Promise<ThreadDto> {
-    const conversationKey = this.conversationKeyService.generate();
+    const conversationKey =
+      request.conversationKey ??
+      this.conversationKeyService.generate();
+
+    if (request.conversationKey) {
+      const existingThreads =
+        await this.chatService.getThreadsByEmail(request.email);
+
+      for (const existingThread of existingThreads) {
+        if (await this.conversationKeyService.verify(
+          conversationKey,
+          existingThread.conversationKeyHash,
+        )) {
+          const message = await this.chatService.sendMessage(
+            existingThread.id,
+            "user",
+            request.content,
+          );
+
+          return ThreadDetailsDtoMapper.toDto({
+            ...existingThread,
+            messages: [...existingThread.messages, message],
+          });
+        }
+      }
+    }
 
     const conversationKeyHash =
       await this.conversationKeyService.hash(

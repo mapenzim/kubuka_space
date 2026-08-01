@@ -21,6 +21,13 @@ export class ChatService {
     return this.inboxService.getThreads();
   }
 
+  async getThreadsByEmail(email: string) {
+    const threads = await this.threadService.findAll();
+    return threads.filter(
+      (thread) => thread.email.toLowerCase() === email.toLowerCase(),
+    );
+  }
+
   async startConversation(
     sender: string,
     email: string,

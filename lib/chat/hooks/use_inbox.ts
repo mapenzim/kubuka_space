@@ -17,12 +17,13 @@ import { ConversationEvent } from "@/lib/events/conversation/conversation_event"
 import { conversationStore } from "@/lib/conversation/conversation_store";
 import { useConversationEvents } from "@/lib/chat/hooks/use_conversation_events";
 import { ConversationEventType } from "@/lib/events/conversation/conversation_event_type";
+import { presenceStore } from "@/lib/chat/stores/presence_store";
 
 export function useInbox() {
   //--------------------------------------------------------
   // State
   //--------------------------------------------------------
-  const threads =
+  const summaryThreads =
   useSyncExternalStore(
     conversationStore.subscribe.bind(
       conversationStore,
@@ -30,6 +31,15 @@ export function useInbox() {
     conversationStore.snapshot.bind(
       conversationStore,
     ),
+    conversationStore.snapshot.bind(
+      conversationStore,
+    ),
+  );
+
+  const presenceSnapshot = useSyncExternalStore(
+    presenceStore.subscribe,
+    presenceStore.snapshot,
+    presenceStore.snapshot,
   );
 
   const [
@@ -105,12 +115,24 @@ export function useInbox() {
   const unreadCount =
     useMemo(
       () =>
-        threads.filter(
+        summaryThreads.filter(
           thread =>
             thread.unread,
         ).length,
-      [threads],
+      [summaryThreads],
     );
+
+  const threads = useMemo(
+    () => summaryThreads.map((thread) => ({
+      ...thread,
+      online: presenceSnapshot.participants.find(
+        (participant) =>
+          participant.threadId === thread.id &&
+          participant.role === "user",
+      )?.online ?? false,
+    })),
+    [summaryThreads, presenceSnapshot],
+  );
 
   //--------------------------------------------------------
   // Public API

@@ -32,7 +32,7 @@ export default function ConversationMessages({
     });
   }, [messages]);
 
-  return (
+  return ( 
     <Box className="flex-1 overflow-hidden">
       <ScrollArea
         ref={viewportRef}

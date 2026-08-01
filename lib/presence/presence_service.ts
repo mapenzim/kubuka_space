@@ -12,16 +12,18 @@ export class PresenceService {
   connect(presence: Presence): void {
     this.state.connect(presence);
 
-    this.notificationService.publishThread({
-      type: ThreadEventType.PRESENCE_CHANGED,
-      threadId: presence.threadId,
-      timestamp: new Date().toISOString(),
-      payload: {
-        clientId: presence.clientId,
-        senderRole: presence.senderRole,
-        online: true,
-      },
-    });
+    for (const participant of this.state.getAll(presence.threadId)) {
+      this.notificationService.publishThread({
+        type: ThreadEventType.PRESENCE_CHANGED,
+        threadId: presence.threadId,
+        timestamp: participant.lastSeen.toISOString(),
+        payload: {
+          clientId: participant.clientId,
+          senderRole: participant.senderRole,
+          online: true,
+        },
+      });
+    }
   }
 
   disconnect(
