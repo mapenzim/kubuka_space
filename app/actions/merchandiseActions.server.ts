@@ -146,11 +146,31 @@ export async function getOrdersForAdmin() {
 
 export async function cancelOrder(orderId: string) {
   await requireAdmin();
-  const order = await prisma.order.findUnique({ where: { id: orderId }, select: { status: true } });
-  if (!order) throw new Error("Order not found.");
-  if (order.status === "delivered" || order.status === "cancelled") throw new Error("This order cannot be cancelled.");
-  await prisma.order.update({ where: { id: orderId }, data: { status: "cancelled" } });
+  await prisma.$transaction(async (tx) => {
+    const order = await tx.order.findUnique({
+      where: { id: orderId },
+      select: { status: true, items: { select: { merchandiseId: true, quantity: true } } },
+    });
+    if (!order) throw new Error("Order not found.");
+    if (order.status === "delivered" || order.status === "cancelled") throw new Error("This order cannot be cancelled.");
+
+    // Claim cancellation before restoring stock, preventing duplicate stock
+    // restoration when two admin requests arrive at the same time.
+    const claimed = await tx.order.updateMany({
+      where: { id: orderId, status: order.status },
+      data: { status: "cancelled" },
+    });
+    if (claimed.count !== 1) throw new Error("This order has already changed state.");
+
+    for (const item of order.items) {
+      await tx.merchandise.update({
+        where: { id: item.merchandiseId },
+        data: { stockQuantity: { increment: item.quantity } },
+      });
+    }
+  });
   revalidatePath("/admin/store");
+  revalidatePath("/store");
 }
 
 export async function getOrderDetails(orderId: string) {

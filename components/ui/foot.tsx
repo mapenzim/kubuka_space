@@ -25,10 +25,10 @@ export default function Footer() {
       <div className="container mx-auto px-4">
         <div className="flex flex-wrap">
           <div className="w-full lg:w-6/12 px-4">
-            <h4 className="text-3xl font-semibold dark:text-zinc-400">
+            <h4 className="text-3xl font-semibold text-zinc-900 dark:text-zinc-100">
               Let&apos;s keep in touch!
             </h4>
-            <h5 className="text-lg mt-0 mb-2 text-gray-700 dark:text-gray-500">
+            <h5 className="text-lg mt-0 mb-2 text-gray-700 dark:text-zinc-300">
               Find us on any of these platforms, we respond in 1-2 business days.
             </h5>
             <div className="mt-6 flex flex-row justify-start gap-5 w-full">
@@ -108,13 +108,13 @@ export default function Footer() {
                 </span>
                 <ul role="list" className="my-2 lg:my-0 list-inside">
                   <li>
-                    <Link className="text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-600 font-[400px] block pb-2 text-sm"
+                    <Link className="text-gray-700 hover:text-gray-900 dark:text-zinc-300 dark:hover:text-white font-[400px] block pb-2 text-sm"
                       href="#about-us">About Us
                     </Link>
                   </li>
                   <li>
                     <Link 
-                      className="text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-600 font-[400px] block pb-2 text-sm"
+                      className="text-gray-700 hover:text-gray-900 dark:text-zinc-300 dark:hover:text-white font-[400px] block pb-2 text-sm"
                       href="/posts"
                     >
                         Blog
@@ -122,14 +122,14 @@ export default function Footer() {
                   </li>
                   <li>
                     <Link 
-                      className="text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-600 font-[400px] block pb-2 text-sm"
+                      className="text-gray-700 hover:text-gray-900 dark:text-zinc-300 dark:hover:text-white font-[400px] block pb-2 text-sm"
                       href="/store"
                     >
                       Products
                     </Link>
                   </li>
                   <li>
-                    <Link className="text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-600 font-[400px] block pb-2 text-sm"
+                    <Link className="text-gray-700 hover:text-gray-900 dark:text-zinc-300 dark:hover:text-white font-[400px] block pb-2 text-sm"
                       href="/contact_us"
                     >
                       Contact Us
@@ -146,7 +146,7 @@ export default function Footer() {
                   { /** Licenses and agreements */ }
                   <li>
                     <Link 
-                      className="text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-600 font-[400px] block text-sm"
+                      className="text-gray-700 hover:text-gray-900 dark:text-zinc-300 dark:hover:text-white font-[400px] block text-sm"
                       href="privacy_data"
                     >
                       License
@@ -156,7 +156,7 @@ export default function Footer() {
                     {/** Terms of use */}
                     <Link 
                       href={"/terms_and_conditions"}
-                      className="text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-600 font-[400px] block text-sm"
+                      className="text-gray-700 hover:text-gray-900 dark:text-zinc-300 dark:hover:text-white font-[400px] block text-sm"
                     >
                       Terms of use
                     </Link>
@@ -165,7 +165,7 @@ export default function Footer() {
                     {/** Cookie Policy */}
                     <Link 
                       href={"/cookie_policy"}
-                      className="text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-600 font-[400px] block text-sm"
+                      className="text-gray-700 hover:text-gray-900 dark:text-zinc-300 dark:hover:text-white font-[400px] block text-sm"
                     >
                       Cookie Policy
                     </Link>
@@ -179,11 +179,11 @@ export default function Footer() {
         <hr className="my-6 border-gray-400" />
         <div className="flex flex-wrap items-center md:justify-between justify-center">
           <div className="w-full md:w-4/12 px-4 mx-auto text-center">
-            <div className="text-sm text-gray-600 font-semibold py-1">
+            <div className="text-sm font-semibold py-1 text-gray-600 dark:text-zinc-300">
               Copyright &copy; {new Date().getFullYear()}{" "}By{" "}
               <a
                 href="#"
-                className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-600"
+                className="text-gray-600 hover:text-gray-900 dark:text-zinc-300 dark:hover:text-white"
               >
                 Kubuka Space PBC
               </a>.

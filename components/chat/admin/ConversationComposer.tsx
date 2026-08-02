@@ -123,7 +123,7 @@ export default function ConversationComposer({
   // Render
   //--------------------------------------------------------
   return (
-    <Box className="p-4">
+    <Box className="border-t border-zinc-200 bg-white/80 p-4 dark:border-zinc-800 dark:bg-zinc-900/60">
       <form
         onSubmit={handleSubmit}
       >

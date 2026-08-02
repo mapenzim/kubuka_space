@@ -5,7 +5,7 @@ import React from "react";
 import { SignoutButton } from "./sign_out";
 import CartStatus from "../cart/components/cart_status";
 import { DropdownMenu, IconButton } from "@radix-ui/themes";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { isAdminRole } from "@/lib/roles";
 import SupportNotificationLink from "@/components/chat/SupportNotificationLink";
@@ -26,12 +26,19 @@ const NavigationApp = () => {
   ];
 
   const { data: session } = useSession();
-                                                                                              
   const user = session?.user;
   const router = useRouter();
+  const pathname = usePathname();
 
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const desktopLinkText = isScrolled
+    ? "text-zinc-800 dark:text-zinc-100"
+    : "text-white";
+
+  const closeMenu = React.useCallback(() => {
+    setIsMenuOpen(false);
+  }, []);
 
   const handleSignout = async () => {
     await signOut({ redirect: false });
@@ -48,19 +55,44 @@ const NavigationApp = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  React.useEffect(() => {
+    closeMenu();
+  }, [pathname, closeMenu]);
+
+  React.useEffect(() => {
+    if (!isMenuOpen) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeMenu();
+      }
+    };
+
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isMenuOpen, closeMenu]);
+
   return (
     <nav
-      className={`fixed top-0 left-0 w-full flex items-center justify-between px-6 md:px-16 lg:px-24 xl:px-32 transition-all duration-500 z-50 
+      className={`fixed inset-x-0 top-0 z-50 flex min-h-16 w-full items-center justify-between px-4 sm:px-6 md:px-16 lg:px-24 xl:px-32 transition-all duration-500
       ${isScrolled 
-        ? "bg-white/80 dark:bg-gray-900 dark:text-gray-300 shadow-md dark:shadow-orange-500/50 text-gray-700 backdrop-blur-lg py-1 md:py-2" 
-        : "bg-indigo-500 dark:bg-gray-900 dark:text-zinc-400 py-2 md:py-4"}`
+        ? "bg-white/90 text-gray-700 shadow-md backdrop-blur-lg dark:bg-gray-900/95 dark:text-gray-300 py-2" 
+        : "bg-indigo-500 text-white dark:bg-gray-900/95 dark:text-zinc-100 py-3"}`
       }
     >
       {/* Logo */}
       <a 
         href="/" 
         aria-label="Prebuilt UI"
-        className="dark:rounded-full dark:p-1 dark:border dark:bg-gray-400 w-8 h-8 md:h-12 md:w-12 dark:overflow-hidden dark:items-center"
+        className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/30 bg-white/90 p-1 md:h-12 md:w-12"
       >
         <img
           src="/images/Kubuka_Logo.png"   // place your logo file in /public/logo.png
@@ -72,11 +104,11 @@ const NavigationApp = () => {
       {/* Desktop Nav with hover effect */}
       <div className="hidden md:flex items-center gap-8 ml-7">
         {navLinks.map((link, i) => (
-          <Link key={i} href={link.path} className="relative overflow-hidden h-6 group">
-            <span className="block group-hover:-translate-y-full transition-transform duration-300">
+            <Link key={i} href={link.path} className={`group relative h-6 overflow-hidden ${desktopLinkText}`}>
+            <span className="block text-inherit transition-transform duration-300 group-hover:-translate-y-full">
               {link.name}
             </span>
-            <span className="block absolute top-full left-0 group-hover:-translate-y-full transition-transform duration-300">
+            <span className="absolute left-0 top-full block text-inherit transition-transform duration-300 group-hover:-translate-y-full">
               {link.name}
             </span>
           </Link>
@@ -84,7 +116,7 @@ const NavigationApp = () => {
       </div>
 
       {/* Right side: Cart + Login */} 
-      <div className="hidden md:flex justify-center items-center gap-6">
+      <div className="hidden items-center justify-center gap-6 md:flex">
         <CartStatus isScrolled={isScrolled} />
         {user && <SupportNotificationLink />}
         {user 
@@ -136,87 +168,98 @@ const NavigationApp = () => {
       </div>
 
       {/* Mobile Menu Button */}
-      <div className="flex items-center gap-3 md:hidden">
-        <button aria-label="Toggle menu" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-          <svg
-            className={`h-6 w-6 cursor-pointer ${isScrolled ? "white" : ""}`}
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            viewBox="0 0 24 24"
-          >
-            <line x1="4" y1="6" x2="20" y2="6" />
-            <line x1="4" y1="12" x2="20" y2="12" />
-            <line x1="4" y1="18" x2="20" y2="18" />
-          </svg>
+      <div className="flex items-center gap-2 md:hidden">
+        <CartStatus isScrolled={isScrolled} />
+        <button
+          type="button"
+          aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+          aria-expanded={isMenuOpen}
+          aria-controls="kubuka-mobile-menu"
+          onClick={() => setIsMenuOpen((open) => !open)}
+          className="inline-flex size-10 items-center justify-center rounded-full border border-white/30 bg-black/10 text-current transition-colors hover:bg-black/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+        >
+          {isMenuOpen ? (
+            <svg className="size-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          ) : (
+            <svg className="size-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
+              <line x1="4" y1="6" x2="20" y2="6" />
+              <line x1="4" y1="12" x2="20" y2="12" />
+              <line x1="4" y1="18" x2="20" y2="18" />
+            </svg>
+          )}
         </button>
       </div>
       
       {/* Mobile Side Menu */}
-      <div
-        className={`fixed top-0 left-0 h-screen w-64 bg-white md:hidden flex flex-col items-start gap-6 font-medium text-gray-800 p-6 transition-transform duration-500 ease-in-out dark:bg-indigo-900 dark:text-zinc-400 
-          ${isMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
-      >
-        {/* Close button */}
+      {isMenuOpen && (
         <button
-          aria-label="Close menu"
-          className="absolute top-4 right-4"
-          onClick={() => setIsMenuOpen(false)}
-        >
-          <svg
-            className="h-6 w-6"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            viewBox="0 0 24 24"
-          >
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </button>
+          type="button"
+          aria-label="Close navigation menu"
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-[2px] md:hidden"
+          onClick={closeMenu}
+        />
+      )}
 
-        {/* Nav links */}
-        {mobileNavLinks.map((link, i) => (
-          <Link
-            key={i}
-            href={link.path}
-            onClick={() => setIsMenuOpen(false)}
-            className="hover:text-zinc-600 transition-colors"
-          >
-            {link.name}
+      <aside
+        id="kubuka-mobile-menu"
+        aria-hidden={!isMenuOpen}
+        inert={!isMenuOpen}
+        className={`fixed inset-y-0 left-0 z-50 flex w-[min(20rem,calc(100vw-1rem))] flex-col overflow-y-auto border-r border-zinc-200 bg-white px-5 pb-8 pt-5 text-zinc-900 shadow-2xl transition-transform duration-300 ease-out dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 md:hidden ${isMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
+      >
+        <div className="mb-8 flex items-center justify-between">
+          <Link href="/" onClick={closeMenu} className="flex items-center gap-3">
+            <img src="/images/Kubuka_Logo.png" alt="" className="size-10 rounded-full object-contain" />
+            <span className="text-sm font-semibold tracking-wide">Kubuka Space</span>
           </Link>
-        ))}
+          <button
+            type="button"
+            aria-label="Close menu"
+            onClick={closeMenu}
+            className="inline-flex size-10 items-center justify-center rounded-full text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-white"
+          >
+            <svg className="size-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
 
-        {/* Actions */}
-        <Link 
-          href="contact_us"
-          className="border px-4 py-1 text-sm font-light rounded-full cursor-pointer transition-all"
-          onClick={() => setIsMenuOpen(false)}
-        >
-          Contact Us
-        </Link>
+        <nav aria-label="Mobile navigation" className="flex flex-col gap-1">
+          {[...mobileNavLinks, { name: "Contact Us", path: "/contact_us" }].map((link) => (
+            <Link
+              key={link.path}
+              href={link.path}
+              onClick={closeMenu}
+              className={`rounded-lg px-3 py-3 text-base font-medium transition-colors hover:bg-zinc-100 hover:text-indigo-700 dark:hover:bg-zinc-800 dark:hover:text-indigo-300 ${pathname === link.path ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300" : ""}`}
+            >
+              {link.name}
+            </Link>
+          ))}
+        </nav>
 
-        {user 
-          ? (
-              <>
-                <div className="flex items-center gap-2" onClick={() => setIsMenuOpen(false)}>
-                  <SupportNotificationLink />
-                  <span>Contact support</span>
-                </div>
-                <SignoutButton close={() => setIsMenuOpen(false)} />
-              </>
-            ) : (
-              <Link
-                href="/authentication"
-                className="bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Login
+        <div className="mt-8 border-t border-zinc-200 pt-6 dark:border-zinc-800">
+          {user ? (
+            <div className="flex flex-col gap-2">
+              <Link href="/profile" onClick={closeMenu} className="rounded-lg px-3 py-3 font-medium hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                Profile
               </Link>
-            )
-        }
-
-      </div>
+              <SupportNotificationLink label="Contact support" />
+              <SignoutButton close={closeMenu} />
+            </div>
+          ) : (
+            <Link
+              href="/authentication"
+              className="flex w-full items-center justify-center rounded-lg bg-indigo-600 px-4 py-3 font-medium text-white transition-colors hover:bg-indigo-700"
+              onClick={closeMenu}
+            >
+              Sign in
+            </Link>
+          )}
+        </div>
+      </aside>
     </nav>
   );
 };

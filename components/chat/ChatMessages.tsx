@@ -49,7 +49,7 @@ export default function ChatMessages({
   //--------------------------------------------------
 
   return (
-    <Box className="flex-1 overflow-hidden">
+    <Box className="flex-1 overflow-hidden bg-zinc-50/70 dark:bg-zinc-950/40">
       <ScrollArea
         ref={scrollRef}
         style={{
@@ -81,12 +81,16 @@ export default function ChatMessages({
                     className={`max-w-[80%] rounded-2xl px-4 py-2 ${
                       mine
                         ? "bg-indigo-600 text-white"
-                        : "border"
+                        : "border border-zinc-200 bg-white text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
                     }`}
                   >
                     <Text
                       size="2"
-                      className="whitespace-pre-wrap break-word"
+                      className={`whitespace-pre-wrap break-word ${
+                        mine
+                          ? "text-white"
+                          : "text-zinc-900 dark:text-zinc-100"
+                      }`}
                     >
                       {message.content}
                     </Text>
@@ -94,7 +98,7 @@ export default function ChatMessages({
 
                   <Text
                     size="1"
-                    color="gray"
+                    className="text-zinc-500 dark:text-zinc-400"
                   >
                     {formatTime(
                       message.timestamp,

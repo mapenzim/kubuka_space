@@ -17,6 +17,7 @@ import {$findMatchingParent, mergeRegister} from '@lexical/utils';
 import {
   $createParagraphNode,
   $getSelection,
+  $isElementNode,
   $isRangeSelection,
   $isRootOrShadowRoot,
   CAN_REDO_COMMAND,
@@ -26,6 +27,7 @@ import {
   FORMAT_TEXT_COMMAND,
   LexicalEditor,
   REDO_COMMAND,
+  SELECTION_CHANGE_COMMAND,
   UNDO_COMMAND,
 } from 'lexical';
 import { AlignCenterIcon, AlignJustifyIcon, AlignLeft, AlignRightIcon, Bold, ItalicIcon, ListIcon, ListOrderedIcon, RedoIcon, UnderlineIcon, UndoIcon } from 'lucide-react';
@@ -88,28 +90,43 @@ export function ToolbarPlugin() {
   const [isBold, setIsBold] = useState(false);
   const [isItalic, setIsItalic] = useState(false);
   const [isUnderline, setIsUnderline] = useState(false);
+  const [alignment, setAlignment] = useState("left");
 
   const $updateToolbar = useCallback(() => {
     const selection = $getSelection();
-    if ($isRangeSelection(selection)) {
-      const anchorNode = selection.anchor.getNode();
-      let topLevelElement = $findMatchingParent(anchorNode, e => {
-        const parent = e.getParent();
-        return parent !== null && $isRootOrShadowRoot(parent);
-      });
-      if (topLevelElement === null) {
-        topLevelElement = anchorNode.getTopLevelElementOrThrow();
-      }
-
-      if ($isHeadingNode(topLevelElement)) {
-        setBlockType(topLevelElement.getTag());
-      } else {
-        setBlockType(topLevelElement.getType());
-      }
-      setIsBold(selection.hasFormat('bold'));
-      setIsItalic(selection.hasFormat('italic'));
-      setIsUnderline(selection.hasFormat('underline'));
+    if (!$isRangeSelection(selection)) {
+      setBlockType("paragraph");
+      setAlignment("left");
+      setIsBold(false);
+      setIsItalic(false);
+      setIsUnderline(false);
+      return;
     }
+
+    const anchorNode = selection.anchor.getNode();
+    let topLevelElement = $findMatchingParent(anchorNode, e => {
+      const parent = e.getParent();
+      return parent !== null && $isRootOrShadowRoot(parent);
+    });
+    if (topLevelElement === null) {
+      topLevelElement = anchorNode.getTopLevelElementOrThrow();
+    }
+
+    if ($isHeadingNode(topLevelElement)) {
+      setBlockType(topLevelElement.getTag());
+    } else {
+      setBlockType(topLevelElement.getType());
+    }
+
+    if ($isElementNode(topLevelElement)) {
+      setAlignment(topLevelElement.getFormatType() || "left");
+    } else {
+      setAlignment("left");
+    }
+
+    setIsBold(selection.hasFormat('bold'));
+    setIsItalic(selection.hasFormat('italic'));
+    setIsUnderline(selection.hasFormat('underline'));
   }, []);
 
   useEffect(() => {
@@ -122,6 +139,16 @@ export function ToolbarPlugin() {
           {editor},
         );
       }),
+      editor.registerCommand(
+        SELECTION_CHANGE_COMMAND,
+        () => {
+          editor.getEditorState().read(() => {
+            $updateToolbar();
+          });
+          return false;
+        },
+        COMMAND_PRIORITY_LOW,
+      ),
       editor.registerCommand(
         CAN_UNDO_COMMAND,
         payload => {
@@ -155,7 +182,7 @@ export function ToolbarPlugin() {
       className="sticky top-0 z-10 flex flex-wrap items-center gap-0.5 overflow-x-auto border-b [border-bottom-style:solid] border-b-black/10 bg-zinc-50 px-2 py-1.5 md:justify-start dark:border-b-white/10 dark:bg-zinc-800"
       ref={toolbarRef}>
       <select
-        className="cursor-pointer appearance-none rounded-md border border-solid border-transparent bg-transparent px-2 py-1 text-sm font-medium text-zinc-700 transition-colors duration-150 hover:bg-zinc-200 focus:outline-none focus-visible:outline  focus-visible:outline-blue-500 dark:text-zinc-200 dark:hover:bg-zinc-700"
+        className={`cursor-pointer appearance-none rounded-md border border-solid border-transparent px-2 py-1 text-sm font-medium transition-colors duration-150 focus:outline-none focus-visible:outline focus-visible:outline-blue-500 ${blockType !== "paragraph" ? "bg-zinc-200 text-zinc-900 dark:bg-zinc-700 dark:text-white" : "bg-transparent text-zinc-700 hover:bg-zinc-200 dark:text-zinc-200 dark:hover:bg-zinc-700"}`}
         value={blockType}
         onChange={e => applyBlockType(editor, e.target.value)}
         aria-label="Block type">
@@ -227,8 +254,9 @@ export function ToolbarPlugin() {
         onClick={() => {
           editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'left');
         }}
-        className={`${btnBase} ${btnInactive} mr-0.5`}
-        aria-label="Left Align">
+        className={`${btnBase} ${alignment === "left" ? btnActive : btnInactive} mr-0.5`}
+        aria-label="Left Align"
+        aria-pressed={alignment === "left"}>
           <AlignLeft className={`${iconBase} opacity-70`} />
         </button>
       <button
@@ -236,8 +264,9 @@ export function ToolbarPlugin() {
         onClick={() => {
           editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'center');
         }}
-        className={`${btnBase} ${btnInactive} mr-0.5`}
-        aria-label="Center Align">
+        className={`${btnBase} ${alignment === "center" ? btnActive : btnInactive} mr-0.5`}
+        aria-label="Center Align"
+        aria-pressed={alignment === "center"}>
           <AlignCenterIcon className={`${iconBase} opacity-70`} />
         </button>
       <button
@@ -245,8 +274,9 @@ export function ToolbarPlugin() {
         onClick={() => {
           editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'right');
         }}
-        className={`${btnBase} ${btnInactive} mr-0.5`}
-        aria-label="Right Align">
+        className={`${btnBase} ${alignment === "right" ? btnActive : btnInactive} mr-0.5`}
+        aria-label="Right Align"
+        aria-pressed={alignment === "right"}>
           <AlignRightIcon className={`${iconBase} opacity-70`} />
       </button>
       <button
@@ -254,8 +284,9 @@ export function ToolbarPlugin() {
         onClick={() => {
           editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'justify');
         }}
-        className={`${btnBase} ${btnInactive}`}
-        aria-label="Justify Align">
+        className={`${btnBase} ${alignment === "justify" ? btnActive : btnInactive}`}
+        aria-label="Justify Align"
+        aria-pressed={alignment === "justify"}>
           <AlignJustifyIcon className={`${iconBase} opacity-70`} />
       </button>
     </div>

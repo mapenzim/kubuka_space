@@ -22,9 +22,90 @@ html {
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+	color: var(--foreground);
+	background: var(--background);
+	font-family: Arial, Helvetica, sans-serif;
+}
+
+/*
+ * Public application theme
+ *
+ * Radix Themes switches its dark tokens only when its root has a `.dark`
+ * class. The app currently follows the system color scheme instead, so keep
+ * the token correction scoped to the public layout. The admin layout is not
+ * inside .public-app and keeps its own visual system.
+ */
+.public-app,
+body:has(.public-app) {
+	--public-background: #f8fafc;
+	--public-panel: #ffffff;
+	--public-foreground: #18181b;
+	--public-muted: #52525b;
+	--color-background: var(--public-background);
+	--color-panel: var(--public-panel);
+	--color-panel-solid: var(--public-panel);
+	--color-panel-translucent: rgb(255 255 255 / 0.88);
+	--color-surface: rgb(255 255 255 / 0.86);
+	--gray-1: #ffffff;
+	--gray-2: #fafafa;
+	--gray-10: #71717a;
+	--gray-11: var(--public-muted);
+	--gray-12: var(--public-foreground);
+	color: var(--public-foreground);
+	background-color: var(--public-background);
+}
+
+@media (prefers-color-scheme: dark) {
+	.public-app,
+	body:has(.public-app) {
+		--public-background: #09090b;
+		--public-panel: #18181b;
+		--public-foreground: #f4f4f5;
+		--public-muted: #a1a1aa;
+		--color-background: var(--public-background);
+		--color-panel: var(--public-panel);
+		--color-panel-solid: var(--public-panel);
+		--color-panel-translucent: rgb(24 24 27 / 0.92);
+		--color-surface: rgb(255 255 255 / 0.06);
+		--gray-1: #18181b;
+		--gray-2: #27272a;
+		--gray-10: #71717a;
+		--gray-11: var(--public-muted);
+		--gray-12: var(--public-foreground);
+		color: var(--public-foreground);
+		background-color: var(--public-background);
+	}
+}
+
+.public-app button:disabled {
+	color: var(--public-muted) !important;
+}
+
+/* Radix surfaces use --color-panel, which is not switched by Tailwind's
+ * dark variant. Keep the public support surface aligned with the page theme. */
+.contact-chat-surface {
+	background-color: #ffffff !important;
+}
+
+@media (prefers-color-scheme: dark) {
+	.contact-chat-surface {
+		background-color: #18181b !important;
+	}
+}
+
+.contact-start-button {
+	background-color: #4f46e5 !important;
+	color: #ffffff !important;
+}
+
+.contact-start-button:hover:not(:disabled) {
+	background-color: #4338ca !important;
+}
+
+.contact-start-button:disabled {
+	background-color: #3f3f46 !important;
+	color: #a1a1aa !important;
+	opacity: 1 !important;
 }
 
 /** Custom dialog styles */

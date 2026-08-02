@@ -36,7 +36,7 @@ export default function MerchandiseCard({ item }: Props) {
       <p className="text-xs">{item.stockQuantity > 0 ? `${item.stockQuantity} available` : "Out of stock"}</p>
         <button
           disabled={cartLoading || item.stockQuantity < 1}
-          className="mt-2 bg-indigo-600 hover:bg-indigo-700 text-white dark:bg-zinc-900 dark:text-slate-500 dark:hover:bg-zinc-800 dark:hover:text-gray-400 px-3 py-1 rounded-md flex items-center justify-center gap-2 cursor-pointer"
+          className="mt-2 flex cursor-pointer items-center justify-center gap-2 rounded-md bg-indigo-600 px-3 py-1 text-white hover:bg-indigo-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700 dark:hover:text-white"
           onClick={() => addItem(item)}
         >
           {cartLoading ? <Loading /> : item.stockQuantity > 0 ? "Add to Cart" : "Out of Stock"}

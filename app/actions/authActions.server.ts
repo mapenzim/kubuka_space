@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { ulidId } from "@/lib/server-utils";
 import { hash } from "bcryptjs";
 import { revalidatePath } from "next/cache"; 
+import { auth } from "@/auth";
 
 type CreateUserResult =
   | { success: true }
@@ -139,37 +140,49 @@ export async function getUserBio(userId: string) {
 }
 
 export async function userWorkExperience(form: FormData): Promise<UpdateUser> {
-  const userId = form.get("userId") as string;
-  const jobTitle = form.get("jobTitle") as string;
-  const companyName = form.get("companyName") as string;
-  const dates = form.get("dates") as string;
-  const duties = form.get("duties") as string;;
+  const session = await auth();
+  const userId = session?.user?.id;
+  const jobTitle = String(form.get("jobTitle") ?? "").trim();
+  const companyName = String(form.get("companyName") ?? "").trim();
+  const dates = String(form.get("dates") ?? "").trim();
+  const duties = String(form.get("duties") ?? "").trim();
 
-  await prisma.workExperience.upsert({
-    where: {
-      userId_jobTitle_companyName: {
+  if (!userId) {
+    return { error: { message: "Please sign in before adding work experience." } };
+  }
+
+  if (!jobTitle || !companyName || !dates || !duties) {
+    return { error: { message: "Complete all work experience fields." } };
+  }
+
+  try {
+    await prisma.workExperience.upsert({
+      where: {
+        userId_jobTitle_companyName: {
+          userId,
+          jobTitle,
+          companyName,
+        },
+      },
+      update: {
+        dates,
+        duties,
+      },
+      create: {
+        id: ulidId(),
         userId,
         jobTitle,
         companyName,
+        dates,
+        duties,
       },
-    },
-    update: {
-      dates,
-      duties,
-    },
-    create: {
-      id: ulidId(),
-      userId,
-      jobTitle,
-      companyName,
-      dates,
-      duties,
-    },
-  });
+    });
 
-  revalidatePath("/profile");
-
-  return { success: true }
+    revalidatePath("/profile");
+    return { success: true };
+  } catch {
+    return { error: { message: "Unable to save work experience right now." } };
+  }
 }
 
 export async function getUserExperience(id: string) {

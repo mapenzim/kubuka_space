@@ -137,7 +137,16 @@ export default function UserChat({
   // No Conversation
   //--------------------------------------------------
   if (loadingHistory) {
-    return <Card variant="ghost" className="flex h-160 items-center justify-center"><Text color="gray">Loading your conversation…</Text></Card>;
+    return (
+      <Card
+        variant="ghost"
+        className="contact-chat-surface flex h-160 items-center justify-center border border-zinc-200 shadow-sm dark:border-zinc-800"
+      >
+        <Text className="text-zinc-600 dark:text-zinc-400">
+          Loading your conversation…
+        </Text>
+      </Card>
+    );
   }
 
   if (!thread) {
@@ -171,7 +180,7 @@ export default function UserChat({
   return (
     <Card
       variant="ghost"
-      className="flex h-160 flex-col"
+      className="contact-chat-surface flex h-160 flex-col overflow-hidden border border-zinc-200 shadow-sm dark:border-zinc-800"
     >
       <ChatHeader
         thread={thread}
@@ -187,7 +196,7 @@ export default function UserChat({
       />
 
       <ConversationComposer
-        placeholder={`Reply to ${thread.sender}...`}
+        placeholder={`Reply as ${thread.sender}...`}
         disabled={isPending}
         onSend={handleSend}
         onTypingStart={startTyping}

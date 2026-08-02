@@ -124,14 +124,19 @@ export default function CartStatus({ isScrolled }: { isScrolled: boolean }) {
 }
 
 export const CartLink = () => {
-  const { cart } = useCart();
+  const { cartId, cartCountTotal } = useCart();
+  const { status } = useSession();
+
+  if (status === "loading") {
+    return <span className="text-sm text-gray-400">Loading cart…</span>;
+  }
+
+  const hasServerCart = status === "authenticated" && Boolean(cartId);
 
   return <Link 
-    href={
-      !cart.userId ? '/store' : `/store/cart/${cart.id}`
-    } 
+    href={hasServerCart ? `/store/cart/${cartId}` : "/store"}
     className="dark:text-indigo-400! text-sm"
   >
-    View Cart &rarr;
+    {hasServerCart && cartCountTotal > 0 ? "View Cart" : "Browse Store"} &rarr;
     </Link>;
 }

@@ -6,11 +6,13 @@ import { ReactNode } from "react";
 export default async function MainLayout({ children }: { children: ReactNode }){
   return (
     <CartProvider>
-      <NavigationApp />
-      <main className="w-full items-center justify-center">
-        { children }
-      </main>
-      <Footer />
+      <div className="public-app min-h-screen">
+        <NavigationApp />
+        <main className="w-full items-center justify-center pt-16 md:pt-0">
+          { children }
+        </main>
+        <Footer />
+      </div>
     </CartProvider>
   );
 }

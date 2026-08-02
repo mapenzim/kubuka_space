@@ -17,6 +17,7 @@ import { CalendarRangeIcon, CaseUpperIcon, FactoryIcon, FileEditIcon, PlusIcon }
 import { userWorkExperience } from "@/app/actions/authActions.server";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 type WorkExperience = {
   workExperience?: {
@@ -30,28 +31,32 @@ type WorkExperience = {
 }
 
 export const AddUpdateExperiencePopover = ({ workExperience }: WorkExperience) => {
-  const { data: session, update } = useSession();
+  const { data: session } = useSession();
   const user = session?.user;
   const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const userExperienceAction = async (formData: FormData) => {
-    await userWorkExperience(formData);
-    await update({
-      workExperience: {
-        jobTitle: formData.get("jobTitle") as string,
-        companyName: formData.get("companyName") as string,
-        dates: formData.get("dates") as string,
-        duties: formData.get("duties") as string,
-        userId: formData.get("userId") as string
-      },
-    });
+    const result = await userWorkExperience(formData);
+
+    if ("error" in result) {
+      setSubmitError(result.error.message);
+      return;
+    }
+
+    setSubmitError(null);
+    setOpen(false);
     router.refresh();
   }
 
   const statement = (word: string) => `${word} work experience`;
 
   return (
-    <Popover.Root>
+    <Popover.Root open={open} onOpenChange={(nextOpen) => {
+      setOpen(nextOpen);
+      if (nextOpen) setSubmitError(null);
+    }}>
       <Popover.Trigger>
         <Button variant="ghost" size={"1"}>
           <Tooltip content={!workExperience ? statement("Add") : statement("Update")}>
@@ -72,14 +77,13 @@ export const AddUpdateExperiencePopover = ({ workExperience }: WorkExperience) =
           />
           <Box flexGrow={"1"}>
             <Form.Root action={userExperienceAction}>
-              <input type="hidden" name="userId" value={user?.id} />
-              <input type="hidden" name="workExperienceUserId" value={ workExperience?.userId } />
               <Flex direction={"column"} gapY={"3"} gap={"3"} mb={"3"} >
                 <TextField.Root 
                   placeholder="Job Title" 
                   size={"1"}
                   name="jobTitle"
                   defaultValue={workExperience?.jobTitle}
+                  required
                 >
                   <TextField.Slot>
                     <CaseUpperIcon height={"16"} width={"16"} />
@@ -90,6 +94,7 @@ export const AddUpdateExperiencePopover = ({ workExperience }: WorkExperience) =
                   size={"1"}
                   name="companyName"
                   defaultValue={workExperience?.companyName}
+                  required
                 >
                   <TextField.Slot>
                     <FactoryIcon height={"16"} width={"16"} />
@@ -100,6 +105,7 @@ export const AddUpdateExperiencePopover = ({ workExperience }: WorkExperience) =
                   size={"1"}
                   name="dates"
                   defaultValue={workExperience?.dates}
+                  required
                 >
                   <TextField.Slot>
                     <CalendarRangeIcon height={"16"} width={"16"} />
@@ -111,12 +117,18 @@ export const AddUpdateExperiencePopover = ({ workExperience }: WorkExperience) =
                 placeholder="Duties" 
                 style={{ height: 120 }} 
                 defaultValue={workExperience?.duties}
+                required
               />
+              {submitError && (
+                <Text size="1" color="red" mt="2">
+                  {submitError}
+                </Text>
+              )}
               <Flex gap={"3"} mt={"3"} justify={"between"} >
                 <Flex align={"center"} gap={"2"} asChild>
                   <Text as="label" size="2">
                     <Checkbox />
-                    <Text asChild>Terms and conditions apply.</Text>
+                    <Text>Terms and conditions apply.</Text>
                   </Text>
                 </Flex>
 

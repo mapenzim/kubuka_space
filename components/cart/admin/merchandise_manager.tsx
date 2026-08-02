@@ -55,18 +55,22 @@ export default function MerchandiseManager() {
 
   async function save() {
     try {
+      const isEditing = mode === "edit";
+      if (isEditing && !editingId) {
+        throw new Error("No product selected for editing.");
+      }
       const input = { title: form.title, body: form.body, price: Number(form.price), stockQuantity: Number(form.stockQuantity), categoryId: form.categoryId || undefined };
-      const product = editingId
-        ? await updateMerchandise({ ...input, id: editingId })
+      const product = isEditing
+        ? await updateMerchandise({ ...input, id: editingId! })
         : await createMerchandise(input);
 
-      setProducts((current) => editingId
+      setProducts((current) => isEditing
               ? current.map((item) => item.id === editingId ? product as Product : item)
         : [product as Product, ...current]);
       setForm(emptyForm);
       setEditingId(null);
       closeDialog();
-      toast.success(editingId ? "Product updated." : "Product created.");
+      toast.success(isEditing ? "Product updated." : "Product created.");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Unable to save product.");
     }

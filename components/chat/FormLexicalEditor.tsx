@@ -13,7 +13,7 @@ import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
 import { $getRoot } from "lexical";
 
 const theme = {
-  paragraph: "mb-2 text-gray-900 dark:text-zinc-300",
+  paragraph: "mb-2 text-zinc-800 dark:text-zinc-100",
 };
 
 function onError(error: Error) {
@@ -85,12 +85,14 @@ export default function FormLexicalEditor({
           border-zinc-300
           bg-white
           p-3
+          text-zinc-800
           text-sm
           transition-colors
           focus-within:ring-2
           focus-within:ring-indigo-500
           dark:border-zinc-700
-          dark:bg-zinc-900
+          dark:bg-zinc-800
+          dark:text-zinc-100
           ${
             disabled
               ? "opacity-60 pointer-events-none"
@@ -110,7 +112,7 @@ export default function FormLexicalEditor({
                 flex-1
                 outline-none
                 text-zinc-800
-                dark:text-zinc-300
+                dark:text-zinc-100
               "
             />
           }
@@ -122,6 +124,7 @@ export default function FormLexicalEditor({
                 left-3
                 top-3
                 text-zinc-400
+                dark:text-zinc-500
               "
             >
               {placeholder}

@@ -21,7 +21,7 @@ export default function ChatHeader({
     <Flex
       align="center"
       gap="3"
-      className="border-b px-4 pb-1"
+      className="border-b border-zinc-200 px-4 py-3 dark:border-zinc-800"
     >
       <Avatar
         radius="full"
@@ -31,19 +31,19 @@ export default function ChatHeader({
       />
 
       <Box className="flex-1">
-        <Text weight="bold">
+        <Text weight="bold" className="text-zinc-900 dark:text-zinc-100">
           {thread.sender}
         </Text>
         <Flex align='start'>
           <Text
             size="1"
-            color="gray"
+            className="text-zinc-500 dark:text-zinc-400"
           >
             {thread.email}
           </Text>
 
           {lastSeen && (
-            <Text size="1" color="gray">
+            <Text size="1" className="text-zinc-500 dark:text-zinc-400">
               • Last seen {formatLastSeen(lastSeen)}
             </Text>
           )}
@@ -60,6 +60,7 @@ export default function ChatHeader({
                 ? "green"
                 : "orange"
             }
+            className="dark:text-zinc-300"
           >
             {connected
               ? "Connected"
@@ -73,6 +74,7 @@ export default function ChatHeader({
                 ? "green"
                 : "gray"
             }
+            className="dark:text-zinc-400"
           >
             •{" "}
             {online
@@ -84,6 +86,7 @@ export default function ChatHeader({
             <Text
               size="1"
               color="blue"
+              className="dark:text-sky-300"
             >
               • An admin is typing …
             </Text>

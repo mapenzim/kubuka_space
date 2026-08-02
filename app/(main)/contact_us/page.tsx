@@ -40,7 +40,7 @@ export default function ContactUsPage() {
       px="4"
       mt={{ initial: "2", md: "8" }}
       pb="8"
-      className="dark:bg-zinc-950"
+      className="min-h-[calc(100vh-4rem)] bg-zinc-50 text-zinc-900 transition-colors dark:bg-zinc-950 dark:text-zinc-100"
     >
       <Section size="4">
         <Grid
@@ -56,14 +56,21 @@ export default function ContactUsPage() {
             direction="column"
             gap="6"
             pl={{ initial: "0", md: "6" }}
+            className="text-zinc-900 dark:text-zinc-100"
           >
             <Box>
-              <Heading as="h3" size="5" mb="3">
+              <Heading as="h3" size="5" mb="3" className="text-zinc-900 dark:text-zinc-100">
                 Contact Information
               </Heading>
               <Flex direction="column" gap="3">
-                <Text size="3">+263 (0) 77 715 1673</Text>
-                <Link href="mailto:mudimbam@outlook.com" size="3">
+                <Text size="3" className="text-zinc-700 dark:text-zinc-300">
+                  +263 (0) 77 715 1673
+                </Text>
+                <Link
+                  href="mailto:mudimbam@outlook.com"
+                  size="3"
+                  className="text-indigo-700 dark:text-indigo-300"
+                >
                   mudimbam@outlook.com
                 </Link>
               </Flex>
@@ -72,10 +79,10 @@ export default function ContactUsPage() {
             <Separator size="4" />
 
             <Box>
-              <Heading as="h3" size="5" mb="3">
+              <Heading as="h3" size="5" mb="3" className="text-zinc-900 dark:text-zinc-100">
                 Our Office
               </Heading>
-              <Text size="3">
+              <Text size="3" className="text-zinc-700 dark:text-zinc-300">
                 Kubuka Headquarters
                 <br />
                 Kasambabezi
