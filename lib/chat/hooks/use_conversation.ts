@@ -16,6 +16,7 @@ import {
 import {
   StartConversationRequest,
 } from "@/lib/api/types";
+import { toast } from "sonner";
 
 import { chatStores } from "../stores";
 
@@ -50,6 +51,18 @@ export function useConversation() {
           threadId,
         );
 
+      if (!response.data) {
+        conversation.clear();
+        if (session.threadId === threadId) {
+          session.setThreadId(undefined);
+        }
+        return null;
+      }
+
+      if (session.threadId !== threadId) {
+        return null;
+      }
+
       conversation.setThread(
         response.data,
       );
@@ -62,6 +75,11 @@ export function useConversation() {
     },
     [conversation, session],
   );
+
+  const setExistingThread = useCallback((existingThread: NonNullable<typeof thread>) => {
+    conversation.setThread(existingThread);
+    session.setThreadId(existingThread.id);
+  }, [conversation, session]);
 
   //--------------------------------------------------------
   // Start Conversation
@@ -85,13 +103,23 @@ export function useConversation() {
           );
         }
 
-        const response =
-          await conversationClient.startConversation(
-            {
-              ...request,
-              conversationKey,
-            },
+        let response;
+        try {
+          response =
+            await conversationClient.startConversation(
+              {
+                ...request,
+                conversationKey,
+              },
+            );
+        } catch (error) {
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : "Unable to start the conversation.",
           );
+          throw error;
+        }
 
         conversation.setThread(
           response.data,
@@ -100,6 +128,8 @@ export function useConversation() {
         session.setThreadId(
           response.data.id,
         );
+
+        toast.success("Message sent.");
 
         return response.data;
       },
@@ -121,16 +151,26 @@ export function useConversation() {
           );
         }
 
-        await conversationClient.sendMessage(
-          {
-            threadId:
-              session.threadId,
-            senderRole: session.role,
-            content,
-            conversationKey:
-              session.conversationKey,
-          },
-        );
+        try {
+          await conversationClient.sendMessage(
+            {
+              threadId:
+                session.threadId,
+              senderRole: session.role,
+              content,
+              conversationKey:
+                session.conversationKey,
+            },
+          );
+          toast.success("Message sent.");
+        } catch (error) {
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : "Unable to send the message.",
+          );
+          throw error;
+        }
       },
       [session],
     );
@@ -148,6 +188,29 @@ export function useConversation() {
       session,
     ]);
 
+  const deleteConversation = useCallback(async () => {
+    if (!session.threadId) {
+      return;
+    }
+
+    try {
+      await conversationClient.delete({
+        threadId: session.threadId,
+      });
+      toast.success("Conversation deleted.");
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Unable to delete the conversation.",
+      );
+      throw error;
+    }
+
+    conversation.clear();
+    session.reset();
+  }, [conversation, session]);
+
   //--------------------------------------------------------
   // Public API
   //--------------------------------------------------------
@@ -157,8 +220,10 @@ export function useConversation() {
     messages,
 
     loadThread,
+    setExistingThread,
     startConversation,
     sendMessage,
     clear,
+    deleteConversation,
   };
 }

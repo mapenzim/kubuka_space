@@ -8,6 +8,7 @@ interface StartConversationRequest {
   email: string;
   content: string;
   conversationKey?: string;
+  senderRole?: "user" | "admin" | "bot";
 }
 
 export class StartConversation {
@@ -34,7 +35,7 @@ export class StartConversation {
         )) {
           const message = await this.chatService.sendMessage(
             existingThread.id,
-            "user",
+            request.senderRole ?? "user",
             request.content,
           );
 
@@ -57,6 +58,7 @@ export class StartConversation {
         request.email,
         request.content,
         conversationKeyHash,
+        request.senderRole ?? "user",
       );
 
     return ThreadDetailsDtoMapper.toDto(thread);

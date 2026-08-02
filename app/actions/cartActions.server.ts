@@ -9,8 +9,17 @@ import { revalidatePath } from "next/dist/server/web/spec-extension/revalidate";
 async function getOrCreateCart(tx: Prisma.TransactionClient | PrismaClient, userId: string, cartId?: string) {
   // 1. Try to find by cartId first (if provided)
   if (cartId) {
-    let cart = await tx.cart.findUnique({ where: { id: cartId } });
+    let cart = await tx.cart.findFirst({
+      where: { id: cartId, userId },
+    });
     if (cart) return cart;
+
+    const existingCart = await tx.cart.findUnique({
+      where: { id: cartId },
+    });
+    if (existingCart) {
+      throw new Error("Cart does not belong to this user.");
+    }
 
     // If not found, create new cart with that ID
     cart = await tx.cart.create({
@@ -49,17 +58,57 @@ export async function batchAddToCartAction({
   cartId,
   items,
 }: BatchAddInput): Promise<{ success?: boolean; error?: { message: string } }> {
-  
-  if (!userId) return { error: { message: "User ID is required" } };
+  const session = await auth();
+  const authenticatedUserId = session?.user?.id;
+
+  if (!authenticatedUserId) {
+    return { error: { message: "Sign in to add items to a server cart." } };
+  }
+
+  if (userId !== authenticatedUserId) {
+    return { error: { message: "Invalid cart owner." } };
+  }
+
   if (!items || items.length === 0) return { error: { message: "No items provided" } };
 
   try {
     await prisma.$transaction(async (tx) => {
-      const cart = await getOrCreateCart(tx, userId, cartId);
+      const user = await tx.user.findUnique({
+        where: { id: authenticatedUserId },
+        select: { id: true },
+      });
 
-      await Promise.all(
-        items.map((item) =>
-          tx.cartItem.upsert({
+      if (!user) {
+        throw new Error("Your account could not be found. Please sign in again.");
+      }
+
+      const cart = await getOrCreateCart(tx, user.id, cartId);
+
+      for (const item of items) {
+        if (!Number.isInteger(item.quantity) || item.quantity < 1) {
+          throw new Error("Invalid quantity.");
+        }
+
+        const merchandise = await tx.merchandise.findFirst({
+          where: { id: item.merchandiseId, deletedAt: null },
+        });
+
+        if (!merchandise) throw new Error("Product is unavailable.");
+
+        const existing = await tx.cartItem.findUnique({
+          where: {
+            cartId_merchandiseId: {
+              cartId: cart.id,
+              merchandiseId: item.merchandiseId,
+            },
+          },
+        });
+
+        if ((existing?.quantity ?? 0) + item.quantity > merchandise.stockQuantity) {
+          throw new Error(`Only ${merchandise.stockQuantity} item(s) available.`);
+        }
+
+        await tx.cartItem.upsert({
             where: {
               cartId_merchandiseId: {
                 cartId: cart.id,
@@ -75,9 +124,8 @@ export async function batchAddToCartAction({
               merchandiseId: item.merchandiseId,
               quantity: item.quantity,
             },
-          })
-        )
-      );
+          });
+      }
     });
 
     return { success: true };
@@ -165,11 +213,16 @@ export async function checkoutAction(formData: FormData) {
   if (!session?.user) throw new Error("Unauthorized");
 
   const userId = session.user.id;
+  const requestedCartId = String(formData.get("cartId") ?? "");
 
-  const fullName = formData.get("fullName") as string;
-  const street = formData.get("street") as string;
-  const city = formData.get("city") as string;
-  const country = formData.get("country") as string;
+  const fullName = String(formData.get("fullName") ?? "").trim();
+  const street = String(formData.get("street") ?? "").trim();
+  const city = String(formData.get("city") ?? "").trim();
+  const country = String(formData.get("country") ?? "").trim();
+
+  if (!requestedCartId || !fullName || !street || !city || !country) {
+    throw new Error("Complete all checkout fields.");
+  }
 
   return await prisma.$transaction(async (tx) => {
     const cart = await tx.cart.findFirst({
@@ -181,8 +234,31 @@ export async function checkoutAction(formData: FormData) {
       },
     });
 
-    if (!cart || cart.cartItems.length === 0) {
+    if (!cart || cart.id !== requestedCartId) {
+      throw new Error("Cart not found.");
+    }
+
+    if (cart.cartItems.length === 0) {
       throw new Error("Cart is empty");
+    }
+
+    if (cart.cartItems.some((item) => item.merchandise.deletedAt)) {
+      throw new Error("One or more products are no longer available.");
+    }
+
+    for (const item of cart.cartItems) {
+      const updated = await tx.merchandise.updateMany({
+        where: {
+          id: item.merchandiseId,
+          deletedAt: null,
+          stockQuantity: { gte: item.quantity },
+        },
+        data: { stockQuantity: { decrement: item.quantity } },
+      });
+
+      if (updated.count !== 1) {
+        throw new Error(`Insufficient stock for ${item.merchandise.title}.`);
+      }
     }
 
     // 🧮 Calculate total server-side (NEVER trust client)

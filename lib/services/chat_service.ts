@@ -33,6 +33,7 @@ export class ChatService {
     email: string,
     content: string,
     conversationKeyHash: string,
+    senderRole: SenderRole = "user",
   ): Promise<Thread> {
 
     const thread =
@@ -45,7 +46,7 @@ export class ChatService {
     const message =
       await this.messageService.create({
         threadId: thread.id,
-        senderRole: "user",
+        senderRole,
         content,
       });
 

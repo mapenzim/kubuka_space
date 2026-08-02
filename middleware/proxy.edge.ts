@@ -35,6 +35,13 @@ export async function proxy(req: NextRequest) {
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
   const { pathname } = req.nextUrl;
 
+  if (pathname.startsWith("/admin")) {
+    if (!token || isExpired(token)) return redirect(req, "/authentication");
+    if (token.role !== "ADMIN" && token.role !== "SUPERUSER") {
+      return redirect(req, "/");
+    }
+  }
+
   // Protect dashboard routes
   if (pathname.startsWith("/dashboard")) {
     if (!token || isExpired(token)) {
@@ -81,5 +88,5 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/authentication/:path*", "/profile/:path*"],
+  matcher: ["/admin/:path*", "/dashboard/:path*", "/authentication/:path*", "/profile/:path*"],
 };

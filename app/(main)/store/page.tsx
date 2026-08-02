@@ -4,12 +4,16 @@ import prisma from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 
 const Page = async () => {
-  const merchandise = await prisma.merchandise.findMany();
-  const minifiedMerchandise = merchandise.map((item: { id: any; title: any; body: any; price: any; }) => ({
+  const merchandise = await prisma.merchandise.findMany({
+    where: { deletedAt: null },
+    orderBy: { createdAt: "desc" },
+  });
+  const minifiedMerchandise = merchandise.map((item) => ({
     id: item.id,
     title: item.title,
     body: item.body,
     price: Number(item.price),
+    stockQuantity: item.stockQuantity,
   }));
 
   // Wrap CartStatus in a client component that listens for updates

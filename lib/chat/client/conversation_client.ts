@@ -88,16 +88,9 @@ class ConversationHttpClient
     request: DeleteConversationRequest,
   ): Promise<void> {
     const response = await fetch(
-      "/api/chat/delete",
+      `/api/chat/thread/${request.threadId}/delete`,
       {
         method: "DELETE",
-        headers: {
-          "Content-Type":
-            "application/json",
-        },
-        body: JSON.stringify(
-          request,
-        ),
       },
     );
 

@@ -3,16 +3,27 @@ import { Flex, Box, Heading, Text, Separator, Button } from "@radix-ui/themes";
 import { AppWindowMacIcon, LayoutPanelTopIcon, MailPlus, NotebookTabs, StickyNote, Users } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { isAdminRole } from "@/lib/roles";
+import { cookies } from "next/headers";
+import AdminReauthGate from "@/components/admin/AdminReauthGate";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
 
   // Extract user role for potential use in conditional rendering
-  const userRole = session?.user?.role || "USER"; // Default to "User" if role is not defined
+  const userRole = session?.user?.role;
 
-  if (!session || (userRole !== "ADMIN" && userRole !== "SUPERUSER")) {
-    // Redirect to home, or to a specific '/unauthorized' page
-    redirect("/"); 
+  if (!session?.user) {
+    redirect("/authentication?callbackUrl=/admin");
+  }
+
+  if (!isAdminRole(userRole)) {
+    redirect("/");
+  }
+
+  const adminReauth = (await cookies()).get("kubuka_admin_reauth")?.value;
+  if (adminReauth !== "confirmed") {
+    return <AdminReauthGate />;
   }
 
   // Reusable Nav Item Component

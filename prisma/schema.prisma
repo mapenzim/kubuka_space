@@ -217,8 +217,9 @@ model Merchandise {
   title     String          @unique
   price     Decimal         @db.Decimal(10, 2)
   body      String
+  stockQuantity Int          @default(0)
   createdAt DateTime        @default(now()) 
-  deletedAt DateTime?       @default(now()) 
+  deletedAt DateTime?
 
   
   cartItems CartItem[]

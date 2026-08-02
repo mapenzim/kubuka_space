@@ -138,8 +138,10 @@ async function main() {
       update: {
         price: mc.price,
         body: mc.body,
+        stockQuantity: 100,
+        deletedAt: null,
       },
-      create: mc,
+      create: { ...mc, stockQuantity: 100 },
     });
   }
 

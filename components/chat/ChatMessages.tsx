@@ -86,7 +86,7 @@ export default function ChatMessages({
                   >
                     <Text
                       size="2"
-                      className="whitespace-pre-wrap break-words leading-tight"
+                      className="whitespace-pre-wrap break-word"
                     >
                       {message.content}
                     </Text>

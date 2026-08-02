@@ -12,27 +12,29 @@ import {
   IconButton,
   Avatar
 } from "@radix-ui/themes";
+import MerchandiseManager from "@/components/cart/admin/merchandise_manager";
+import { getOrdersForAdmin } from "@/app/actions/merchandiseActions.server";
+import OrderActions from "@/components/cart/admin/order_actions";
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
+import { isAdminRole } from "@/lib/roles";
 
-// 1. Mock Data covering all your requested categories
-const MOCK_ORDERS = [
-  { id: "ORD-001", customer: "Tariro Ndlovu", email: "tariro@example.com", items: "2x Kubuka T-Shirt", total: "$45.00", date: "2026-05-03T10:30:00Z", status: "cart" },
-  { id: "ORD-002", customer: "Jane Doe", email: "jane@example.com", items: "1x Premium E-Book", total: "$15.00", date: "2026-05-02T14:15:00Z", status: "checkout" },
-  { id: "ORD-003", customer: "John Smith", email: "john@example.com", items: "1x Annual Subscription", total: "$120.00", date: "2026-05-01T09:00:00Z", status: "paid" },
-  { id: "ORD-004", customer: "Alice Johnson", email: "alice@example.com", items: "3x Sticker Pack", total: "$12.00", date: "2026-05-01T16:45:00Z", status: "paid" },
-  { id: "ORD-005", customer: "Bob Martin", email: "bob@example.com", items: "1x Digital Course", total: "$99.00", date: "2026-04-28T11:20:00Z", status: "fulfilled" },
-  { id: "ORD-006", customer: "Sarah Connor", email: "sarah@example.com", items: "1x Hoodie (Black, M)", total: "$65.00", date: "2026-04-25T08:10:00Z", status: "fulfilled" },
-];
-
-// Helper to format dates
 const formatDate = (dateString: string) => {
   return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(dateString));
 };
 
-export default function AdminStorePage() {
+export default async function AdminStorePage() {
+  // Check again at the page boundary so logout cannot start the data query
+  // while the admin layout is transitioning away.
+  const session = await auth();
+  if (!session?.user) redirect("/authentication?callbackUrl=/admin/store");
+  if (!isAdminRole(session.user.role)) redirect("/");
+
+  const orders = await getOrdersForAdmin();
   
   // 2. Reusable Table Component to prevent repeating code across 4 tabs
   const OrderTable = ({ filterStatus }: { filterStatus: string }) => {
-    const filteredOrders = MOCK_ORDERS.filter(order => order.status === filterStatus);
+    const filteredOrders = orders.filter(order => order.status === filterStatus);
 
     if (filteredOrders.length === 0) {
       return (
@@ -74,7 +76,7 @@ export default function AdminStorePage() {
                   </Table.Cell>
 
                   <Table.Cell><Text size="2" color="gray">{order.items}</Text></Table.Cell>
-                  <Table.Cell><Text size="2" weight="bold">{order.total}</Text></Table.Cell>
+                  <Table.Cell><Text size="2" weight="bold">${order.total.toFixed(2)}</Text></Table.Cell>
                   <Table.Cell><Text size="2" color="gray">{formatDate(order.date)}</Text></Table.Cell>
 
                   <Table.Cell align="right">
@@ -87,12 +89,10 @@ export default function AdminStorePage() {
                         </IconButton>
                       </DropdownMenu.Trigger>
                       <DropdownMenu.Content size="2" align="end">
-                        <DropdownMenu.Item>View Details</DropdownMenu.Item>
-                        <DropdownMenu.Item>Message Customer</DropdownMenu.Item>
+                        <OrderActions order={order} />
                         <DropdownMenu.Separator />
                         {filterStatus === "paid" && <DropdownMenu.Item color="grass">Mark as Shipped</DropdownMenu.Item>}
                         {filterStatus === "cart" && <DropdownMenu.Item>Send Recovery Email</DropdownMenu.Item>}
-                        <DropdownMenu.Item color="ruby">Cancel Order</DropdownMenu.Item>
                       </DropdownMenu.Content>
                     </DropdownMenu.Root>
                   </Table.Cell>
@@ -127,48 +127,41 @@ export default function AdminStorePage() {
         </Flex>
       </Flex>
 
+      <MerchandiseManager />
+
       {/* 3. The Tabs Component managing the categories */}
       <Tabs.Root defaultValue="paid" className="bg-sky-900 rounded-b-md">
         <Tabs.List size="2">
-          {/* Active Carts */}
-          <Tabs.Trigger value="cart" style={{ cursor: "pointer", color: "var(--gray-2)" }}>
-            In Cart
-            <Badge size="1" color="orange" variant="solid" radius="full" className="ml-2">1</Badge>
+          <Tabs.Trigger value="pending" style={{ cursor: "pointer", color: "var(--gray-2)" }}>
+            Pending
+            <Badge size="1" color="orange" variant="solid" radius="full" className="ml-2">{orders.filter((order) => order.status === "pending").length}</Badge>
           </Tabs.Trigger>
-          
-          {/* Pending Checkout */}
-          <Tabs.Trigger value="checkout" style={{ cursor: "pointer", color: "var(--gray-2)" }}>
-            Checkout Queue
-            <Badge size="1" color="amber" variant="solid" radius="full" className="ml-2">1</Badge>
-          </Tabs.Trigger>
-          
-          {/* Paid / Processing */}
           <Tabs.Trigger value="paid" style={{ cursor: "pointer", color: "var(--gray-2)" }}>
-            Paid (Action Required)
-            <Badge size="1" color="indigo" variant="solid" radius="full" className="ml-2">2</Badge>
+            Paid
+            <Badge size="1" color="indigo" variant="solid" radius="full" className="ml-2">{orders.filter((order) => order.status === "paid").length}</Badge>
           </Tabs.Trigger>
-          
-          {/* Shipped / Downloaded */}
-          <Tabs.Trigger value="fulfilled" style={{ cursor: "pointer", color: "var(--gray-2)" }}>
-            Shipped / Downloaded
+          <Tabs.Trigger value="shipped" style={{ cursor: "pointer", color: "var(--gray-2)" }}>
+            Shipped
+          </Tabs.Trigger>
+          <Tabs.Trigger value="delivered" style={{ cursor: "pointer", color: "var(--gray-2)" }}>
+            Delivered
           </Tabs.Trigger>
         </Tabs.List>
 
         <Box pt="2">
-          <Tabs.Content value="cart">
-            <OrderTable filterStatus="cart" />
-          </Tabs.Content>
-          
-          <Tabs.Content value="checkout">
-            <OrderTable filterStatus="checkout" />
+          <Tabs.Content value="pending">
+            <OrderTable filterStatus="pending" />
           </Tabs.Content>
           
           <Tabs.Content value="paid">
             <OrderTable filterStatus="paid" />
           </Tabs.Content>
           
-          <Tabs.Content value="fulfilled">
-            <OrderTable filterStatus="fulfilled" />
+          <Tabs.Content value="shipped">
+            <OrderTable filterStatus="shipped" />
+          </Tabs.Content>
+          <Tabs.Content value="delivered">
+            <OrderTable filterStatus="delivered" />
           </Tabs.Content>
         </Box>
       </Tabs.Root>

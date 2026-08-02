@@ -5,7 +5,7 @@ import {
   useTransition,
 } from "react";
 
-import { Card } from "@radix-ui/themes";
+import { Card, Text } from "@radix-ui/themes";
 
 import ChatHeader from "./ChatHeader";
 import ChatMessages from "./ChatMessages";
@@ -14,6 +14,8 @@ import StartConversationForm from "./StartConversation";
 
 import { useChat } from "@/lib/chat/hooks/use_chat";
 import { UserChatProps } from "@/lib/type_interface";
+import { getUserSupportThreads } from "@/app/actions/messageThreadAction";
+import { useEffect } from "react";
 
 export default function UserChat({
   user,
@@ -26,6 +28,7 @@ export default function UserChat({
   const [guestEmail, setGuestEmail] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [loadingHistory, setLoadingHistory] = useState(Boolean(user));
 
   //--------------------------------------------------
   // Chat
@@ -35,11 +38,33 @@ export default function UserChat({
     connected,
     startConversation,
     sendMessage,
+    setExistingThread,
     startTyping,
     stopTyping,
     isTyping,
     getParticipantByRole,
   } = useChat();
+
+  useEffect(() => {
+    let active = true;
+    if (!user?.email) {
+      setLoadingHistory(false);
+      return () => { active = false; };
+    }
+
+    void getUserSupportThreads().then((result) => {
+      if (!active) return;
+      const existing = [...result.threads]
+        .filter(Boolean)
+        .sort((a, b) => new Date(b!.updatedAt).getTime() - new Date(a!.updatedAt).getTime())[0];
+      if (existing) setExistingThread(existing);
+      setLoadingHistory(false);
+    }).catch(() => {
+      if (active) setLoadingHistory(false);
+    });
+
+    return () => { active = false; };
+  }, [user?.email, setExistingThread]);
 
   //--------------------------------------------------
   // Start Conversation
@@ -111,6 +136,10 @@ export default function UserChat({
   //--------------------------------------------------
   // No Conversation
   //--------------------------------------------------
+  if (loadingHistory) {
+    return <Card variant="ghost" className="flex h-160 items-center justify-center"><Text color="gray">Loading your conversation…</Text></Card>;
+  }
+
   if (!thread) {
     return (
       <StartConversationForm

@@ -66,6 +66,13 @@ export function useInbox() {
     );
   }, []);
 
+  const removeThread = useCallback((threadId: string) => {
+    conversationStore.remove(threadId);
+    setSelectedThreadId((current) =>
+      current === threadId ? null : current,
+    );
+  }, []);
+
   useEffect(() => {
     loadInbox();
   }, [loadInbox]);
@@ -148,5 +155,6 @@ export function useInbox() {
     setSelectedThreadId,
 
     refresh: loadInbox,
+    removeThread,
   };
 }

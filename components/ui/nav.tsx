@@ -7,6 +7,8 @@ import CartStatus from "../cart/components/cart_status";
 import { DropdownMenu, IconButton } from "@radix-ui/themes";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { isAdminRole } from "@/lib/roles";
+import SupportNotificationLink from "@/components/chat/SupportNotificationLink";
 
 const NavigationApp = () => {
   const navLinks = [
@@ -31,8 +33,8 @@ const NavigationApp = () => {
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
 
-  const handleSignout = () => {
-    signOut({ redirect: false });
+  const handleSignout = async () => {
+    await signOut({ redirect: false });
     localStorage.removeItem("tempCart");
     localStorage.removeItem("tempCartId");
     router.refresh();
@@ -84,6 +86,7 @@ const NavigationApp = () => {
       {/* Right side: Cart + Login */} 
       <div className="hidden md:flex justify-center items-center gap-6">
         <CartStatus isScrolled={isScrolled} />
+        {user && <SupportNotificationLink />}
         {user 
           ? (	
               <DropdownMenu.Root>
@@ -96,7 +99,10 @@ const NavigationApp = () => {
                   <DropdownMenu.Item shortcut="⌘ E" onSelect={() => router.push("/profile")}>
                     Profile
                   </DropdownMenu.Item>
-                  {(user.role === "ADMIN" || user.role === "SUPERUSER") && (
+                  <DropdownMenu.Item shortcut="⌘ S" onSelect={() => router.push("/contact_us")}>
+                    Contact support
+                  </DropdownMenu.Item>
+                  {isAdminRole(user.role) && (
                     <DropdownMenu.Item shortcut="⌘ D" asChild>
                       <Link href="/admin" className="w-full" referrerPolicy="no-referrer" target="_blank">
                         Admin Dashboard
@@ -192,7 +198,13 @@ const NavigationApp = () => {
 
         {user 
           ? (
-              <SignoutButton close={() => setIsMenuOpen(false)} />
+              <>
+                <div className="flex items-center gap-2" onClick={() => setIsMenuOpen(false)}>
+                  <SupportNotificationLink />
+                  <span>Contact support</span>
+                </div>
+                <SignoutButton close={() => setIsMenuOpen(false)} />
+              </>
             ) : (
               <Link
                 href="/authentication"

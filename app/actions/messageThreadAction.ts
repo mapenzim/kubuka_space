@@ -1,6 +1,7 @@
 "use server";
 
 import { chatGateway } from "@/lib/container/runtime";
+import { auth } from "@/auth";
 
 // =====================================================
 // THREADS
@@ -46,6 +47,44 @@ export async function getThreads() {
   }
 }
 
+export async function getUserSupportThreads() {
+  const session = await auth();
+  const email = session?.user?.email?.toLowerCase();
+  if (!email) return { success: false, threads: [], unreadCount: 0 };
+
+  const summaries = await chatGateway.getThreads();
+  const own = summaries.filter((thread) => thread.email.toLowerCase() === email);
+  const threads = await Promise.all(own.map(async (summary) => {
+    const details = await chatGateway.getThread(summary.id);
+    return details;
+  }));
+  const validThreads = threads.filter(Boolean);
+  const unreadCount = validThreads.reduce(
+    (count, thread) => count + (thread?.messages.filter((message) => message.senderRole === "admin" && !message.readAt).length ?? 0),
+    0,
+  );
+  return { success: true, threads: validThreads, unreadCount };
+}
+
+export async function getUserSupportUnreadCount() {
+  const result = await getUserSupportThreads();
+  return result.success ? result.unreadCount : 0;
+}
+
+export async function markUserSupportRead() {
+  const session = await auth();
+  const email = session?.user?.email?.toLowerCase();
+  if (!email) return { success: false };
+
+  const result = await getUserSupportThreads();
+  await Promise.all(
+    result.threads
+      .filter((thread) => thread && thread.messages.some((message) => message.senderRole === "admin" && !message.readAt))
+      .map((thread) => thread ? chatGateway.markThreadRead(thread.id) : Promise.resolve()),
+  );
+  return { success: true };
+}
+
 // =====================================================
 // THREAD STATE
 // =====================================================
@@ -53,6 +92,11 @@ export async function getThreads() {
 export async function markThreadRead(
   threadId: string,
 ) {
+  const session = await auth();
+  const thread = await chatGateway.getThread(threadId);
+  if (!session?.user?.email || thread?.email.toLowerCase() !== session.user.email.toLowerCase()) {
+    return { success: false };
+  }
   try {
     await chatGateway.markThreadRead(threadId);
 

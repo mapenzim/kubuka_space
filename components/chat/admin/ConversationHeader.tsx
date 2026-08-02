@@ -6,9 +6,11 @@ import {
   IconButton,
   Text,
 } from "@radix-ui/themes";
+import { useState } from "react";
 
 import PresenceIndicator from "./PresenceIndicator";
 import { ThreadDetailsDto } from "@/lib/dto/thread_details_dto";
+import RemoveItemAlert from "@/components/modals/admin-delete-alert";
 
 interface ConversationHeaderProps {
   thread: ThreadDetailsDto;
@@ -16,6 +18,7 @@ interface ConversationHeaderProps {
   online: boolean;
   typing: boolean;
   lastSeen?: string;
+  onDelete?: () => void;
 }
 
 export default function ConversationHeader({
@@ -24,14 +27,18 @@ export default function ConversationHeader({
   online,
   typing,
   lastSeen,
+  onDelete,
 }: ConversationHeaderProps) {
+  const [deleteOpen, setDeleteOpen] = useState(false);
+
   return (
-    <Flex
-      justify="between"
-      align="center"
-      className="border-b p-4"
-    >
-      <Flex gap="3" align="center">
+    <>
+      <Flex
+        justify="between"
+        align="center"
+        className="border-b p-4"
+      >
+        <Flex gap="3" align="center">
         <Avatar
           radius="full"
           fallback={thread.sender
@@ -58,14 +65,30 @@ export default function ConversationHeader({
             lastSeen={lastSeen}
           />
         </Flex>
+        </Flex>
+
+        <IconButton
+          variant="ghost"
+          aria-label="Delete conversation"
+          color="red"
+          onClick={() => setDeleteOpen(true)}
+        >
+          ×
+        </IconButton>
       </Flex>
 
-      <IconButton
-        variant="ghost"
-        aria-label="Conversation options"
-      >
-        ⋮
-      </IconButton>
-    </Flex>
+      <RemoveItemAlert
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title="Delete conversation?"
+        description="This conversation and all of its messages will be permanently deleted."
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={async () => {
+          await onDelete?.();
+          setDeleteOpen(false);
+        }}
+      />
+    </>
   );
 }

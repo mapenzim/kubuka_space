@@ -144,6 +144,7 @@ export class ChatGateway {
     email: string,
     content: string,
     conversationKey?: string,
+    senderRole: SenderRole = "user",
   ): Promise<ThreadDetailsDto> {
     const thread =
       await this.startConversationUseCase.execute({
@@ -151,6 +152,7 @@ export class ChatGateway {
         email,
         content,
         conversationKey,
+        senderRole,
       });
 
     const summary =

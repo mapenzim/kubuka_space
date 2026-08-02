@@ -5,6 +5,9 @@ import { compare } from "bcryptjs";
 
 export const dynamic = "force-dynamic";
 
+// Keep sign-in sessions finite. Users must authenticate again after 30 days.
+const SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;
+
 async function getPrisma() {
   const { default: prisma } = await import("@/lib/prisma");
   return prisma;
@@ -130,7 +133,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
   },
 
-  session: { strategy: "jwt" },
+  session: {
+    strategy: "jwt",
+    maxAge: SESSION_MAX_AGE_SECONDS,
+    updateAge: 24 * 60 * 60,
+  },
+  jwt: {
+    maxAge: SESSION_MAX_AGE_SECONDS,
+  },
   pages: { signIn: "/authentication" },
   secret: process.env.NEXTAUTH_SECRET,
 });

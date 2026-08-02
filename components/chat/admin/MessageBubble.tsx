@@ -32,7 +32,7 @@ export default function MessageBubble({
       align={mine ? "end" : "start"}
     >
       <Box
-        className={`max-w-[75%] rounded-2xl px-4 py-2 ${
+        className={`max-w-[75%] rounded-2xl px-4 py-1 ${
           mine
             ? "bg-indigo-600 text-white"
             : "border"
@@ -40,7 +40,7 @@ export default function MessageBubble({
       >
         <Text
           size="2"
-          className="whitespace-pre-wrap break-words leading-tight"
+          className="whitespace-pre-wrap break-word"
         >
           {message.content}
         </Text>

@@ -1,5 +1,6 @@
 "use server";
 
+import { auth } from "@/auth";
 import { Paynow } from "paynow";
 import prisma from "@/lib/prisma";
 
@@ -12,13 +13,22 @@ paynow.resultUrl = process.env.PAYNOW_RESULT_URL!;
 paynow.returnUrl = process.env.PAYNOW_RETURN_URL!;
 
 export async function initiateEcoCashPayment(orderId: string) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+
   return prisma.$transaction(async (tx) => {
     const order = await tx.order.findUnique({
       where: { id: orderId },
       include: { payments: true },
     });
 
-    if (!order) throw new Error("Order not found");
+    if (!order || order.userId !== session.user.id) {
+      throw new Error("Order not found");
+    }
+
+    if (order.paymentStatus === "PAID") {
+      throw new Error("This order has already been paid.");
+    }
 
     // ✅ Prevent duplicate payment attempts
     const existing = order.payments.find(
@@ -31,7 +41,7 @@ export async function initiateEcoCashPayment(orderId: string) {
 
     const payment = paynow.createPayment(
       `Order ${order.id}`,
-      "customer@email.com"
+      session.user.email ?? "customer@example.com"
     );
 
     payment.add("Order Payment", Number(order.totalAmount));
@@ -62,8 +72,17 @@ export async function initiateEcoCashPayment(orderId: string) {
 }
 
 export async function verifyPayment(orderId: string) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+
+  const order = await prisma.order.findFirst({
+    where: { id: orderId, userId: session.user.id },
+  });
+  if (!order) throw new Error("Order not found");
+
   const payment = await prisma.payment.findFirst({
     where: { orderId },
+    orderBy: { createdAt: "desc" },
   });
 
   if (!payment?.transactionRef) return false;
@@ -146,6 +165,14 @@ export async function retryPayment(orderId: string) {
  * @returns 
  */
 export async function getPaymentStatus(orderId: string) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+
+  const order = await prisma.order.findFirst({
+    where: { id: orderId, userId: session.user.id },
+  });
+  if (!order) throw new Error("Order not found");
+
   const payment = await prisma.payment.findFirst({
     where: { orderId },
     orderBy: { createdAt: "desc" },

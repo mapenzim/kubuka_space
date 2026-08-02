@@ -1,6 +1,7 @@
 "use client";
 
 import { checkoutAction } from "@/app/actions/cartActions.server";
+import { initiateEcoCashPayment } from "@/app/actions/paynow.server";
 import * as Dialog from "@radix-ui/react-dialog";
 import * as Form from "@radix-ui/react-form";
 import * as Label from "@radix-ui/react-label";
@@ -23,8 +24,13 @@ export default function CheckoutForm({
 
     if (result.success) {
       setOrderId(result.orderId);
-      setLoading(false);
-      setOpen(true);
+      try {
+        const payment = await initiateEcoCashPayment(result.orderId);
+        window.location.assign(payment.redirectUrl);
+      } catch (error) {
+        setLoading(false);
+        setOpen(true);
+      }
     } else {
       setLoading(false);
     }

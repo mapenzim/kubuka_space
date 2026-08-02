@@ -10,6 +10,7 @@ type Props = {
     title: string;
     body: string;
     price: number;
+    stockQuantity: number;
   };
 };
 
@@ -32,12 +33,13 @@ export default function MerchandiseCard({ item }: Props) {
         ))}
       </ul>
       <p className="text-sm font-semibold">${item.price.toFixed(2)}</p>
+      <p className="text-xs">{item.stockQuantity > 0 ? `${item.stockQuantity} available` : "Out of stock"}</p>
         <button
-          disabled={cartLoading}
+          disabled={cartLoading || item.stockQuantity < 1}
           className="mt-2 bg-indigo-600 hover:bg-indigo-700 text-white dark:bg-zinc-900 dark:text-slate-500 dark:hover:bg-zinc-800 dark:hover:text-gray-400 px-3 py-1 rounded-md flex items-center justify-center gap-2 cursor-pointer"
           onClick={() => addItem(item)}
         >
-          {cartLoading ? <Loading /> : "Add to Cart"}
+          {cartLoading ? <Loading /> : item.stockQuantity > 0 ? "Add to Cart" : "Out of Stock"}
         </button>
     </div>
   );

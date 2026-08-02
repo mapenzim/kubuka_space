@@ -33,6 +33,7 @@ export default function AdminMessenger() {
     unreadCount,
     selectedThreadId,
     setSelectedThreadId,
+    removeThread,
   } = useInbox();
 
   //--------------------------------------------------
@@ -52,6 +53,7 @@ export default function AdminMessenger() {
     sendMessage,
     startTyping,
     stopTyping,
+    deleteConversation,
   } = useChat();
 
   //--------------------------------------------------
@@ -93,6 +95,15 @@ export default function AdminMessenger() {
     startTransition(async () => {
       await sendMessage(content);
     });
+  }
+
+  async function deleteCurrentConversation() {
+    if (!selectedThreadId) {
+      return;
+    }
+
+    await deleteConversation();
+    removeThread(selectedThreadId);
   }
 
   //--------------------------------------------------
@@ -185,6 +196,7 @@ export default function AdminMessenger() {
                 online={getParticipantByRole("user")?.online ?? false}
                 typing={isTyping("user")}
                 lastSeen={getParticipantByRole("user")?.lastSeen}
+                onDelete={deleteCurrentConversation}
               /> 
 
               <ConversationMessages

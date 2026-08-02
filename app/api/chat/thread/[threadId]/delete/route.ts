@@ -1,5 +1,5 @@
 import { apiHandler } from "@/lib/api/api_handler";
-import { deleteThreadUseCase } from "@/lib/container/runtime";
+import { chatGateway } from "@/lib/container/runtime";
 
 interface RouteProps {
   params: Promise<{
@@ -15,6 +15,6 @@ export async function DELETE(
     await params;
 
   return apiHandler(() =>
-    deleteThreadUseCase.execute(threadId),
+    chatGateway.deleteThread(threadId),
   );
 }

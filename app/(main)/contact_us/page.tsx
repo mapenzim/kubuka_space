@@ -13,9 +13,17 @@ import {
   Text,
 } from "@radix-ui/themes";
 import UserChat from "@/components/chat/UserChat";
+import { markUserSupportRead } from "@/app/actions/messageThreadAction";
+import { useEffect } from "react";
 
 export default function ContactUsPage() {
   const { data: session } = useSession();
+
+  useEffect(() => {
+    if (session?.user) {
+      void markUserSupportRead();
+    }
+  }, [session?.user]);
 
   // Extract user safely for cleaner rendering
   const userData = session?.user
