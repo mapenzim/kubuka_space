@@ -18,6 +18,7 @@ export async function getMerchandiseForAdmin() {
   await requireAdmin();
   const products = await prisma.merchandise.findMany({
     orderBy: { createdAt: "desc" },
+    include: { category: true },
   });
 
   return products.map((product) => ({
@@ -32,6 +33,7 @@ export async function createMerchandise(input: {
   body: string;
   price: number;
   stockQuantity?: number;
+  categoryId?: string;
 }) {
   await requireAdmin();
   const title = input.title.trim();
@@ -48,7 +50,9 @@ export async function createMerchandise(input: {
       body,
       price: input.price,
       stockQuantity: input.stockQuantity ?? 0,
+      categoryId: input.categoryId || null,
     },
+    include: { category: true },
   });
 
   revalidatePath("/store");
@@ -62,6 +66,7 @@ export async function updateMerchandise(input: {
   body: string;
   price: number;
   stockQuantity?: number;
+  categoryId?: string;
 }) {
   await requireAdmin();
   const title = input.title.trim();
@@ -78,12 +83,31 @@ export async function updateMerchandise(input: {
       body,
       price: input.price,
       ...(input.stockQuantity === undefined ? {} : { stockQuantity: input.stockQuantity }),
+      categoryId: input.categoryId || null,
     },
+    include: { category: true },
   });
 
   revalidatePath("/store");
   revalidatePath("/admin/store");
   return { ...product, price: Number(product.price) };
+}
+
+export async function getProductCategories() {
+  await requireAdmin();
+  return prisma.productCategory.findMany({
+    where: { isActive: true },
+    orderBy: [{ parentId: "asc" }, { name: "asc" }],
+  });
+}
+
+export async function createProductCategory(input: { name: string; description?: string; parentId?: string }) {
+  await requireAdmin();
+  const name = input.name.trim();
+  if (!name) throw new Error("Category name is required.");
+  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  if (!slug) throw new Error("Category name must contain letters or numbers.");
+  return prisma.productCategory.create({ data: { id: ulidId(), name, slug, description: input.description?.trim() || null, parentId: input.parentId || null } });
 }
 
 export async function setMerchandiseDeleted(id: string, deleted: boolean) {

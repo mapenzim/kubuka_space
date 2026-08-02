@@ -218,15 +218,36 @@ model Merchandise {
   price     Decimal         @db.Decimal(10, 2)
   body      String
   stockQuantity Int          @default(0)
+  categoryId String?         @db.Char(26)
   createdAt DateTime        @default(now()) 
   deletedAt DateTime?
 
+  category ProductCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   
   cartItems CartItem[]
 
   wishlists Wishlist[]
 
   orderItems OrderItem[]
+
+  @@index([categoryId])
+}
+
+model ProductCategory {
+  id          String           @id @db.Char(26)
+  name        String           @unique
+  slug        String           @unique
+  description String?
+  isActive    Boolean          @default(true)
+  parentId    String?          @db.Char(26)
+  parent      ProductCategory? @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children    ProductCategory[] @relation("CategoryHierarchy")
+  products    Merchandise[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt @default(now())
+
+  @@index([parentId])
+  @@index([isActive])
 }
 
 model Order {

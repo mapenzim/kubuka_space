@@ -18,6 +18,8 @@ import OrderActions from "@/components/cart/admin/order_actions";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { isAdminRole } from "@/lib/roles";
+import { StoreProductProvider } from "@/components/cart/admin/store_product_context";
+import StoreProductAddButton from "@/components/cart/admin/store_product_add_button";
 
 const formatDate = (dateString: string) => {
   return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(dateString));
@@ -106,6 +108,7 @@ export default async function AdminStorePage() {
   };
 
   return (
+    <StoreProductProvider>
     <Flex direction="column" gap="5">
       
       {/* Page Header */}
@@ -118,12 +121,7 @@ export default async function AdminStorePage() {
           <Button size="3" variant="soft" color="gray" style={{ cursor: "pointer" }}>
             Export CSV
           </Button>
-          <Button size="3" color="indigo" style={{ cursor: "pointer" }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
-              <path d="M5 12h14"/><path d="M12 5v14"/>
-            </svg>
-            Add Product
-          </Button>
+          <StoreProductAddButton />
         </Flex>
       </Flex>
 
@@ -167,5 +165,6 @@ export default async function AdminStorePage() {
       </Tabs.Root>
 
     </Flex>
+    </StoreProductProvider>
   );
 }

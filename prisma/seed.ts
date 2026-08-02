@@ -100,6 +100,22 @@ async function main() {
 
 
   // --- 4️⃣ Merchandise ---
+  const productCategories = [
+    { name: "Electrical", slug: "electrical" },
+    { name: "Fruits & Vegetables", slug: "fruits-vegetables" },
+    { name: "Timber", slug: "timber" },
+    { name: "Digital Services", slug: "digital-services" },
+  ];
+  for (const category of productCategories) {
+    await prisma.productCategory.upsert({
+      where: { slug: category.slug },
+      update: { name: category.name, isActive: true },
+      create: { id: ulid(), ...category },
+    });
+  }
+
+  const digitalServices = await prisma.productCategory.findUnique({ where: { slug: "digital-services" } });
+
   const offers = [
     "installation",
     "tutorial",
@@ -140,8 +156,9 @@ async function main() {
         body: mc.body,
         stockQuantity: 100,
         deletedAt: null,
+        categoryId: digitalServices?.id,
       },
-      create: { ...mc, stockQuantity: 100 },
+      create: { ...mc, stockQuantity: 100, categoryId: digitalServices?.id },
     });
   }
 
