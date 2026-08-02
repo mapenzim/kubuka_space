@@ -2,6 +2,7 @@
 
 import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
+import { serializeDecimal } from "@/lib/prisma";
 import { ulidId } from "@/lib/server-utils";
 import { Prisma, PrismaClient } from "@prisma/client";
 import { revalidatePath } from "next/dist/server/web/spec-extension/revalidate";
@@ -135,7 +136,9 @@ export async function batchAddToCartAction({
   }
 }
 
-export async function getCartMeta(userId: string) {
+export async function getCartMeta() {
+  const session = await auth();
+  const userId = session?.user?.id;
   if (!userId) return { distinctCount: 0, totalCount: 0, cartId: null };
 
   const cart = await prisma.cart.findFirst({
@@ -163,10 +166,35 @@ export async function getCartMeta(userId: string) {
   };
 }
 
+export async function getCurrentUserCart() {
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) return null;
+
+  const cart = await prisma.cart.findUnique({
+    where: { userId },
+    include: {
+      cartItems: {
+        include: {
+          merchandise: {
+            select: { id: true, title: true, body: true, price: true },
+          },
+        },
+      },
+    },
+  });
+
+  return cart ? serializeDecimal(cart) : null;
+}
+
 export async function getCartById(cartId: string) {
+  const session = await auth();
+  if (!session?.user?.id) return [];
+
   return await prisma.cart.findMany({
     where: {
       id: cartId,
+      userId: session.user.id,
     },
     include: {
       cartItems: {
@@ -186,7 +214,16 @@ export async function getCartById(cartId: string) {
 }
 
 export async function updateCartQuantity(itemId: string, quantity: number) {
-  if (quantity < 1) return;
+  const session = await auth();
+  if (!session?.user?.id || !Number.isInteger(quantity) || quantity < 1) return;
+
+  const item = await prisma.cartItem.findFirst({
+    where: { id: itemId, cart: { userId: session.user.id } },
+    include: { merchandise: true },
+  });
+  if (!item || item.merchandise.deletedAt || quantity > item.merchandise.stockQuantity) {
+    return { error: "Quantity exceeds available stock." };
+  }
 
   await prisma.cartItem.update({
     where: { id: itemId },
@@ -197,9 +234,14 @@ export async function updateCartQuantity(itemId: string, quantity: number) {
 }
 
 export async function deleteCartItem(itemId: string) {
-  
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Unauthorized" };
+
   try {
-    await prisma.cartItem.delete({ where: { id: itemId } });
+    const deleted = await prisma.cartItem.deleteMany({
+      where: { id: itemId, cart: { userId: session.user.id } },
+    });
+    if (deleted.count !== 1) return { error: "Cart item not found" };
     // trigger revalidation so UI updates
     revalidatePath("/cart");
     return { success: true };
@@ -321,9 +363,12 @@ interface CartItem {
 }
 
 export async function getAllOrdersByUser(userId: string) {
+  const session = await auth();
+  if (!session?.user?.id) return [];
+
   return await prisma.order.findMany({
     where: {
-      userId
+      userId: session.user.id,
     },
     include: {
       items: true

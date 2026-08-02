@@ -1,11 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useEffect } from "react";
-
 export default function Error({ error, reset }: any) {
-  useEffect(() => {
-  },[error]);
 
   return (
     <section className="flex w-full h-screen items-center justify-center">

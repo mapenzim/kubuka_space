@@ -3,6 +3,7 @@
 import {
   batchAddToCartAction,
   deleteCartItem,
+  getCurrentUserCart,
   getCartMeta,
   updateCartQuantity,
 } from "@/app/actions/cartActions.server";
@@ -69,7 +70,7 @@ export function CartProvider({
 
   // wrap your server fetch in debounce
   const updateCountsFromServer = debounceQuery(async (userId: string) => {
-    const { distinctCount, totalCount, cartId } = await getCartMeta(userId);
+    const { distinctCount, totalCount, cartId } = await getCartMeta();
     setCountDistinct(distinctCount);
     setCountTotal(totalCount);
     setCartId(cartId);
@@ -79,6 +80,23 @@ export function CartProvider({
     🧠 HYDRATE GUEST CART
   ---------------------------- */
   useEffect(() => {
+    if (session?.user?.id) {
+      setHydrated(false);
+      void getCurrentUserCart().then((serverCart) => {
+        if (serverCart) {
+          setCart(serverCart as Cart);
+          setCartId(serverCart.id);
+          updateCounts(serverCart.cartItems);
+        } else {
+          setCart(emptyCart);
+          setCartId(null);
+          updateCounts([]);
+        }
+        setHydrated(true);
+      });
+      return;
+    }
+
     if (initialCart) {
       setHydrated(true);
       setCartId(initialCart.id ?? null);
@@ -118,7 +136,7 @@ export function CartProvider({
     setCart(hydratedCart);
     setHydrated(true);
     setCartId(id);
-  }, [initialCart]);
+  }, [initialCart, session?.user?.id]);
 
   /* ---------------------------
     💾 PERSIST GUEST CART

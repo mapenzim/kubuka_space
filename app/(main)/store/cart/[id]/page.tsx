@@ -5,7 +5,6 @@ import { LinkIcon } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Container, Box, Flex, Heading, Text, Separator } from "@radix-ui/themes";
-import { toast } from "sonner";
 import { auth } from "@/auth";
 
 export const dynamic = "force-dynamic";
@@ -54,9 +53,14 @@ function toNumber(value: unknown): number {
 export default async function Page({ params }: PageProps) {
   const cartId = validateCartId((await params)?.id);
 
+  const session = await auth();
+  if (!session?.user) {
+    redirect(`/authentication?callbackUrl=/store/cart/${cartId}`);
+  }
+
   // 1. Fetch Cart
   const cart = await prisma.cart.findFirst({
-    where: { id: cartId },
+    where: { id: cartId, userId: session.user.id },
     include: {
       cartItems: {
         include: { merchandise: true },
@@ -65,9 +69,6 @@ export default async function Page({ params }: PageProps) {
   });
 
   if (!cart) notFound();
-
-  // 2. Validate Cart Ownership (Redirect if it belongs to someone else)
-  const session = await auth(); // Placeholder
 
   const safeCart = serializeDecimal(cart);
   const items: CartItem[] = safeCart.cartItems;
@@ -91,13 +92,6 @@ export default async function Page({ params }: PageProps) {
   
   const discount = DISCOUNT;
   const total = Math.max(0, inclusiveSubtotal - discount);
-
-  if (cart.userId && cart.userId !== session?.user?.id) {
-    // toast.error("You do not have access to this cart. Redirecting to store...");
-    redirect("/store");
-  }
-
-  if (!session?.user) { return redirect('/store'); }
 
   return (
     // Added min-h-screen and explicit dark mode backgrounds to the root wrapper
