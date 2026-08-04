@@ -17,20 +17,20 @@ export const DeleteUserExperience = ({ id }: {  id: string }) => {
     router.refresh();
   }
 
-  return (
-    <Tooltip content="Delete data">
-      <RemoveAlert
-        trigger={
-          <button className="text-orange-600 hover:text-red-600">
+  return ( 
+    <RemoveAlert
+      trigger={
+        <button className="text-orange-600 hover:text-red-600">
+          <Tooltip content="Delete this entry">
             <ArchiveIcon className="w-4 h-auto" />
-          </button>
-        }
-        title="Delete"
-        description="Caution! This action cannot be undone."
-        confirmText="Permanent Delete"
-        cancelText="Cancel"
-        onConfirm={() => handleDelete(id)}
-      />
-    </Tooltip>
+          </Tooltip>
+        </button>
+      }
+      title="Delete"
+      description="Caution! This action cannot be undone."
+      confirmText="Permanent Delete"
+      cancelText="Cancel"
+      onConfirm={() => handleDelete(id)}
+    />
   );
 }

@@ -15,7 +15,6 @@ import {
 import * as Form from "@radix-ui/react-form";
 import { CalendarRangeIcon, CaseUpperIcon, FactoryIcon, FileEditIcon, PlusIcon } from "lucide-react";
 import { userWorkExperience } from "@/app/actions/authActions.server";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -26,13 +25,10 @@ type WorkExperience = {
     companyName: string;
     dates: string;
     duties: string;
-    userId: string;
   };
 }
 
 export const AddUpdateExperiencePopover = ({ workExperience }: WorkExperience) => {
-  const { data: session } = useSession();
-  const user = session?.user;
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);

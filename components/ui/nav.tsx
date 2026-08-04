@@ -14,15 +14,11 @@ const NavigationApp = () => {
   const navLinks = [
     { name: "Products", path: "/store" },
     { name: "Blog", path: "/posts" },
-    { name: "Pricing", path: "/pricing" },
-    { name: "Docs", path: "/docs" },
     { name: "Contact Us", path: "/contact_us" },
   ];
   const mobileNavLinks = [
     { name: "Products", path: "/store" },
     { name: "Blog", path: "/posts" },
-    { name: "Pricing", path: "/pricing" },
-    { name: "Docs", path: "/docs" },
   ];
 
   const { data: session } = useSession();
