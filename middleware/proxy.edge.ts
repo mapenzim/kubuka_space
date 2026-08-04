@@ -8,6 +8,8 @@ import { ulid } from "ulid";
 // const prisma = new PrismaClient().$extends(withAccelerate());
 export const dynamic = "force-dynamic";
 
+const authSecret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
+
 const prisma = new PrismaClient().$extends(withAccelerate());
 
 function redirect(req: NextRequest, path: string) {
@@ -32,7 +34,11 @@ async function getRolePermissions(roleName: string) {
 }
 
 export async function proxy(req: NextRequest) {
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  const token = await getToken({
+    req,
+    secret: authSecret,
+    secureCookie: process.env.NODE_ENV === "production" || req.nextUrl.protocol === "https:",
+  });
   const { pathname } = req.nextUrl;
 
   if (pathname.startsWith("/admin")) {
@@ -73,14 +79,18 @@ export async function proxy(req: NextRequest) {
     }
   }
 
+  if (pathname.startsWith("/profile") && (!token || isExpired(token))) {
+    return redirect(req, "/authentication");
+  }
+
   // Prevent logged-in users from accessing /authentication
   if (pathname.startsWith("/authentication") && token) {
     const redirectUrl =
-      token.role === "ADMIN"
-        ? "/dashboard"
+      token.role === "ADMIN" || token.role === "SUPERUSER"
+        ? "/admin"
         : token.role === "EDITOR"
-        ? "/dashboard/posts"
-        : "/dashboard";
+        ? "/admin/posts"
+        : "/";
     return redirect(req, redirectUrl);
   }
 

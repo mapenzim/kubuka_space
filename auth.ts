@@ -5,6 +5,8 @@ import { compare } from "bcryptjs";
 
 export const dynamic = "force-dynamic";
 
+const authSecret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
+
 // Keep sign-in sessions finite. Users must authenticate again after 30 days.
 const SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;
 
@@ -35,12 +37,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         const user = await prisma.user.findUnique({
           where: { email: String(credentials.email) },
-          include: { 
-            role: true, 
-            cartItems: true, 
-            bio: true, skills: true, 
-            social: true, 
-            workExperience: true
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            password: true,
+            role: { select: { name: true } },
           },
         });
 
@@ -58,77 +60,34 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           name: user.name || "Anonymous",
           email: user.email,
           role: user.role?.name ?? "USER",
-          roleId: user.roleId,
-          cartItems: user.cartItems,
-          'bio.id': String(user.bio?.id),
-          'bio.text': String(user.bio?.text),
-          'bio.userId': String(user.bio?.userId),
-          skills: user.skills,
-          social: user.social,
-          workExperience: user.workExperience
         };
       },
     }),
   ],
 
   callbacks: {
-    async jwt({ token, trigger, user, session }) {
-      const prisma = await getPrisma();
-
+    async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
         token.role = user.role;
-        token.cartItems = user.cartItems;
-        token.skills = user.skills;
-        token.social = user.social;
-        token.workExperience = user.workExperience;
-        token.bio = user.bio;
-      } else if (!token.role && !token.bio && !token.skills && !token.social && !token.workExperience && token.sub) {
-        const dbUser = await prisma.user.findUnique({
-          where: { id: token.sub },
-          include: { 
-            role: true, 
-            cartItems: true, 
-            bio: true, 
-            social: true, 
-            skills: true, 
-            workExperience: true
-          },
-        });
-
-        if (dbUser) {
-          token.role = dbUser.role?.name ?? "USER";
-          token.cartItems = dbUser.cartItems;
-          token.skills = dbUser.skills;
-          token.social = dbUser.social;
-          token.workExperience = dbUser.workExperience;
-          token.bio = dbUser.bio;
-        }
-
-        // 🔥 Handle manual session update
-        if (trigger === "update" && session?.bio) {
-          token.bio = {
-            ...(token.bio || {}),
-            ...session.bio,
-          };
-        }
+      } else if (!token.id && token.sub) {
+        token.id = token.sub;
       }
+
+      // Keep database relations out of the JWT. They make the production
+      // cookie unnecessarily large and can leave stale profile data behind.
+      delete token.cartItems;
+      delete token.skills;
+      delete token.social;
+      delete token.workExperience;
+      delete token.bio;
 
       return token;
     },
 
     async session({ session, token }) {
-      session.user.id = token.id as string;
+      session.user.id = (token.id ?? token.sub) as string;
       session.user.role = token.role as string;
-      session.user.cartItems = token.cartItems as string[];
-      session.user.social = token.social as string[];
-      session.user.skills = token.skills as string[];
-      session.user.workExperience = token.workExperience as string[];
-      session.user.bio = token.bio as {
-        id: string;
-          text: string;
-          userId: string;
-        };
       return session;
     },
   },
@@ -142,5 +101,5 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     maxAge: SESSION_MAX_AGE_SECONDS,
   },
   pages: { signIn: "/authentication" },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: authSecret,
 });

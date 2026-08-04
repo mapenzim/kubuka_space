@@ -364,11 +364,11 @@ interface CartItem {
 
 export async function getAllOrdersByUser(userId: string) {
   const session = await auth();
-  if (!session?.user?.id) return [];
+  if (!session?.user?.id || session.user.id !== userId) return [];
 
   return await prisma.order.findMany({
     where: {
-      userId: session.user.id,
+      userId,
     },
     include: {
       items: true

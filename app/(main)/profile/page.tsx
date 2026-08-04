@@ -1,4 +1,4 @@
-import { getUserAllExperience, getUserBio, getUserExperience, getUserSkills } from "@/app/actions/authActions.server";
+import { getUserAllExperience, getUserBio, getUserSkills } from "@/app/actions/authActions.server";
 import { getAllOrdersByUser } from "@/app/actions/cartActions.server";
 import { getOwnPosts } from "@/app/actions/postActions.server";
 import { auth } from "@/auth";
@@ -18,13 +18,18 @@ const ProfilePage = async () => {
 
   if (!session?.user) return redirect("/authentication");
 
-  const user = session?.user; 
-  
-  const bio = await getUserBio(String(user?.id));
-  const workExperience = await getUserAllExperience(user?.id as string);
-  const userSkill = await getUserSkills(user?.id as string);
-  const posts = await getOwnPosts(user?.id as string);
-  const orders = await getAllOrdersByUser(user?.id as string);
+  const user = session.user;
+  const userId = user.id;
+
+  if (!userId) return redirect("/authentication");
+
+  const [bio, workExperience, userSkill, posts, orders] = await Promise.all([
+    getUserBio(userId),
+    getUserAllExperience(userId),
+    getUserSkills(userId),
+    getOwnPosts(userId),
+    getAllOrdersByUser(userId),
+  ]);
   
   return (
     <Box className="min-h-screen bg-zinc-50 dark:bg-zinc-950 py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-200">

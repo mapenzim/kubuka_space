@@ -3,19 +3,29 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
+const authSecret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
+
 function isExpired(token: { exp?: number } | null) {
   return Boolean(token?.exp && Date.now() >= token.exp * 1000);
 }
 
 export async function middleware(req: NextRequest) {
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  const token = await getToken({
+    req,
+    secret: authSecret,
+    secureCookie: process.env.NODE_ENV === "production" || req.nextUrl.protocol === "https:",
+  });
   const { pathname } = req.nextUrl;
+
+  const redirectToAuthentication = () => {
+    const loginUrl = new URL("/authentication", req.url);
+    loginUrl.searchParams.set("callbackUrl", `${pathname}${req.nextUrl.search}`);
+    return NextResponse.redirect(loginUrl);
+  };
 
   if (pathname.startsWith("/admin")) {
     if (!token || isExpired(token)) {
-      const loginUrl = new URL("/authentication", req.url);
-      loginUrl.searchParams.set("callbackUrl", pathname);
-      return NextResponse.redirect(loginUrl);
+      return redirectToAuthentication();
     }
 
     if (token.role !== "ADMIN" && token.role !== "SUPERUSER") {
@@ -25,9 +35,7 @@ export async function middleware(req: NextRequest) {
 
   if (pathname.startsWith("/dashboard")) {
     if (!token || isExpired(token)) {
-      const loginUrl = new URL("/authentication", req.url);
-      loginUrl.searchParams.set("callbackUrl", req.url);
-      return NextResponse.redirect(loginUrl);
+      return redirectToAuthentication();
     }
 
     const userRole = token.role as string;
@@ -52,13 +60,17 @@ export async function middleware(req: NextRequest) {
     }
   }
 
+  if (pathname.startsWith("/profile") && (!token || isExpired(token))) {
+    return redirectToAuthentication();
+  }
+
   if (pathname.startsWith("/authentication") && token) {
     const redirectUrl =
-      token.role === "ADMIN"
-        ? "/dashboard"
+      token.role === "ADMIN" || token.role === "SUPERUSER"
+        ? "/admin"
         : token.role === "EDITOR"
-        ? "/dashboard/posts"
-        : "/dashboard";
+        ? "/admin/posts"
+        : "/";
     return NextResponse.redirect(new URL(redirectUrl, req.url));
   }
 

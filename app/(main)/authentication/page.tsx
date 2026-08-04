@@ -43,7 +43,7 @@ const AuthenticationPage = () => {
     if (status === "authenticated") {
       const role = (session?.user as any)?.role;
       const redirect =
-        role === "ADMIN" ? "/admin" :
+        role === "ADMIN" || role === "SUPERUSER" ? "/admin" :
         role === "EDITOR" ? "/admin/posts" :
         callbackUrl;
       router.replace(redirect);
