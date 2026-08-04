@@ -128,8 +128,8 @@ export default async function AdminStorePage() {
       <MerchandiseManager />
 
       {/* 3. The Tabs Component managing the categories */}
-      <Tabs.Root defaultValue="paid" className="bg-sky-900 rounded-b-md">
-        <Tabs.List size="2">
+      <Tabs.Root defaultValue="paid" className="admin-tabs rounded-b-md">
+        <Tabs.List size="2" className="overflow-x-auto">
           <Tabs.Trigger value="pending" style={{ cursor: "pointer", color: "var(--gray-2)" }}>
             Pending
             <Badge size="1" color="orange" variant="solid" radius="full" className="ml-2">{orders.filter((order) => order.status === "pending").length}</Badge>

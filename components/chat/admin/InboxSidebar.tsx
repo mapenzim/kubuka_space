@@ -98,7 +98,7 @@ export default function InboxSidebar({
   }, []);
 
   return (
-    <Card className="w-full md:w-80 flex flex-col overflow-hidden">
+    <Card className="flex h-full w-full flex-col overflow-hidden">
       <ScrollArea className="flex-1">
         {threads.length === 0 ? (
           <Flex

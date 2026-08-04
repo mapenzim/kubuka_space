@@ -2,17 +2,21 @@
 
 import {
   useEffect,
+  useState,
   useTransition,
 } from "react";
 
 import {
+  Button,
   Box,
   Card,
   Flex,
   Heading,
+  IconButton,
   Separator,
   Text,
 } from "@radix-ui/themes";
+import { ArrowLeft, Inbox } from "lucide-react";
 
 import { useChat } from "@/lib/chat/hooks/use_chat";
 import { useChatSession } from "@/lib/chat/session/use_chat_session";
@@ -60,6 +64,7 @@ export default function AdminMessenger() {
   // Pending
   //--------------------------------------------------
   const [isPending, startTransition] = useTransition();
+  const [mobileInboxOpen, setMobileInboxOpen] = useState(false);
 
   //--------------------------------------------------
   // Selected Thread
@@ -72,6 +77,12 @@ export default function AdminMessenger() {
     selectedThreadId,
     session,
   ]);
+
+  useEffect(() => {
+    if (selectedThreadId) {
+      setMobileInboxOpen(false);
+    }
+  }, [selectedThreadId]);
 
   //--------------------------------------------------
   // Load Conversation
@@ -125,10 +136,12 @@ export default function AdminMessenger() {
           Messages
         </Heading>
 
-        <Flex
-          justify="between"
-          align="center"
-        >
+          <Flex
+            justify="between"
+            align="center"
+            wrap="wrap"
+            gap="3"
+          >
           <Text
             size="2"
             color="gray"
@@ -140,7 +153,19 @@ export default function AdminMessenger() {
           <Flex
             gap="3"
             align="center"
+            wrap="wrap"
           >
+            <Button
+              type="button"
+              variant="soft"
+              color="gray"
+              className="md:hidden"
+              onClick={() => setMobileInboxOpen(true)}
+            >
+              <Inbox size={16} />
+              Conversations
+            </Button>
+
             <Text
               size="2"
               color={
@@ -165,19 +190,44 @@ export default function AdminMessenger() {
 
       <Flex
         gap="4"
-        className="flex-1 min-h-0 overflow-hidden"
+        className="min-h-0 flex-1 flex-col overflow-hidden md:flex-row"
       >
-        <InboxSidebar
-          threads={threads}
-          selectedThreadId={
-            selectedThreadId
-          }
-          onSelect={
-            setSelectedThreadId
-          }
-        />
+        <Box
+          className={`min-h-0 w-full shrink-0 md:flex md:w-80 ${
+            selectedThreadId && !mobileInboxOpen
+              ? "hidden"
+              : "flex"
+          }`}
+        >
+          <InboxSidebar
+            threads={threads}
+            selectedThreadId={
+              selectedThreadId
+            }
+            onSelect={
+              setSelectedThreadId
+            }
+          />
+        </Box>
 
-        <Card className="flex flex-1 flex-col overflow-hidden">
+        <Card
+          className={`min-w-0 flex-1 flex-col overflow-hidden ${
+            selectedThreadId && !mobileInboxOpen
+              ? "flex"
+              : "hidden md:flex"
+          }`}
+        >
+          {selectedThreadId && (
+            <Box className="border-b border-zinc-200 p-2 dark:border-zinc-800 md:hidden">
+              <IconButton
+                variant="ghost"
+                aria-label="Back to conversations"
+                onClick={() => setMobileInboxOpen(true)}
+              >
+                <ArrowLeft size={18} />
+              </IconButton>
+            </Box>
+          )}
           {!thread ? (
             <Flex
               align="center"

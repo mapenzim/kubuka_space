@@ -60,3 +60,106 @@ export async function getAllUsers() {
   });
   return users;
 }
+
+export async function getAdminDashboardData() {
+  await requireAdmin();
+
+  const [
+    totalUsers,
+    publishedPosts,
+    activeOrders,
+    paidRevenue,
+    recentOrders,
+    recentPosts,
+    pendingOrders,
+    draftPosts,
+  ] = await prisma.$transaction([
+    prisma.user.count(),
+    prisma.post.count({ where: { published: true, deletedAt: null } }),
+    prisma.order.count({ where: { archived: false, status: { not: "cancelled" } } }),
+    prisma.order.aggregate({
+      _sum: { totalAmount: true },
+      where: { archived: false, status: { not: "cancelled" }, paymentStatus: "PAID" },
+    }),
+    prisma.order.findMany({
+      where: { archived: false },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      select: {
+        id: true,
+        status: true,
+        totalAmount: true,
+        createdAt: true,
+        user: { select: { name: true, email: true } },
+      },
+    }),
+    prisma.post.findMany({
+      where: { deletedAt: null },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      select: { id: true, title: true, published: true, createdAt: true },
+    }),
+    prisma.order.findMany({
+      where: { archived: false, status: "pending" },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      select: {
+        id: true,
+        totalAmount: true,
+        createdAt: true,
+        user: { select: { name: true, email: true } },
+      },
+    }),
+    prisma.post.findMany({
+      where: { published: false, deletedAt: null },
+      orderBy: { updatedAt: "desc" },
+      take: 5,
+      select: { id: true, title: true, updatedAt: true },
+    }),
+  ]);
+
+  return {
+    stats: {
+      totalUsers,
+      publishedPosts,
+      activeOrders,
+      paidRevenue: Number(paidRevenue._sum.totalAmount ?? 0),
+    },
+    recentActivity: [
+      ...recentOrders.map((order) => ({
+        id: `order-${order.id}`,
+        label: `Order from ${order.user.name ?? order.user.email}`,
+        detail: `${order.status} · $${Number(order.totalAmount).toFixed(2)}`,
+        date: order.createdAt.toISOString(),
+        href: "/admin/store",
+      })),
+      ...recentPosts.map((post) => ({
+        id: `post-${post.id}`,
+        label: post.title,
+        detail: post.published ? "Published post" : "Draft post",
+        date: post.createdAt.toISOString(),
+        href: `/admin/posts/${post.id}/edit`,
+      })),
+    ]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 6),
+    pendingApprovals: [
+      ...pendingOrders.map((order) => ({
+        id: `order-${order.id}`,
+        label: `Order from ${order.user.name ?? order.user.email}`,
+        detail: `$${Number(order.totalAmount).toFixed(2)}`,
+        date: order.createdAt.toISOString(),
+        href: "/admin/store",
+      })),
+      ...draftPosts.map((post) => ({
+        id: `post-${post.id}`,
+        label: post.title,
+        detail: "Draft post",
+        date: post.updatedAt.toISOString(),
+        href: `/admin/posts/${post.id}/edit`,
+      })),
+    ]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 6),
+  };
+}

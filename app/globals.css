@@ -81,6 +81,99 @@ body:has(.public-app) {
 	color: var(--public-muted) !important;
 }
 
+/*
+ * Admin application theme
+ *
+ * The admin dashboard has its own toggle, independent from the public
+ * interface. Keeping the tokens scoped to .admin-app prevents the admin
+ * palette from leaking into the customer-facing pages.
+ */
+.admin-app {
+	height: 100dvh;
+	max-height: 100dvh;
+	overflow: hidden;
+	--admin-sidebar: #075985;
+	--admin-sidebar-foreground: #e0f2fe;
+	--admin-sidebar-muted: #bae6fd;
+	--admin-sidebar-hover: rgb(14 116 144 / 0.8);
+	--admin-sidebar-active: #4f46e5;
+	--admin-sidebar-active-foreground: #ffffff;
+	--admin-tabs: #075985;
+	--color-background: #f8fafc;
+	--color-panel: #ffffff;
+	--color-panel-solid: #ffffff;
+	--color-panel-translucent: rgb(255 255 255 / 0.9);
+	--color-surface: rgb(255 255 255 / 0.8);
+	--gray-1: #ffffff;
+	--gray-2: #fafafa;
+	--gray-3: #f4f4f5;
+	--gray-6: #d4d4d8;
+	--gray-a2: rgb(24 24 27 / 0.06);
+	--gray-a3: rgb(24 24 27 / 0.1);
+	--gray-a6: rgb(24 24 27 / 0.25);
+	--gray-10: #71717a;
+	--gray-11: #52525b;
+	--gray-12: #18181b;
+	color: var(--gray-12);
+	background-color: var(--color-background);
+}
+
+.admin-app.admin-dark {
+	--admin-sidebar: #111827;
+	--admin-sidebar-foreground: #e5e7eb;
+	--admin-sidebar-muted: #9ca3af;
+	--admin-sidebar-hover: rgb(55 65 81 / 0.75);
+	--admin-sidebar-active: #4f46e5;
+	--admin-sidebar-active-foreground: #ffffff;
+	--admin-tabs: #0f172a;
+	--color-background: #09090b;
+	--color-panel: #18181b;
+	--color-panel-solid: #18181b;
+	--color-panel-translucent: rgb(24 24 27 / 0.92);
+	--color-surface: rgb(255 255 255 / 0.06);
+	--gray-1: #18181b;
+	--gray-2: #27272a;
+	--gray-3: #3f3f46;
+	--gray-6: #52525b;
+	--gray-a2: rgb(255 255 255 / 0.06);
+	--gray-a3: rgb(255 255 255 / 0.1);
+	--gray-a6: rgb(255 255 255 / 0.22);
+	--gray-10: #a1a1aa;
+	--gray-11: #d4d4d8;
+	--gray-12: #f4f4f5;
+	color: var(--gray-12);
+	background-color: var(--color-background);
+}
+
+.admin-pattern {
+	background-color: var(--color-background);
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cg fill='%23141380' fill-opacity='0.22'%3E%3Cpath fill-rule='evenodd' d='M11 0l5 20H6l5-20zm42 31a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM0 72h40v4H0v-4zm0-8h31v4H0v-4zm20-16h20v4H20v-4zM0 56h40v4H0v-4zm63-25a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm10 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM53 41a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm10 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm10 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm-30 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm-28-8a5 5 0 0 0-10 0h10zm10 0a5 5 0 0 1-10 0h10zM56 5a5 5 0 0 0-10 0h10zm10 0a5 5 0 0 1-10 0h10zm-3 46a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm10 0a3 3 0 1 0 0-6 3 3 0 0 0 0 0 6zM21 0l5 20H16l5-20zm43 64v-4h-4v4h-4v4h4v4h4v-4h4v-4h-4zM36 13h4v4h-4v-4zm4 4h4v4h-4v-4zm-4 4h4v4h-4v-4zm8-8h4v4h-4v-4z'/%3E%3C/g%3E%3C/svg%3E");
+	background-size: 80px 80px;
+}
+
+.admin-app.admin-dark .admin-pattern {
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cg fill='%23a5b4fc' fill-opacity='0.16'%3E%3Cpath fill-rule='evenodd' d='M11 0l5 20H6l5-20zm42 31a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM0 72h40v4H0v-4zm0-8h31v4H0v-4zm20-16h20v4H20v-4zM0 56h40v4H0v-4zm63-25a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm10 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM53 41a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm10 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm10 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm-30 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm-28-8a5 5 0 0 0-10 0h10zm10 0a5 5 0 0 1-10 0h10zM56 5a5 5 0 0 0-10 0h10zm10 0a5 5 0 0 1-10 0h10zm-3 46a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm10 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM21 0l5 20H16l5-20zm43 64v-4h-4v4h-4v4h4v4h4v-4h4v-4h-4zM36 13h4v4h-4v-4zm4 4h4v4h-4v-4zm-4 4h4v4h-4v-4zm8-8h4v4h-4v-4z'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+.admin-tabs {
+	background-color: var(--admin-tabs);
+}
+
+.admin-app .rt-Card,
+.admin-app .rt-TableRoot {
+	color: var(--gray-12);
+}
+
+@media (max-width: 767px) {
+	.admin-app .rt-TableRoot {
+		min-width: 680px;
+	}
+}
+
+body.admin-menu-open {
+	overflow: hidden;
+}
+
 /* Radix surfaces use --color-panel, which is not switched by Tailwind's
  * dark variant. Keep the public support surface aligned with the page theme. */
 .contact-chat-surface {
