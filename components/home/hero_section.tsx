@@ -1,28 +1,24 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Fading from "../fade";
 
 const HeroSection = () => {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
   const [loadVideo, setLoadVideo] = useState(false);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setLoadVideo(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.25 }
-    );
+    const connection = (navigator as Navigator & {
+      connection?: { saveData?: boolean };
+    }).connection;
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
 
-    if (videoRef.current) {
-      observer.observe(videoRef.current);
-    }
+    if (prefersReducedMotion || connection?.saveData) return;
 
-    return () => observer.disconnect();
+    // Let the poster and the first paint win before downloading the decorative video.
+    const timer = window.setTimeout(() => setLoadVideo(true), 1200);
+    return () => window.clearTimeout(timer);
   }, []);
   
   return (
@@ -30,16 +26,16 @@ const HeroSection = () => {
       className="relative flex flex-col items-center justify-center w-full min-h-screen"
     >
       {/** Background */}
-      <div className="absolute w-full overflow-hidden">
+      <div className="absolute inset-0 overflow-hidden bg-indigo-500 dark:bg-gray-900">
         <video
-          ref={videoRef}
-          className="w-full h-screen object-cover"
+          className="h-full w-full object-cover"
           autoPlay={loadVideo}
           muted
           loop
           playsInline
           preload="none"
-          poster="/images/hero.jpg" // 🔥 add this image
+          poster="/images/hero.jpg"
+          aria-hidden="true"
         >
           {loadVideo && (
             <>

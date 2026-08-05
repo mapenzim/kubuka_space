@@ -21,5 +21,15 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     return <AdminReauthGate />;
   }
 
-  return <AdminShell>{children}</AdminShell>;
+  return (
+    <AdminShell
+      user={{
+        name: session.user.name,
+        email: session.user.email,
+        image: session.user.image,
+      }}
+    >
+      {children}
+    </AdminShell>
+  );
 }

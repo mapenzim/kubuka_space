@@ -7,6 +7,7 @@ import CartStatus from "../cart/components/cart_status";
 import { DropdownMenu, IconButton } from "@radix-ui/themes";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { isAdminRole } from "@/lib/roles";
 import SupportNotificationLink from "@/components/chat/SupportNotificationLink";
 
@@ -90,10 +91,13 @@ const NavigationApp = () => {
         aria-label="Prebuilt UI"
         className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/30 bg-white/90 p-1 md:h-12 md:w-12"
       >
-        <img
+        <Image
           src="/images/Kubuka_Logo.png"   // place your logo file in /public/logo.png
           alt="Kubuka Hub Logo"
-          className="object-contain"
+          width={48}
+          height={48}
+          sizes="48px"
+          className="h-full w-full object-contain"
         />
       </a>
 
@@ -207,7 +211,14 @@ const NavigationApp = () => {
       >
         <div className="mb-8 flex items-center justify-between">
           <Link href="/" onClick={closeMenu} className="flex items-center gap-3">
-            <img src="/images/Kubuka_Logo.png" alt="" className="size-10 rounded-full object-contain" />
+            <Image
+              src="/images/Kubuka_Logo.png"
+              alt=""
+              width={40}
+              height={40}
+              sizes="40px"
+              className="size-10 rounded-full object-contain"
+            />
             <span className="text-sm font-semibold tracking-wide">Kubuka Space</span>
           </Link>
           <button

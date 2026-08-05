@@ -27,6 +27,12 @@ body {
 	font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Defer layout/paint work for long public sections until they approach the viewport. */
+.content-deferred {
+	content-visibility: auto;
+	contain-intrinsic-size: auto 720px;
+}
+
 /*
  * Public application theme
  *

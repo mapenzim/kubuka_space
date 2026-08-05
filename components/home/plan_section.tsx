@@ -2,7 +2,7 @@ import Image from "next/image";
 
 const PlanSection = () => {
   return (
-    <section id="our-products" className="relative flex h-screen bg-indigo-300 dark:bg-slate-900 dark:border-b border-teal-400 w-full items-center justify-center">
+    <section id="our-products" className="content-deferred relative flex h-screen bg-indigo-300 dark:bg-slate-900 dark:border-b border-teal-400 w-full items-center justify-center">
       <div className="">
         <div className="flex flex-col-reverse md:flex-row items-center md:gap-y-5 gap-y-2">
           <div className="w-full md:w-4/12 mx-auto px-4">

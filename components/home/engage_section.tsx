@@ -1,7 +1,7 @@
 
 const EngageSection = () => {
   return (
-    <section id="what-we-offer" className="min-h-screen w-full py-16 relative block bg-gray-900">
+    <section id="what-we-offer" className="content-deferred min-h-screen w-full py-16 relative block bg-gray-900">
       <div
         className="bottom-auto top-0 left-0 right-0 w-full absolute pointer-events-none overflow-hidden -mt-20 border-none"
         style={{ height: "80px" }}

@@ -8,6 +8,10 @@ export interface ThreadRepository {
 
   findAll(): Promise<Thread[]>;
 
+  findAllByEmail(
+    email: string,
+  ): Promise<Thread[]>;
+
   getInbox(): Promise<ThreadSummary[]>;
 
   getInboxThread(

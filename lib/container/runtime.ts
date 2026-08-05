@@ -19,6 +19,7 @@ import { DisconnectUseCase } from "../use-cases/disconnect_use_case";
 import { GetThread } from "../use-cases/get_thread";
 import { GetThreadSummary } from "../use-cases/get_thread_summary";
 import { GetThreads } from "../use-cases/get_threads";
+import { GetThreadsByEmail } from "../use-cases/get_threads_by_email";
 import { HeartbeatUseCase } from "../use-cases/heartbeat_use_case";
 import { MarkThreadRead } from "../use-cases/mark_thread_read";
 import { SendMessage } from "../use-cases/send_message";
@@ -64,6 +65,9 @@ export const getThreadUseCase =
 export const getThreadsUseCase =
   new GetThreads(inboxService);
 
+export const getThreadsByEmailUseCase =
+  new GetThreadsByEmail(inboxService);
+
 export const conversationHub =
   new ConversationHub(
     notificationService,
@@ -108,6 +112,7 @@ export const chatGateway =
     getThreadUseCase,
     getThreadSummaryUseCase,
     getThreadsUseCase,
+    getThreadsByEmailUseCase,
     sendMessageUseCase,
     startConversationUseCase,
     markThreadReadUseCase,

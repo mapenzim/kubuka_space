@@ -1,6 +1,3 @@
-"use client";
-
-import { useSession } from "next-auth/react";
 import {
   Box,
   Container,
@@ -13,17 +10,11 @@ import {
   Text,
 } from "@radix-ui/themes";
 import UserChat from "@/components/chat/UserChat";
-import { markUserSupportRead } from "@/app/actions/messageThreadAction";
-import { useEffect } from "react";
+import { auth } from "@/auth";
+import ContactReadMarker from "@/components/chat/ContactReadMarker";
 
-export default function ContactUsPage() {
-  const { data: session } = useSession();
-
-  useEffect(() => {
-    if (session?.user) {
-      void markUserSupportRead();
-    }
-  }, [session?.user]);
+export default async function ContactUsPage() {
+  const session = await auth();
 
   // Extract user safely for cleaner rendering
   const userData = session?.user
@@ -42,6 +33,7 @@ export default function ContactUsPage() {
       pb="8"
       className="min-h-[calc(100vh-4rem)] bg-zinc-50 text-zinc-900 transition-colors dark:bg-zinc-950 dark:text-zinc-100"
     >
+      <ContactReadMarker userId={session?.user?.id ?? null} />
       <Section size="4">
         <Grid
           columns={{ initial: "1", md: "2" }}

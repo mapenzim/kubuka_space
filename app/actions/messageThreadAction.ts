@@ -52,13 +52,7 @@ export async function getUserSupportThreads() {
   const email = session?.user?.email?.toLowerCase();
   if (!email) return { success: false, threads: [], unreadCount: 0 };
 
-  const summaries = await chatGateway.getThreads();
-  const own = summaries.filter((thread) => thread.email.toLowerCase() === email);
-  const threads = await Promise.all(own.map(async (summary) => {
-    const details = await chatGateway.getThread(summary.id);
-    return details;
-  }));
-  const validThreads = threads.filter(Boolean);
+  const validThreads = await chatGateway.getThreadsByEmail(email);
   const unreadCount = validThreads.reduce(
     (count, thread) => count + (thread?.messages.filter((message) => message.senderRole === "admin" && !message.readAt).length ?? 0),
     0,

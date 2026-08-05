@@ -138,6 +138,30 @@ export class PrismaThreadRepository implements ThreadRepository {
     return threads.map(ThreadMapper.toDomain);
   }
 
+  async findAllByEmail(email: string): Promise<Thread[]> {
+    const threads = await this.prisma.thread.findMany({
+      where: {
+        archived: false,
+        email: {
+          equals: email,
+          mode: "insensitive",
+        },
+      },
+      include: {
+        messages: {
+          orderBy: {
+            timestamp: "asc",
+          },
+        },
+      },
+      orderBy: {
+        updatedAt: "desc",
+      },
+    });
+
+    return threads.map(ThreadMapper.toDomain);
+  }
+
   async create(data: Thread): Promise<Thread> {
     const thread = await this.prisma.thread.create({
       data: {

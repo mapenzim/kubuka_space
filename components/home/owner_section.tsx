@@ -81,7 +81,7 @@ const OwnerSection = () => {
   return (
     <section
       id="about-us"
-      className="min-h-screen w-full px-4 pt-16 pb-24 bg-linear-to-r from-fuchsia-50 via-indigo-100 to-purple-200 dark:from-gray-900 dark:via-slate-900 dark:to-zinc-900"
+      className="content-deferred min-h-screen w-full px-4 pt-16 pb-24 bg-linear-to-r from-fuchsia-50 via-indigo-100 to-purple-200 dark:from-gray-900 dark:via-slate-900 dark:to-zinc-900"
     >
       <div className="mx-auto px-4">
         <div className="flex flex-wrap justify-center text-center mb-16">

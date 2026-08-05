@@ -1,9 +1,6 @@
-"use client";
-
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Box, Card, Container, Flex, Heading, Text, Button } from "@radix-ui/themes";
-import { BookOpenIcon, ShoppingBagIcon, ArrowLeftIcon, FileQuestionIcon } from "lucide-react";
+import { Box, Card, Container, Flex, Heading, Text } from "@radix-ui/themes";
+import { BookOpenIcon, ShoppingBagIcon, FileQuestionIcon } from "lucide-react";
 
 const popular = [
   {
@@ -25,8 +22,6 @@ const popular = [
 ];
 
 export default function NotFound() {
-  const router = useRouter();
-
   return (
     <Box className="min-h-[80vh] flex flex-col items-center justify-center bg-zinc-50 dark:bg-zinc-950 px-4 pt-24 pb-32 transition-colors duration-200">
       <Container size="2">
@@ -76,16 +71,15 @@ export default function NotFound() {
             })}
           </Flex>
 
-          {/* 🔙 Back Button */}
+          {/* A normal link keeps the not-found route server-rendered and always usable. */}
           <Box mt="6" pt="6" className="border-t border-zinc-100 dark:border-zinc-800">
-            <Button 
-              size="4" 
+            <Link
+              href="/"
               className="w-full cursor-pointer bg-linear-to-r from-indigo-500 via-blue-500 to-purple-500 hover:from-indigo-600 hover:via-blue-600 hover:to-purple-600 text-white font-bold border-0 shadow-md hover:shadow-lg transition-all"
-              onClick={() => router.back()}
+              style={{ display: "flex", justifyContent: "center", alignItems: "center", padding: "0.75rem 1rem", borderRadius: "0.375rem" }}
             >
-              <ArrowLeftIcon className="w-4 h-4 mr-2" />
-              Go Back
-            </Button>
+              Return home
+            </Link>
           </Box>
         </Card>
 

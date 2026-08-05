@@ -2,11 +2,13 @@
 
 import {
   AppWindowMacIcon,
+  ChevronDown,
   LayoutPanelTopIcon,
   MailPlus,
   Menu,
   Moon,
   NotebookTabs,
+  LogOut,
   ShoppingCart,
   Sun,
   Users,
@@ -14,6 +16,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import {
   Button,
   Flex,
@@ -26,14 +30,32 @@ import { useEffect, useState } from "react";
 
 interface AdminShellProps {
   children: React.ReactNode;
+  user: {
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+  };
 }
 
-const navigation = [
+const overviewNavigation = [
   { href: "/admin", label: "Dashboard", icon: LayoutPanelTopIcon },
-  { href: "/admin/posts", label: "All Posts", icon: NotebookTabs },
-  { href: "/admin/users", label: "Users", icon: Users },
-  { href: "/admin/store", label: "Storefront", icon: ShoppingCart },
-  { href: "/admin/messages", label: "Messages", icon: MailPlus },
+];
+
+const navigationGroups = [
+  {
+    label: "Content",
+    items: [
+      { href: "/admin/posts", label: "All Posts", icon: NotebookTabs },
+      { href: "/admin/users", label: "Users", icon: Users },
+    ],
+  },
+  {
+    label: "Operations",
+    items: [
+      { href: "/admin/store", label: "Storefront", icon: ShoppingCart },
+      { href: "/admin/messages", label: "Messages", icon: MailPlus },
+    ],
+  },
 ];
 
 const pageTitles: Record<string, string> = {
@@ -50,7 +72,7 @@ function isActivePath(pathname: string, href: string) {
     : pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export default function AdminShell({ children }: AdminShellProps) {
+export default function AdminShell({ children, user }: AdminShellProps) {
   const pathname = usePathname();
   const pageTitle = pageTitles[pathname] ?? "Admin Dashboard";
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -92,11 +114,13 @@ export default function AdminShell({ children }: AdminShellProps) {
     <div className={`admin-app h-dvh max-h-dvh overflow-hidden ${darkMode ? "admin-dark" : "admin-light"}`}>
       <Flex className="h-dvh max-h-dvh min-h-0 w-full overflow-hidden bg-(--gray-a2) text-(--gray-12)">
         <aside className="hidden h-dvh max-h-dvh w-64 shrink-0 flex-col border-r border-(--gray-a6) bg-(--admin-sidebar) md:flex">
-          <AdminBrand />
-          <Separator size="4" />
-          <AdminContextHeader pageTitle={pageTitle} darkMode={darkMode} onToggleTheme={() => setDarkMode((current) => !current)} />
-          <Separator size="4" />
-          <AdminNavigation pathname={pathname} onNavigate={closeMobileMenu} />
+          <AdminSidebarContent
+            pathname={pathname}
+            pageTitle={pageTitle}
+            darkMode={darkMode}
+            user={user}
+            onToggleTheme={() => setDarkMode((current) => !current)}
+          />
         </aside>
 
         {mobileMenuOpen && (
@@ -115,16 +139,15 @@ export default function AdminShell({ children }: AdminShellProps) {
             mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
-          <div className="flex items-center justify-between p-4">
-            <AdminBrand compact />
-            <IconButton variant="ghost" aria-label="Close admin menu" onClick={closeMobileMenu}>
-              <X size={20} />
-            </IconButton>
-          </div>
-          <Separator size="4" />
-          <AdminContextHeader pageTitle={pageTitle} darkMode={darkMode} onToggleTheme={() => setDarkMode((current) => !current)} />
-          <Separator size="4" />
-          <AdminNavigation pathname={pathname} onNavigate={closeMobileMenu} />
+          <AdminSidebarContent
+            pathname={pathname}
+            pageTitle={pageTitle}
+            darkMode={darkMode}
+            user={user}
+            mobile
+            onClose={closeMobileMenu}
+            onToggleTheme={() => setDarkMode((current) => !current)}
+          />
         </aside>
 
         <Flex direction="column" className="relative h-dvh max-h-dvh min-w-0 flex-1 overflow-hidden">
@@ -147,6 +170,42 @@ export default function AdminShell({ children }: AdminShellProps) {
         </Flex>
       </Flex>
     </div>
+  );
+}
+
+function AdminSidebarContent({
+  pathname,
+  pageTitle,
+  darkMode,
+  user,
+  mobile = false,
+  onClose,
+  onToggleTheme,
+}: {
+  pathname: string;
+  pageTitle: string;
+  darkMode: boolean;
+  user: AdminShellProps["user"];
+  mobile?: boolean;
+  onClose?: () => void;
+  onToggleTheme: () => void;
+}) {
+  return (
+    <>
+      <div className={`flex items-center justify-between ${mobile ? "p-4" : ""}`}>
+        <AdminBrand compact={mobile} />
+        {mobile && (
+          <IconButton variant="ghost" aria-label="Close admin menu" onClick={onClose}>
+            <X size={20} />
+          </IconButton>
+        )}
+      </div>
+      <Separator size="4" />
+      <AdminContextHeader pageTitle={pageTitle} darkMode={darkMode} onToggleTheme={onToggleTheme} />
+      <Separator size="4" />
+      <AdminNavigation pathname={pathname} onNavigate={onClose} />
+      <AdminAccountFooter user={user} onNavigate={onClose} />
+    </>
   );
 }
 
@@ -197,24 +256,93 @@ function AdminNavigation({
   onNavigate,
 }: {
   pathname: string;
-  onNavigate: () => void;
+  onNavigate?: () => void;
 }) {
   return (
     <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto p-3" aria-label="Admin sections">
       <Text size="1" weight="bold" mb="2" className="px-3 uppercase tracking-wider text-(--admin-sidebar-muted)">
         Overview
       </Text>
-      {navigation.map(({ href, label, icon: Icon }) => (
-        <AdminLink
-          key={href}
-          href={href}
-          label={label}
-          icon={Icon}
-          active={isActivePath(pathname, href)}
-          onNavigate={onNavigate}
-        />
+      {overviewNavigation.map(({ href, label, icon: Icon }) => (
+        <AdminLink key={href} href={href} label={label} icon={Icon} active={isActivePath(pathname, href)} onNavigate={onNavigate} />
       ))}
+
+      {navigationGroups.map((group) => {
+        const groupIsActive = group.items.some((item) => isActivePath(pathname, item.href));
+
+        return (
+          <details key={group.label} open={groupIsActive} className="group mt-1">
+            <summary className="flex cursor-pointer list-none items-center justify-between rounded-md px-3 py-2.5 text-(--admin-sidebar-foreground) transition-colors hover:bg-(--admin-sidebar-hover) [&::-webkit-details-marker]:hidden">
+              <span className="text-sm font-medium">{group.label}</span>
+              <ChevronDown size={17} className="shrink-0 transition-transform duration-200 group-open:rotate-180" aria-hidden="true" />
+            </summary>
+            <div className="ml-3 mt-1 space-y-1 border-l border-(--gray-a6) pl-2">
+              {group.items.map(({ href, label, icon: Icon }) => (
+                <AdminLink key={href} href={href} label={label} icon={Icon} active={isActivePath(pathname, href)} onNavigate={onNavigate} nested />
+              ))}
+            </div>
+          </details>
+        );
+      })}
     </nav>
+  );
+}
+
+function AdminAccountFooter({
+  user,
+  onNavigate,
+}: {
+  user: AdminShellProps["user"];
+  onNavigate?: () => void;
+}) {
+  const router = useRouter();
+  const [isSigningOut, setIsSigningOut] = useState(false);
+  const displayName = user.name?.trim() || "Administrator";
+  const initials = displayName.slice(0, 1).toUpperCase();
+
+  async function handleSignOut() {
+    setIsSigningOut(true);
+    await signOut({ redirect: false });
+    localStorage.removeItem("tempCart");
+    localStorage.removeItem("tempCartId");
+    onNavigate?.();
+    router.replace("/");
+    router.refresh();
+  }
+
+  return (
+    <div className="shrink-0 border-t border-(--gray-a6) p-3">
+      <details className="group">
+        <summary className="flex cursor-pointer list-none items-center gap-3 rounded-lg p-2 text-(--admin-sidebar-foreground) transition-colors hover:bg-(--admin-sidebar-hover) [&::-webkit-details-marker]:hidden">
+          {user.image ? (
+            <img src={user.image} alt="" className="size-10 shrink-0 rounded-full object-cover" />
+          ) : (
+            <span className="grid size-10 shrink-0 place-content-center rounded-full bg-indigo-500 text-sm font-semibold text-white">
+              {initials}
+            </span>
+          )}
+          <span className="min-w-0 flex-1">
+            <strong className="block truncate text-xs font-semibold">{displayName}</strong>
+            <span className="block truncate text-xs text-(--admin-sidebar-muted)">{user.email ?? "Administrator account"}</span>
+          </span>
+          <ChevronDown size={17} className="shrink-0 transition-transform duration-200 group-open:rotate-180" aria-hidden="true" />
+        </summary>
+        <div className="mt-2 space-y-1 rounded-lg border border-(--gray-a6) p-1">
+          <Link href="/profile" onClick={onNavigate} className="block rounded-md px-3 py-2 text-sm text-(--admin-sidebar-foreground) hover:bg-(--admin-sidebar-hover)">
+            Profile
+          </Link>
+          <button
+            type="button"
+            disabled={isSigningOut}
+            onClick={handleSignOut}
+            className="flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm text-red-500 hover:bg-red-500/10 disabled:opacity-60"
+          >
+            {isSigningOut ? "Signing out…" : "Sign out"}
+            <LogOut size={16} aria-hidden="true" />
+          </button>
+        </div>
+      </details>
+    </div>
   );
 }
 
@@ -224,19 +352,21 @@ function AdminLink({
   icon: Icon,
   active,
   onNavigate,
+  nested,
 }: {
   href: string;
   label: string;
   icon: typeof LayoutPanelTopIcon;
   active: boolean;
   onNavigate?: () => void;
+  nested?: boolean;
 }) {
   return (
     <Button asChild variant="ghost" size="3" className="w-full justify-start">
       <Link
         href={href}
         onClick={onNavigate}
-        className={`flex w-full items-center justify-start gap-3 rounded-md px-3 py-2.5 ${
+        className={`flex w-full items-center justify-start gap-3 rounded-md px-3 py-2.5 ${nested ? "text-sm" : ""} ${
           active
             ? "bg-(--admin-sidebar-active) text-(--admin-sidebar-active-foreground)"
             : "text-(--admin-sidebar-foreground) hover:bg-(--admin-sidebar-hover)"
