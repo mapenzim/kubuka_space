@@ -1,4 +1,8 @@
-import { ConversationThreadResponse, StartConversationRequest } from "@/lib/api/types";
+import {
+  ConversationThreadResponse,
+  SendMessageResponse,
+  StartConversationRequest,
+} from "@/lib/api/types";
 import {
   ConversationApi,
   SendMessageRequest,
@@ -38,7 +42,7 @@ class ConversationHttpClient
 
   async sendMessage(
     request: SendMessageRequest,
-  ): Promise<void> {
+  ): Promise<SendMessageResponse> {
     const response = await fetch(
       "/api/chat/send",
       {
@@ -58,6 +62,8 @@ class ConversationHttpClient
         await response.text(),
       );
     }
+
+    return response.json();
   }
 
   async archive(

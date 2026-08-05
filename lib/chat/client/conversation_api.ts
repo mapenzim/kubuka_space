@@ -1,4 +1,8 @@
-import { ConversationThreadResponse, StartConversationRequest } from "@/lib/api/types";
+import {
+  ConversationThreadResponse,
+  SendMessageResponse,
+  StartConversationRequest,
+} from "@/lib/api/types";
 
 export interface SendMessageRequest {
   threadId: string;
@@ -26,7 +30,7 @@ export interface ConversationApi {
 
   sendMessage(
     request: SendMessageRequest,
-  ): Promise<void>;
+  ): Promise<SendMessageResponse>;
 
   archive(
     request: ArchiveConversationRequest,

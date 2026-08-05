@@ -152,7 +152,7 @@ export function useConversation() {
         }
 
         try {
-          await conversationClient.sendMessage(
+          const response = await conversationClient.sendMessage(
             {
               threadId:
                 session.threadId,
@@ -162,6 +162,14 @@ export function useConversation() {
                 session.conversationKey,
             },
           );
+
+          // Render from the acknowledged server response immediately. The
+          // SSE event is still useful for the other participant, but must not
+          // be the only way this client sees its own message.
+          if (response.data) {
+            conversation.appendMessage(response.data);
+          }
+
           toast.success("Message sent.");
         } catch (error) {
           toast.error(
@@ -172,7 +180,7 @@ export function useConversation() {
           throw error;
         }
       },
-      [session],
+      [conversation, session],
     );
 
   //--------------------------------------------------------
