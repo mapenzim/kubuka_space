@@ -2,6 +2,7 @@
 
 import {
   useCallback,
+  useEffect,
   useRef,
   useSyncExternalStore,
 } from "react";
@@ -29,6 +30,14 @@ export function useActivity() {
   );
 
   const session = useChatSession();
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      activity.expireStale();
+    }, 1_000);
+
+    return () => window.clearInterval(timer);
+  }, [activity]);
 
   //--------------------------------------------------------
   // Activity
@@ -91,8 +100,10 @@ export function useActivity() {
     setActivity,
     startTyping,
     stopTyping,
-    getActivity: activity.getActivity.bind(activity),
-    isTyping: activity.isTyping.bind(activity),
+    getActivity: (clientId: string) =>
+      activity.getActivity(session.threadId, clientId),
+    isTyping: (role: "admin" | "user") =>
+      activity.isTyping(session.threadId, role),
   };
 
 }

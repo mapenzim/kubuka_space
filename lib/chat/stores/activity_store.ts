@@ -2,6 +2,7 @@ import { ActivityType } from "@/lib/activity/activity";
 import { SenderRole } from "@/lib/interfaces";
 
 export interface ActivityParticipant {
+  threadId: string;
   clientId: string;
   role: SenderRole;
   activity: ActivityType;
@@ -9,6 +10,7 @@ export interface ActivityParticipant {
 }
 
 interface SetActivityInput {
+  threadId: string;
   clientId: string;
   senderRole: SenderRole;
   activity: ActivityType;
@@ -86,18 +88,27 @@ export class ActivityStore {
   }
 
   getActivity(
+    threadId: string | undefined,
     clientId: string,
   ) {
+    if (!threadId) return undefined;
     return this.participants.get(
-      clientId,
+      this.key(threadId, clientId),
     )?.activity;
   }
 
-   isTyping(role: SenderRole) {
+  isTyping(
+    threadId: string | undefined,
+    role: SenderRole,
+  ) {
+    if (!threadId) return false;
+
     return this.snapshotState.participants.some(
       (participant) =>
+        participant.threadId === threadId &&
         participant.role === role &&
-        participant.activity === ActivityType.TYPING,
+        participant.activity === ActivityType.TYPING &&
+        Date.now() - new Date(participant.updatedAt).getTime() <= 6_000,
     );
   }
 
@@ -116,9 +127,21 @@ export class ActivityStore {
   setActivity(
     participant: SetActivityInput,
   ) {
-    this.participants.set(
+    const key = this.key(
+      participant.threadId,
       participant.clientId,
+    );
+
+    if (participant.activity === ActivityType.IDLE) {
+      this.participants.delete(key);
+      this.notify();
+      return;
+    }
+
+    this.participants.set(
+      key,
       {
+        threadId: participant.threadId,
         clientId:
           participant.clientId,
         role:
@@ -134,18 +157,20 @@ export class ActivityStore {
   }
 
   clearActivity(
+    threadId: string,
     clientId: string,
   ) {
+    const key = this.key(threadId, clientId);
     if (
       !this.participants.has(
-        clientId,
+        key,
       )
     ) {
       return;
     }
 
     this.participants.delete(
-      clientId,
+      key,
     );
 
     this.notify();
@@ -158,7 +183,7 @@ export class ActivityStore {
 
     for (const participant of participants) {
       this.participants.set(
-        participant.clientId,
+        this.key(participant.threadId, participant.clientId),
         participant,
       );
     }
@@ -170,6 +195,27 @@ export class ActivityStore {
     this.participants.clear();
 
     this.notify();
+  }
+
+  expireStale(maxAgeMs = 6_000) {
+    const now = Date.now();
+    let changed = false;
+
+    for (const [key, participant] of this.participants) {
+      if (
+        participant.activity === ActivityType.TYPING &&
+        now - new Date(participant.updatedAt).getTime() > maxAgeMs
+      ) {
+        this.participants.delete(key);
+        changed = true;
+      }
+    }
+
+    if (changed) this.notify();
+  }
+
+  private key(threadId: string, clientId: string) {
+    return `${threadId}:${clientId}`;
   }
 }
 

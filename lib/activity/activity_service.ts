@@ -12,6 +12,11 @@ export class ActivityService {
   setActivity(
     activity: Activity,
   ): void {
+    if (activity.activity === "idle") {
+      this.clearActivity(activity.threadId, activity.clientId);
+      return;
+    }
+
     this.state.set(activity);
 
     this.notificationService.publishThread({

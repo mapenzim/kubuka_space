@@ -27,6 +27,7 @@ export function useThreadEvents() {
 
         case ChatEventType.ACTIVITY_CHANGED:
           activity.setActivity({
+            threadId: event.threadId,
             clientId: event.payload.clientId,
             senderRole: event.payload.senderRole,
             activity: event.payload.activity,
