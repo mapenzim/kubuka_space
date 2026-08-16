@@ -12,7 +12,7 @@ type CreateUserResult =
 
 export async function createUser(form: FormData): Promise<CreateUserResult> {
   const name = form.get("name") as string;
-  const email = form.get("email") as string;
+  const email = String(form.get("email") ?? "").trim().toLowerCase();
   const password = form.get("password") as string;
   const confirm = form.get("confirmPassword") as string;
 
@@ -58,7 +58,18 @@ export async function createUser(form: FormData): Promise<CreateUserResult> {
 
     const hashed = await hash(password, 10);
     await prisma.user.create({
-      data: { id: ulidId(), name, email, password: hashed },
+      data: {
+        id: ulidId(),
+        name,
+        email,
+        password: hashed,
+        role: { connect: { name: "USER" } },
+        settings: {
+          create: {
+            id: ulidId(),
+          },
+        },
+      },
     });
 
     return { success: true };

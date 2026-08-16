@@ -1,61 +1,58 @@
 "use client";
 
 import { checkoutAction } from "@/app/actions/cartActions.server";
-import { initiateEcoCashPayment } from "@/app/actions/paynow.server";
-import * as Dialog from "@radix-ui/react-dialog";
+import { useCart } from "@/context/cartContext";
 import * as Form from "@radix-ui/react-form";
 import * as Label from "@radix-ui/react-label";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function CheckoutForm({
   cartId,
-  total,
 }: {
   cartId: string;
-  total: number;
 }) {
+  const router = useRouter();
+  const { clearCart } = useCart();
   const [loading, setLoading] = useState(false);
-  const [open, setOpen] = useState(false);
-  const [orderId, setOrderId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleCheckout(formData: FormData) {
     setLoading(true);
-    const result = await checkoutAction(formData);
+    setError(null);
 
-    if (result.success) {
-      setOrderId(result.orderId);
-      try {
-        const payment = await initiateEcoCashPayment(result.orderId);
-        window.location.assign(payment.redirectUrl);
-      } catch (error) {
-        setLoading(false);
-        setOpen(true);
-      }
-    } else {
+    try {
+      const result = await checkoutAction(formData);
+      clearCart();
+      router.replace(`/store/receipt/${result.orderId}`);
+    } catch (checkoutError) {
+      setError(
+        checkoutError instanceof Error
+          ? checkoutError.message
+          : "We could not complete your order. Please try again.",
+      );
       setLoading(false);
     }
   }
 
   return (
-    <>
     <Form.Root
       action={handleCheckout}
-      className="mx-auto max-w-md space-y-4 rounded-lg border border-gray-300 bg-gray-100 dark:bg-gray-800 p-6"
+      className="mx-auto max-w-md space-y-4 rounded-xl border border-zinc-200 bg-zinc-50 p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
     >
-      <h3 className="text-2xl font-semibold mb-4 dark:text-zinc-400">Billing Info</h3>
+      <h3 className="mb-4 text-2xl font-semibold text-zinc-900 dark:text-zinc-100">Delivery details</h3>
 
-      {/* Hidden fields for cartId and total */}
+      {/* Totals are calculated on the server; only the cart identity is submitted. */}
       <input type="hidden" name="cartId" value={cartId} />
-      <input type="hidden" name="total" value={total} />
 
-      {/* Full Name */}
-      <Form.Field name="fullName" className="flex flex-col dark:text-zinc-400">
-        <Label.Root className="block text-sm font-medium text-gray-900 dark:text-zinc-400">Full Name</Label.Root>
+      <Form.Field name="fullName" className="flex flex-col text-zinc-700 dark:text-zinc-300">
+        <Label.Root className="block text-sm font-medium">Full name</Label.Root>
         <Form.Control asChild>
           <input
             required
             type="text"
-            className="mt-1 w-full rounded-lg border p-2 focus:border-indigo-500 focus:outline-none"
+            autoComplete="name"
+            className="mt-1 w-full rounded-lg border border-zinc-300 bg-white p-2 text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
             placeholder="John Doe"
           />
         </Form.Control>
@@ -64,93 +61,60 @@ export default function CheckoutForm({
         </Form.Message>
       </Form.Field>
 
-      {/* Email */}
-      <Form.Field name="email" className="flex flex-col dark:text-zinc-400">
-        <Label.Root className="block text-sm font-medium text-gray-900 dark:text-zinc-400">Email</Label.Root>
-        <Form.Control asChild>
-          <input
-            required
-            type="email"
-            className="mt-1 w-full rounded-lg p-2 border focus:border-indigo-500 focus:outline-none"
-            placeholder="john@example.com"
-          />
-        </Form.Control>
-        <Form.Message match="valueMissing" className="text-red-500 text-xs mt-1">
-          Please enter your email
-        </Form.Message>
-        <Form.Message match="typeMismatch" className="text-red-500 text-xs mt-1">
-          Please provide a valid email
-        </Form.Message>
-      </Form.Field>
-
-      <Form.Field name="street" className="flex flex-col dark:text-zinc-400">
+      <Form.Field name="street" className="flex flex-col text-zinc-700 dark:text-zinc-300">
         <Label.Root className="text-sm font-medium mb-1">Street</Label.Root>
         <Form.Control asChild>
           <input 
             required 
-            type="text" 
-            className="rounded-lg border p-2 focus:border-indigo-500 focus:outline-none" 
-            placeholder="street address"
+            type="text"
+            autoComplete="street-address"
+            className="rounded-lg border border-zinc-300 bg-white p-2 text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+            placeholder="Street address"
           />
         </Form.Control>
       </Form.Field>
 
-      <Form.Field name="city" className="flex flex-col dark:text-zinc-400">
+      <Form.Field name="city" className="flex flex-col text-zinc-700 dark:text-zinc-300">
         <Label.Root className="text-sm font-medium mb-1">City</Label.Root>
         <Form.Control asChild>
           <input 
             required 
-            type="text" 
-            className="rounded-lg border p-2 focus:border-indigo-500 focus:outline-none" 
-            placeholder="city/town"
+            type="text"
+            autoComplete="address-level2"
+            className="rounded-lg border border-zinc-300 bg-white p-2 text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+            placeholder="City or town"
           />
         </Form.Control>
       </Form.Field>
 
-      <Form.Field name="country" className="flex flex-col dark:text-zinc-400">
+      <Form.Field name="country" className="flex flex-col text-zinc-700 dark:text-zinc-300">
         <Label.Root className="text-sm font-medium mb-1">Country</Label.Root>
         <Form.Control asChild>
           <input 
             required 
-            type="text" 
-            className="rounded-lg border p-2 focus:border-indigo-500 focus:outline-none"
-            placeholder="country" 
+            type="text"
+            autoComplete="country-name"
+            className="rounded-lg border border-zinc-300 bg-white p-2 text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+            placeholder="Country"
           />
         </Form.Control>
       </Form.Field>
 
-      {/* Submit */}
+      {error && (
+        <p role="alert" aria-live="polite" className="text-sm text-red-600 dark:text-red-400">
+          {error}
+        </p>
+      )}
+
       <Form.Submit asChild>
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-indigo-600 text-white py-3 rounded-lg mt-4 hover:bg-indigo-700 disabled:bg-gray-400 transition"
+          className="mt-4 w-full rounded-lg bg-indigo-600 py-3 font-medium text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-zinc-400"
         >
-          {loading ? "Processing..." : `Proceed to Pay`}
+          {loading ? "Completing order..." : "Complete order"}
         </button>
       </Form.Submit>
     </Form.Root>
-      {/* ✅ Confirmation Dialog */}
-      <Dialog.Root open={open} onOpenChange={setOpen}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 bg-black/50" />
-          <Dialog.Content className="fixed z-50 top-1/2 left-1/2 w-[90%] max-w-md -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-lg">
-            <Dialog.Title className="text-xl font-semibold mb-2">
-              Order Placed Successfully
-            </Dialog.Title>
-            <Dialog.Description className="text-gray-600 mb-4">
-              Thank you for your purchase! Your order ID is{" "}
-              <span className="font-mono font-bold">{orderId}</span>.
-            </Dialog.Description>
-            <button
-              onClick={() => setOpen(false)}
-              className="mt-4 w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 transition"
-            >
-              Close
-            </button>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
-    </>
   );
 }

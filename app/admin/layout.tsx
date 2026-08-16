@@ -16,6 +16,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     redirect("/");
   }
 
+  if (session.user.status && session.user.status !== "ACTIVE") {
+    redirect("/authentication?account=inactive");
+  }
+
   const adminReauth = (await cookies()).get("kubuka_admin_reauth")?.value;
   if (adminReauth !== "confirmed") {
     return <AdminReauthGate />;

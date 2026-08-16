@@ -5,7 +5,8 @@ import prisma from "@/lib/prisma";
 import { serializeDecimal } from "@/lib/prisma";
 import { ulidId } from "@/lib/server-utils";
 import { Prisma, PrismaClient } from "@prisma/client";
-import { revalidatePath } from "next/dist/server/web/spec-extension/revalidate";
+import { revalidatePath } from "next/cache";
+import { getDiscountedUnitPrice } from "@/lib/pricing";
 
 async function getOrCreateCart(tx: Prisma.TransactionClient | PrismaClient, userId: string, cartId?: string) {
   // 1. Try to find by cartId first (if provided)
@@ -266,7 +267,7 @@ export async function checkoutAction(formData: FormData) {
     throw new Error("Complete all checkout fields.");
   }
 
-  return await prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     const cart = await tx.cart.findFirst({
       where: { userId },
       include: {
@@ -305,7 +306,7 @@ export async function checkoutAction(formData: FormData) {
 
     // 🧮 Calculate total server-side (NEVER trust client)
     const total = cart.cartItems.reduce((sum, item) => {
-      return sum + Number(item.merchandise.price) * item.quantity;
+      return sum + getDiscountedUnitPrice(Number(item.merchandise.price)) * item.quantity;
     }, 0);
 
     // 🧾 Create Order
@@ -314,15 +315,15 @@ export async function checkoutAction(formData: FormData) {
         id: ulidId(),
         userId,
         totalAmount: total,
-        status: "pending",
-        paymentStatus: "PENDING",
+        status: "paid",
+        paymentStatus: "PAID",
 
         items: {
           create: cart.cartItems.map((item) => ({
             id: ulidId(),
             merchandiseId: item.merchandiseId,
             title: item.merchandise.title,
-            price: item.merchandise.price,
+            price: getDiscountedUnitPrice(Number(item.merchandise.price)),
             quantity: item.quantity,
           })),
         },
@@ -341,8 +342,9 @@ export async function checkoutAction(formData: FormData) {
           create: {
             id: ulidId(),
             amount: total,
-            method: "ECOCASH",
-            status: "PENDING",
+            method: "TEMPORARY_CHECKOUT",
+            status: "PAID",
+            paidAt: new Date(),
           },
         },
       },
@@ -355,6 +357,12 @@ export async function checkoutAction(formData: FormData) {
 
     return { success: true, orderId: order.id };
   });
+
+  revalidatePath("/store");
+  revalidatePath("/profile");
+  revalidatePath("/admin/store");
+
+  return result;
 }
 
 interface CartItem {

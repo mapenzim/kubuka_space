@@ -1,5 +1,4 @@
 import "dotenv/config";
-import { Prisma } from "@prisma/client";
 import { hash } from "bcryptjs";
 import { ulid } from "ulid";
 import prisma from "@/lib/prisma";
@@ -34,6 +33,12 @@ async function main() {
         { path: "/api/secure" },
       ],
     },
+    {
+      name: "USER",
+      permissions: [
+        { path: "/" },
+      ],
+    },
   ];
 
   for (const role of rolesData) {
@@ -55,46 +60,48 @@ async function main() {
 
 
   // --- 2️⃣ Fetch roles ---
-  const adminRole = await prisma.role.findUnique({ where: { name: "ADMIN" } });
-  const editorRole = await prisma.role.findUnique({ where: { name: "EDITOR" } });
   const superRole = await prisma.role.findUnique({ where: { name: "SUPERUSER" } });
 
-  if (!adminRole || !editorRole || !superRole) {
-    throw new Error("❌ Missing one or more roles.");
+  if (!superRole) {
+    throw new Error("❌ Missing the SUPERUSER role.");
   }
 
-  // --- 3️⃣ Users ---
-  const userData: Prisma.UserCreateInput[] = [
-    {
-      id: ulid(),
-      name: "Kubuka Space",
-      email: "kubukahub@gmail.com",
-      password: await securePassword("kubuka1234"),
-      role: { connect: { id: editorRole.id } },
-      posts: {},
-    },
-    {
-      id: ulid(),
-      name: "Mapenzi Mudimba",
-      email: "hazelman@live.com",
-      password: await securePassword("mapenzim"),
-      role: { connect: { id: adminRole.id } },
-      posts: {},
-    },
-    {
-      id: ulid(),
-      name: "Super Admin",
-      email: "superadmin@kubuka.space",
-      password: await securePassword("superadmin1234"),
-      role: { connect: { id: superRole.id } },
-    },
-  ];
+  // --- 3️⃣ Singleton superuser ---
+  // A clean seed creates exactly one account. Every other account is created
+  // through the application, and only this account may grant ADMIN access.
+  const existingSuperusers = await prisma.user.findMany({
+    where: { roleId: superRole.id },
+    select: { id: true, email: true },
+  });
 
-  for (const u of userData) {
+  if (existingSuperusers.length > 1) {
+    throw new Error("❌ More than one SUPERUSER account exists.");
+  }
+
+  if (existingSuperusers.length === 0) {
+    const superuserEmail =
+      process.env.SEED_SUPERUSER_EMAIL ?? "superadmin@kubuka.space";
+    const superuserPassword =
+      process.env.SEED_SUPERUSER_PASSWORD ?? "superadmin1234";
+    const superuserName =
+      process.env.SEED_SUPERUSER_NAME ?? "Super Admin";
+
     await prisma.user.upsert({
-      where: { email: u.email },
-      update: {},
-      create: u,
+      where: { email: superuserEmail.toLowerCase() },
+      update: {
+        name: superuserName,
+        role: { connect: { id: superRole.id } },
+        status: "ACTIVE",
+        suspendedAt: null,
+        archivedAt: null,
+      },
+      create: {
+        id: ulid(),
+        name: superuserName,
+        email: superuserEmail.toLowerCase(),
+        password: await securePassword(superuserPassword),
+        role: { connect: { id: superRole.id } },
+      },
     });
   }
 

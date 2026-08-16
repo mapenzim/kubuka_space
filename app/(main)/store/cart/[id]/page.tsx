@@ -1,6 +1,9 @@
 import { CartButtons, CheckoutBtn } from "@/components/buttons/cart-btns";
 import prisma, { serializeDecimal } from "@/lib/prisma";
-import { DISCOUNT } from "@/lib/utils"; // Removed VAT import since it's hardcoded to 15% backwards
+import {
+  getDiscountedUnitPrice,
+  getLineDiscount,
+} from "@/lib/pricing";
 import { LinkIcon } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -90,7 +93,12 @@ export default async function Page({ params }: PageProps) {
   const exclusiveSubtotal = inclusiveSubtotal / (1 + VAT_RATE);
   const vat = inclusiveSubtotal - exclusiveSubtotal;
   
-  const discount = DISCOUNT;
+  const discount = items.reduce((sum, item) => {
+    return sum + getLineDiscount(
+      toNumber(item.merchandise?.price),
+      toNumber(item.quantity),
+    );
+  }, 0);
   const total = Math.max(0, inclusiveSubtotal - discount);
 
   return (
@@ -127,9 +135,16 @@ export default async function Page({ params }: PageProps) {
                       {item.merchandise.title}
                     </Text>
 
-                    <Text size="2" color="gray" className="dark:text-indigo-500!">
-                      ${toNumber(item.merchandise.price).toFixed(2)}
-                    </Text>
+                    <Flex align="center" gap="2">
+                      {getLineDiscount(toNumber(item.merchandise.price), 1) > 0 && (
+                        <Text size="1" color="gray" className="line-through dark:text-zinc-500!">
+                          ${toNumber(item.merchandise.price).toFixed(2)}
+                        </Text>
+                      )}
+                      <Text size="2" color="gray" className="dark:text-indigo-500!">
+                        ${getDiscountedUnitPrice(toNumber(item.merchandise.price)).toFixed(2)}
+                      </Text>
+                    </Flex>
                   </Flex>
                 </Flex>
               ))}
@@ -163,10 +178,12 @@ export default async function Page({ params }: PageProps) {
                     <Text size="3" color="gray" className="dark:text-zinc-400!">${vat.toFixed(2)}</Text>
                   </Flex>
 
-                  <Flex justify="between">
-                    <Text size="3" color="gray" className="dark:text-zinc-400!">Discount</Text>
-                    <Text size="3" color="gray" className="dark:text-zinc-400!">- ${discount.toFixed(2)}</Text>
-                  </Flex>
+                  {discount > 0 && (
+                    <Flex justify="between">
+                      <Text size="3" color="gray" className="dark:text-zinc-400!">Eligible product discount</Text>
+                      <Text size="3" color="gray" className="dark:text-zinc-400!">- ${discount.toFixed(2)}</Text>
+                    </Flex>
+                  )}
 
                   {/* Radix Separator automatically handles dark mode via the Theme provider */}
                   <Separator size="4" my="2" className="bg-zinc-200 dark:bg-zinc-800" />

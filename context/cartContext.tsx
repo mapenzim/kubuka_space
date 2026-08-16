@@ -68,6 +68,15 @@ export function CartProvider({
     setCountTotal(items.reduce((sum, i) => sum + i.quantity, 0));
   }
 
+  function clearCart() {
+    setCart((currentCart) => ({
+      ...currentCart,
+      cartItems: [],
+    }));
+    setCountDistinct(0);
+    setCountTotal(0);
+  }
+
   // wrap your server fetch in debounce
   const updateCountsFromServer = debounceQuery(async (userId: string) => {
     const { distinctCount, totalCount, cartId } = await getCartMeta();
@@ -395,6 +404,7 @@ export function CartProvider({
         cartCountTotal,
         cartId,
         isGuest,
+        clearCart,
       }}
     >
       {children}

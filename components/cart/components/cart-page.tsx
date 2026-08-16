@@ -1,6 +1,10 @@
 "use client";
 
-import { DISCOUNT, VAT } from "@/lib/utils";
+import { VAT } from "@/lib/utils";
+import {
+  getDiscountedUnitPrice,
+  getLineDiscount,
+} from "@/lib/pricing";
 import RemoveAlert from "@/components/modals/alert";
 import { Loader2Icon } from "lucide-react";
 import { signIn } from "next-auth/react";
@@ -19,16 +23,22 @@ interface CartItem {
 const CartPage = () => {
   const { cart, cartLoading, isGuest, removeItem, updateQuantity, cartId } = useCart();
   const router = useRouter();
+  const items: CartItem[] = cart?.cartItems ?? [];
 
   // Totals
-  const subtotal = cart.reduce(
+  const inclusiveSubtotal = items.reduce(
     (sum: number, item: { merchandise: { price: number; }; quantity: number; }) => sum + item.merchandise.price * item.quantity,
     0
   );
 
-  const vat = subtotal * VAT;
-  const total = Math.max(0, subtotal + vat - DISCOUNT);
-  const isCartEmpty = cart.length === 0;
+  const exclusiveSubtotal = inclusiveSubtotal / (1 + VAT);
+  const vat = inclusiveSubtotal - exclusiveSubtotal;
+  const discount = items.reduce(
+    (sum, item) => sum + getLineDiscount(item.merchandise.price, item.quantity),
+    0,
+  );
+  const total = Math.max(0, inclusiveSubtotal - discount);
+  const isCartEmpty = items.length === 0;
 
   const handleCheckout = async () => {
     if (isCartEmpty) return;
@@ -59,7 +69,7 @@ const CartPage = () => {
               </p>
             ) : (
               <ul className="space-y-4">
-                {cart.map((item: CartItem) => (
+                {items.map((item: CartItem) => (
                   <li key={item.id} className="flex items-center gap-4">
                     <img
                       src="https://images.unsplash.com/photo-1618354691373-d851c5c3a990?auto=format&fit=crop&q=80&w=1160"
@@ -72,8 +82,11 @@ const CartPage = () => {
                         {item.merchandise.title} Website Builder
                       </h3>
 
-                      <p className="text-xs text-gray-600 dark:text-gray-400">
-                        ${item.merchandise.price.toFixed(2)}
+                      <p className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                        {getLineDiscount(item.merchandise.price, 1) > 0 && (
+                          <span className="line-through">${item.merchandise.price.toFixed(2)}</span>
+                        )}
+                        <span>${getDiscountedUnitPrice(item.merchandise.price).toFixed(2)}</span>
                       </p>
                     </div>
 
@@ -119,8 +132,8 @@ const CartPage = () => {
                 <div className="w-full max-w-lg space-y-4">
                   <dl className="space-y-1 text-sm text-gray-700 dark:text-zinc-400">
                     <div className="flex justify-between">
-                      <dt>Subtotal</dt>
-                      <dd>${subtotal.toFixed(2)}</dd>
+                      <dt>Subtotal (Excl. VAT)</dt>
+                      <dd>${exclusiveSubtotal.toFixed(2)}</dd>
                     </div>
 
                     <div className="flex justify-between">
@@ -128,10 +141,12 @@ const CartPage = () => {
                       <dd>${vat.toFixed(2)}</dd>
                     </div>
 
-                    <div className="flex justify-between">
-                      <dt>Discount</dt>
-                      <dd>- ${DISCOUNT.toFixed(2)}</dd>
-                    </div>
+                    {discount > 0 && (
+                      <div className="flex justify-between">
+                        <dt>Eligible product discount</dt>
+                        <dd>- ${discount.toFixed(2)}</dd>
+                      </div>
+                    )}
 
                     <div className="flex justify-between font-semibold">
                       <dt>Total</dt>

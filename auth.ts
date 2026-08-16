@@ -36,17 +36,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const prisma = await getPrisma();
 
         const user = await prisma.user.findUnique({
-          where: { email: String(credentials.email) },
+          where: { email: String(credentials.email).trim().toLowerCase() },
           select: {
             id: true,
             name: true,
             email: true,
             password: true,
+            status: true,
             role: { select: { name: true } },
           },
         });
 
         if (!user) throw new Error("No user found with that email");
+
+        if (user.status !== "ACTIVE") {
+          throw new Error("This account is suspended or archived");
+        }
 
         const valid = await compare(
           String(credentials.password),
@@ -60,6 +65,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           name: user.name || "Anonymous",
           email: user.email,
           role: user.role?.name ?? "USER",
+          status: user.status,
         };
       },
     }),
@@ -70,8 +76,24 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (user) {
         token.id = user.id;
         token.role = user.role;
-      } else if (!token.id && token.sub) {
-        token.id = token.sub;
+        token.status = user.status;
+      } else {
+        const accountId = token.id ?? token.sub;
+
+        if (accountId) {
+          token.id = accountId;
+          const prisma = await getPrisma();
+          const account = await prisma.user.findUnique({
+            where: { id: String(accountId) },
+            select: {
+              status: true,
+              role: { select: { name: true } },
+            },
+          });
+
+          token.status = account?.status ?? "ARCHIVED";
+          token.role = account?.role?.name ?? "USER";
+        }
       }
 
       // Keep database relations out of the JWT. They make the production
@@ -88,6 +110,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async session({ session, token }) {
       session.user.id = (token.id ?? token.sub) as string;
       session.user.role = token.role as string;
+      session.user.status = token.status as "ACTIVE" | "SUSPENDED" | "ARCHIVED";
       return session;
     },
   },

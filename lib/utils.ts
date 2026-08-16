@@ -21,7 +21,6 @@ export function containsProfanity(text: string): boolean {
 }
 
 export const VAT = 0.15;
-export const DISCOUNT = 20;
 
 /**
  * Formats a database date string or Date object into "MMM DD, YYYY"

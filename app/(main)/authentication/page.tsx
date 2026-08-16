@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, SyntheticEvent } from "react";
-import { signIn, useSession } from "next-auth/react";
+import { signIn, signOut, useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion, useAnimationControls } from "framer-motion";
 import { AtSignIcon, CircleEllipsisIcon, EyeIcon, EyeOff, User2Icon } from "lucide-react";
@@ -41,6 +41,14 @@ const AuthenticationPage = () => {
 
   useEffect(() => {
     if (status === "authenticated") {
+      if (session?.user?.status && session.user.status !== "ACTIVE") {
+        void signOut({ redirect: false }).then(() => {
+          toast.error("This account is suspended or archived.");
+          router.refresh();
+        });
+        return;
+      }
+
       const role = (session?.user as any)?.role;
       const redirect =
         role === "ADMIN" || role === "SUPERUSER" ? "/admin" :
@@ -82,7 +90,7 @@ const AuthenticationPage = () => {
         });
 
         if (res?.error) {
-          toast.error("Invalid credentials");
+          toast.error("Unable to sign in. Check your credentials and account status.");
           return;
         }
 

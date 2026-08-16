@@ -1,4 +1,7 @@
-import { DISCOUNT } from "@/lib/utils";
+import {
+  getDiscountedUnitPrice,
+  getLineDiscount,
+} from "@/lib/pricing";
 import { auth } from "@/auth";
 import CheckoutForm from "@/components/cart/components/checkout_form";
 import prisma from "@/lib/prisma";
@@ -70,7 +73,12 @@ export default async function Page({ params }: Props) {
   const exclusiveSubtotal = inclusiveSubtotal / (1 + VAT_RATE);
   const vat = inclusiveSubtotal - exclusiveSubtotal;
   
-  const discount = Number(DISCOUNT || 0);
+  const discount = cart.cartItems.reduce((sum, item) => {
+    return sum + getLineDiscount(
+      Number(item.merchandise?.price) || 0,
+      Number(item.quantity) || 0,
+    );
+  }, 0);
   const total = Math.max(0, inclusiveSubtotal - discount);
 
   return (
@@ -102,9 +110,16 @@ export default async function Page({ params }: Props) {
                     <Text as="div" size="3" weight="medium" className="capitalize text-zinc-900 dark:text-zinc-100">
                       {item.merchandise?.title}
                     </Text>
-                    <Text as="div" size="2" color="gray">
-                      ${Number(item.merchandise?.price || 0).toFixed(2)}
-                    </Text>
+                    <Flex justify="end" align="center" gap="2">
+                      {getLineDiscount(Number(item.merchandise?.price) || 0, 1) > 0 && (
+                        <Text as="span" size="1" color="gray" className="line-through">
+                          ${Number(item.merchandise?.price || 0).toFixed(2)}
+                        </Text>
+                      )}
+                      <Text as="span" size="2" color="gray">
+                        ${getDiscountedUnitPrice(Number(item.merchandise?.price) || 0).toFixed(2)}
+                      </Text>
+                    </Flex>
                   </Box>
                 </Flex>
               ))}
@@ -124,10 +139,12 @@ export default async function Page({ params }: Props) {
                   <Text size="2" className="text-zinc-900 dark:text-zinc-300">${vat.toFixed(2)}</Text>
                 </Flex>
 
-                <Flex justify="between" className="pr-4">
-                  <Text size="2" weight="medium" className="text-zinc-700 dark:text-zinc-400">Discount</Text>
-                  <Text size="2" className="text-zinc-900 dark:text-zinc-300">- ${discount.toFixed(2)}</Text>
-                </Flex>
+                {discount > 0 && (
+                  <Flex justify="between" className="pr-4">
+                    <Text size="2" weight="medium" className="text-zinc-700 dark:text-zinc-400">Eligible product discount</Text>
+                    <Text size="2" className="text-zinc-900 dark:text-zinc-300">- ${discount.toFixed(2)}</Text>
+                  </Flex>
+                )}
 
                 <Separator size="4" my="2" className="bg-zinc-300 dark:bg-zinc-600 w-full" />
 
@@ -145,7 +162,7 @@ export default async function Page({ params }: Props) {
 
         {/* 💳 Checkout Component */}
         <Box>
-          <CheckoutForm cartId={cart.id} total={total} />
+          <CheckoutForm cartId={cart.id} />
         </Box>
 
       </Box>

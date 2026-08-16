@@ -12,5 +12,7 @@ export const config = {
     "/dashboard/:path*",
     "/authentication/:path*",
     "/profile/:path*",
+    "/store/cart/:path*",
+    "/store/receipt/:path*",
   ],
 };

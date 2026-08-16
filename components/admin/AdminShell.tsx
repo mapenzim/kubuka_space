@@ -64,6 +64,7 @@ const pageTitles: Record<string, string> = {
   "/admin/users": "User Management",
   "/admin/store": "Storefront & Orders",
   "/admin/messages": "Messages",
+  "/admin/profile": "Administrator Profile",
 };
 
 function isActivePath(pathname: string, href: string) {
@@ -328,7 +329,7 @@ function AdminAccountFooter({
           <ChevronDown size={17} className="shrink-0 transition-transform duration-200 group-open:rotate-180" aria-hidden="true" />
         </summary>
         <div className="mt-2 flex w-full flex-col gap-1 rounded-lg border border-(--gray-a6) p-1">
-          <Link href="/profile" onClick={onNavigate} className="block rounded-md px-3 py-2 text-sm text-(--admin-sidebar-foreground) hover:bg-(--admin-sidebar-hover)">
+          <Link href="/admin/profile" onClick={onNavigate} className="block rounded-md px-3 py-2 text-sm text-(--admin-sidebar-foreground) hover:bg-(--admin-sidebar-hover)">
             Profile
           </Link>
           <button

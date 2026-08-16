@@ -1,5 +1,6 @@
 import { getToken } from "next-auth/jwt";
 import { NextRequest, NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +17,19 @@ export async function middleware(req: NextRequest) {
     secureCookie: process.env.NODE_ENV === "production" || req.nextUrl.protocol === "https:",
   });
   const { pathname } = req.nextUrl;
+  const account = token?.id
+    ? await prisma.user.findUnique({
+        where: { id: String(token.id) },
+        select: {
+          status: true,
+          role: { select: { name: true } },
+        },
+      })
+    : null;
+  const accountStatus = token
+    ? account?.status ?? "ARCHIVED"
+    : undefined;
+  const accountRole = account?.role?.name;
 
   const redirectToAuthentication = () => {
     const loginUrl = new URL("/authentication", req.url);
@@ -28,7 +42,11 @@ export async function middleware(req: NextRequest) {
       return redirectToAuthentication();
     }
 
-    if (token.role !== "ADMIN" && token.role !== "SUPERUSER") {
+    if (accountStatus && accountStatus !== "ACTIVE") {
+      return redirectToAuthentication();
+    }
+
+    if (accountRole !== "ADMIN" && accountRole !== "SUPERUSER") {
       return NextResponse.redirect(new URL("/", req.url));
     }
   }
@@ -38,7 +56,11 @@ export async function middleware(req: NextRequest) {
       return redirectToAuthentication();
     }
 
-    const userRole = token.role as string;
+    if (accountStatus && accountStatus !== "ACTIVE") {
+      return redirectToAuthentication();
+    }
+
+    const userRole = accountRole as string;
     if (!userRole) return NextResponse.redirect(new URL("/not-authorized", req.url));
 
     try {
@@ -60,15 +82,34 @@ export async function middleware(req: NextRequest) {
     }
   }
 
-  if (pathname.startsWith("/profile") && (!token || isExpired(token))) {
+  if (pathname.startsWith("/profile")) {
+    if (
+      !token ||
+      isExpired(token) ||
+      (accountStatus && accountStatus !== "ACTIVE")
+    ) {
+      return redirectToAuthentication();
+    }
+  }
+
+  if (
+    (pathname.startsWith("/store/cart") ||
+      pathname.startsWith("/store/receipt")) &&
+    token &&
+    accountStatus !== "ACTIVE"
+  ) {
     return redirectToAuthentication();
   }
 
-  if (pathname.startsWith("/authentication") && token) {
+  if (
+    pathname.startsWith("/authentication") &&
+    token &&
+    (!accountStatus || accountStatus === "ACTIVE")
+  ) {
     const redirectUrl =
-      token.role === "ADMIN" || token.role === "SUPERUSER"
+      accountRole === "ADMIN" || accountRole === "SUPERUSER"
         ? "/admin"
-        : token.role === "EDITOR"
+        : accountRole === "EDITOR"
         ? "/admin/posts"
         : "/";
     return NextResponse.redirect(new URL(redirectUrl, req.url));
@@ -78,5 +119,12 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/dashboard/:path*", "/authentication/:path*", "/profile/:path*"],
+  matcher: [
+    "/admin/:path*",
+    "/dashboard/:path*",
+    "/authentication/:path*",
+    "/profile/:path*",
+    "/store/cart/:path*",
+    "/store/receipt/:path*",
+  ],
 };
