@@ -271,12 +271,12 @@ function AdminNavigation({
         const groupIsActive = group.items.some((item) => isActivePath(pathname, item.href));
 
         return (
-          <details key={group.label} open={groupIsActive} className="group mt-1">
+          <details key={group.label} open={groupIsActive} className="group mt-1 w-full">
             <summary className="flex cursor-pointer list-none items-center justify-between rounded-md px-3 py-2.5 text-(--admin-sidebar-foreground) transition-colors hover:bg-(--admin-sidebar-hover) [&::-webkit-details-marker]:hidden">
               <span className="text-sm font-medium">{group.label}</span>
               <ChevronDown size={17} className="shrink-0 transition-transform duration-200 group-open:rotate-180" aria-hidden="true" />
             </summary>
-            <div className="ml-3 mt-1 space-y-1 border-l border-(--gray-a6) pl-2">
+            <div className="ml-3 mt-1 flex w-full flex-col gap-1 border-l border-(--gray-a6) pl-2">
               {group.items.map(({ href, label, icon: Icon }) => (
                 <AdminLink key={href} href={href} label={label} icon={Icon} active={isActivePath(pathname, href)} onNavigate={onNavigate} nested />
               ))}
@@ -327,7 +327,7 @@ function AdminAccountFooter({
           </span>
           <ChevronDown size={17} className="shrink-0 transition-transform duration-200 group-open:rotate-180" aria-hidden="true" />
         </summary>
-        <div className="mt-2 space-y-1 rounded-lg border border-(--gray-a6) p-1">
+        <div className="mt-2 flex w-full flex-col gap-1 rounded-lg border border-(--gray-a6) p-1">
           <Link href="/profile" onClick={onNavigate} className="block rounded-md px-3 py-2 text-sm text-(--admin-sidebar-foreground) hover:bg-(--admin-sidebar-hover)">
             Profile
           </Link>
@@ -362,21 +362,18 @@ function AdminLink({
   nested?: boolean;
 }) {
   return (
-    <Button asChild variant="ghost" size="3" className="w-full justify-start">
-      <Link
-        href={href}
-        onClick={onNavigate}
-        className={`flex w-full items-center justify-start gap-3 rounded-md px-3 py-2.5 ${nested ? "text-sm" : ""} ${
-          active
-            ? "bg-(--admin-sidebar-active) text-(--admin-sidebar-active-foreground)"
-            : "text-(--admin-sidebar-foreground) hover:bg-(--admin-sidebar-hover)"
-        }`}
-      >
-        <Icon size={18} aria-hidden="true" />
-        <Text size="3" weight="medium">
-          {label}
-        </Text>
-      </Link>
-    </Button>
+    <Link
+      href={href}
+      onClick={onNavigate}
+      aria-current={active ? "page" : undefined}
+      className={`flex w-full items-center justify-start gap-3 rounded-md px-3 py-2.5 text-left ${nested ? "text-sm" : ""} ${
+        active
+          ? "bg-(--admin-sidebar-active) text-(--admin-sidebar-active-foreground)"
+          : "text-(--admin-sidebar-foreground) hover:bg-(--admin-sidebar-hover)"
+      }`}
+    >
+      <Icon size={18} className="shrink-0" aria-hidden="true" />
+      <span className="min-w-0 text-left text-sm font-medium">{label}</span>
+    </Link>
   );
 }

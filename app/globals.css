@@ -34,6 +34,89 @@ body {
 }
 
 /*
+ * The featured solutions section is rendered from live store data. Keep its
+ * critical paint and CTA styles in the root stylesheet so Safari cannot
+ * restore an older route-scoped style snapshot after back/forward navigation.
+ */
+#featured-solutions {
+	content-visibility: visible;
+	contain: none;
+	contain-intrinsic-size: none;
+	isolation: isolate;
+	padding-bottom: 8rem;
+}
+
+#featured-solutions a[href="/store"],
+#featured-solutions a[href="/contact_us"] {
+	position: relative;
+	z-index: 2;
+	display: inline-flex;
+	min-height: 2.75rem;
+	align-items: center;
+	justify-content: center;
+	border-radius: 9999px;
+	padding: 0.75rem 1.5rem;
+	font-size: 0.875rem;
+	font-weight: 600;
+	line-height: 1.25rem;
+	text-decoration: none;
+}
+
+#featured-solutions a[href="/store"] {
+	border: 1px solid #6d28d9;
+	background-color: #6d28d9;
+	color: #ffffff;
+	box-shadow: 0 4px 10px rgb(76 29 149 / 0.2);
+}
+
+#featured-solutions a[href="/store"]:hover {
+	border-color: #5b21b6;
+	background-color: #5b21b6;
+}
+
+#featured-solutions a[href="/contact_us"] {
+	border: 1px solid #c4b5fd;
+	background-color: rgb(255 255 255 / 0.4);
+	color: #4c1d95;
+}
+
+#featured-solutions a[href="/contact_us"]:hover {
+	border-color: #a78bfa;
+	background-color: rgb(255 255 255 / 0.7);
+}
+
+@media (min-width: 1024px) {
+	#featured-solutions {
+		padding-bottom: 9rem;
+	}
+}
+
+@media (prefers-color-scheme: dark) {
+	#featured-solutions a[href="/store"] {
+		border-color: #ffffff;
+		background-color: #ffffff;
+		color: #2e1065;
+		box-shadow: 0 4px 10px rgb(0 0 0 / 0.2);
+	}
+
+	#featured-solutions a[href="/store"]:hover {
+		border-color: #ede9fe;
+		background-color: #ede9fe;
+	}
+
+	#featured-solutions a[href="/contact_us"] {
+		border-color: rgb(196 181 253 / 0.5);
+		background-color: transparent;
+		color: #ffffff;
+	}
+
+	#featured-solutions a[href="/contact_us"]:hover {
+		border-color: #ddd6fe;
+		background-color: rgb(255 255 255 / 0.1);
+	}
+}
+
+/*
  * Public application theme
  *
  * Radix Themes switches its dark tokens only when its root has a `.dark`
