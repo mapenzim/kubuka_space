@@ -1,9 +1,9 @@
-import { ReactNode } from "react";
+import ProfileSessionGuard from "@/components/auth/ProfileSessionGuard";
 
-export default function Layout({ children }: { children: ReactNode }) {
-  return (
-    <section className="w-full min-h-screen overflow-y-auto items-center justify-center dark:bg-gray-900">
-      {children}
-    </section>
-  );
+export default function ProfileLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return <ProfileSessionGuard>{children}</ProfileSessionGuard>;
 }
