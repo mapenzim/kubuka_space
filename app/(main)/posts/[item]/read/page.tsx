@@ -73,23 +73,23 @@ export default async function ReadPage({ params }: { params: Promise<{ item: str
             <Flex direction="column" className="w-full">
               
               {/* Top Bar: Status & Actions */}
-              <Flex gap="3" align="center" wrap="wrap" mb="4">
-                <Badge 
-                  color={post.published ? "green" : "orange"} 
-                  size="2" 
-                  variant="soft"
-                >
-                  {post.published ? "Published" : "Draft"}
-                </Badge>
-                
-                {isAuthor && (
+              {isAuthor && (
+                <Flex gap="3" align="center" wrap="wrap" mb="4">
+                  <Badge 
+                    color={post.published ? "green" : "orange"} 
+                    size="2" 
+                    variant="soft"
+                  >
+                    {post.published ? "Published" : "Draft"}
+                  </Badge>
+                  
                   <Button size="1" color="iris" variant="soft" asChild className="cursor-pointer dark:bg-amber-200/30!">
                     <Link href={`/posts/${post.id}`} className="dark:text-orange-300!">
                       Edit Post
                     </Link>
                   </Button>
-                )}
-              </Flex>
+                </Flex>
+              )}
 
               {/* Title */}
               <Heading as="h1" size="7" weight="bold" className="text-zinc-900 dark:text-zinc-400 mb-6">
