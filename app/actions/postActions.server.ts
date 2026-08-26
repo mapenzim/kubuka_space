@@ -39,7 +39,6 @@ export async function publishPost(formData: FormData): Promise<PostResult> {
   const title = formData.get("title") as string;
   const content = formData.get("content") as string;
   const postId = formData.get("postId") as string;
-  const authorId = formData.get("authorId") as string;
 
   if (!title?.trim()) {
     throw new Error("Title is required");
@@ -49,34 +48,44 @@ export async function publishPost(formData: FormData): Promise<PostResult> {
     return { error: { message: "Message contains profanity." } };
   }
 
-  if(postId && authorId !== session.user.id) {
-    return { error: { message: "You do not have permission to update this post." } }
+  const existingPost = postId
+    ? await prisma.post.findUnique({
+        where: { id: postId },
+        select: {
+          id: true,
+          authorId: true,
+          publishedAt: true,
+        },
+      })
+    : null;
+
+  if (postId && (!existingPost || existingPost.authorId !== session.user.id)) {
+    return {
+      error: { message: "You do not have permission to update this post." },
+    };
   }
 
-  const post = await prisma.post.upsert({
-    where: {
-      id: postId || "",
-      author: {
-        email: session.user.email!,
-      },
-    },
-    update: {
-      title: title.trim(),
-      content: content?.trim(),
-      published: true,
-    },
-    create: {
-      id: ulidId(),
-      title: title.trim(),
-      content: content?.trim(),
-      published: true,
-      author: {
-        connect: {
-          email: session.user.email!,
+  const publishedAt = existingPost?.publishedAt ?? new Date();
+  const post = existingPost
+    ? await prisma.post.update({
+        where: { id: existingPost.id },
+        data: {
+          title: title.trim(),
+          content: content?.trim(),
+          published: true,
+          publishedAt,
         },
-      },
-    },
-  });
+      })
+    : await prisma.post.create({
+        data: {
+          id: ulidId(),
+          title: title.trim(),
+          content: content?.trim(),
+          published: true,
+          publishedAt,
+          authorId: session.user.id,
+        },
+      });
 
   // 🔥 Broadcast the new post to all connected SSE clients
   const broadcaster = getBroadcaster();
@@ -150,7 +159,7 @@ export async function getOwnPosts(authorId: string) {
 
 export async function getAllPosts() {
   return await prisma.post.findMany({
-    where: { published: Boolean(true) },
+    where: { published: true, deletedAt: null },
     include: { author: {
       select: {
         name: true,
@@ -159,7 +168,7 @@ export async function getAllPosts() {
         id: true
       }
     } },
-    orderBy: { createdAt: "desc" }
+    orderBy: { publishedAt: "desc" }
   });
 }
 

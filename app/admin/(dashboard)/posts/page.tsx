@@ -26,7 +26,7 @@ export default async function AdminPostsPage() {
     author: post.author.name,
     status: post.published ? "Published" : "Draft",
     category: "Uncategorized", // Placeholder, replace with actual category if available
-    date: post.createdAt.toISOString(),
+    date: (post.publishedAt ?? post.updatedAt).toISOString(),
   }));
 
   return (
@@ -58,7 +58,7 @@ export default async function AdminPostsPage() {
                 <Table.ColumnHeaderCell>Author</Table.ColumnHeaderCell>
                 <Table.ColumnHeaderCell>Category</Table.ColumnHeaderCell>
                 <Table.ColumnHeaderCell>Status</Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell>Date</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Published / Updated</Table.ColumnHeaderCell>
                 <Table.ColumnHeaderCell align="right">Actions</Table.ColumnHeaderCell>
               </Table.Row>
             </Table.Header>

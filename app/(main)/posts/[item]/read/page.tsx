@@ -7,6 +7,8 @@ import { getPost } from "@/app/actions/postActions.server";
 import { auth } from "@/auth";
 import { ClientViewer } from "@/components/lexical-editor/client-viewer";
 import { Box, Card, Flex, Heading, Text, Badge, Button, Container } from "@radix-ui/themes";
+import { CalendarDays } from "lucide-react";
+import { formatDate } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -111,6 +113,17 @@ export default async function ReadPage({ params }: { params: Promise<{ item: str
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <Text size="2" weight="medium" className="text-orange-500/50">{readTime}</Text>
+                </Flex>
+
+                <Text className="hidden sm:block text-zinc-300 dark:text-zinc-700" aria-hidden="true">
+                  ·
+                </Text>
+
+                <Flex align="center" gap="1" className="text-zinc-500 dark:text-zinc-400">
+                  <CalendarDays size={16} aria-hidden="true" />
+                  <Text size="2" weight="medium">
+                    Published {formatDate(post.publishedAt ?? post.createdAt)}
+                  </Text>
                 </Flex>
 
                 <Text className="hidden sm:block text-zinc-300 dark:text-zinc-700" aria-hidden="true">

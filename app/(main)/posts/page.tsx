@@ -3,6 +3,8 @@ import { formatName } from "@/lib/utils";
 import { getAllPosts } from "@/app/actions/postActions.server";
 import { Box, Button, Card, Flex, Grid, Heading, Inset, Text, Container } from "@radix-ui/themes";
 import { auth } from "@/auth";
+import { CalendarDays } from "lucide-react";
+import { formatDate } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +23,8 @@ interface PostAuthor {
 interface Post {
   id: string;
   title: string;
+  publishedAt: Date | null;
+  createdAt: Date;
   author: PostAuthor;
 }
 
@@ -96,6 +100,13 @@ export default async function Posts() {
                       {post.title}
                     </Link>
                   </Heading>
+
+                  <Flex align="center" gap="2" className="text-zinc-500 dark:text-zinc-500">
+                    <CalendarDays size={15} aria-hidden="true" />
+                    <Text size="1">
+                      Published {formatDate(post.publishedAt ?? post.createdAt)}
+                    </Text>
+                  </Flex>
 
                   {/* Footer (Author & Actions) */}
                   <Flex direction="row" justify="between" align="center" mt="auto">
