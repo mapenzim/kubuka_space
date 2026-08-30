@@ -103,7 +103,7 @@ export default function ConversationComposer({
         disabled,
         value,
         onSend,
-        onTypingStop,
+        forceIdle,
       ],
     );
 
@@ -133,7 +133,6 @@ export default function ConversationComposer({
         >
           <Box className="flex-1">
             <FormLexicalEditor
-              value={value}
               onChange={
                 handleChange
               }

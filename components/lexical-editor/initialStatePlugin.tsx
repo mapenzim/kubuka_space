@@ -26,7 +26,7 @@ export function InitialStatePlugin({ initialValue }: { initialValue?: string }) 
 
         editor.setEditorState(parsedState);
 
-      } catch (error) {
+      } catch {
         console.warn("Data is not valid Lexical JSON. Falling back to plain text insertion.");
         
         // ✨ Attempt 2: If it's plain text (or corrupted), manually insert it as a paragraph!

@@ -8,7 +8,7 @@ interface RouteProps {
 }
 
 export async function GET(
-  request: Request,
+  _request: Request,
   { params }: RouteProps,
 ) {
   const { threadId } =

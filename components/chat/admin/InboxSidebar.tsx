@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useEffect, useState } from "react";
+import { memo } from "react";
 
 import {
   Card,
@@ -22,14 +22,12 @@ interface InboxSidebarItemProps {
   thread: ThreadSummaryDto;
   selected: boolean;
   onSelect: (threadId: string) => void;
-  now: number;
 }
 
 const InboxSidebarItem = memo(function InboxSidebarItem({
   thread,
   selected,
   onSelect,
-  now,
 }: InboxSidebarItemProps) {
   return (
     <button
@@ -85,18 +83,6 @@ export default function InboxSidebar({
   selectedThreadId,
   onSelect,
 }: InboxSidebarProps) {
-  const [now, setNow] = useState(0);
-
-  useEffect(() => {
-    setNow(Date.now());
-
-    const timer = window.setInterval(() => {
-      setNow(Date.now());
-    }, 1000);
-
-    return () => window.clearInterval(timer);
-  }, []);
-
   return (
     <Card className="flex h-full w-full flex-col overflow-hidden">
       <ScrollArea className="flex-1">
@@ -117,7 +103,6 @@ export default function InboxSidebar({
               thread={thread}
               selected={selectedThreadId === thread.id}
               onSelect={onSelect}
-              now={now}
             />
           ))
         )}

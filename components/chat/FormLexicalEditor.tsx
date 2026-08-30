@@ -21,7 +21,6 @@ function onError(error: Error) {
 }
 
 type Props = {
-  value?: string;
   onChange: (text: string) => void;
   placeholder?: string;
   minHeight?: string;
@@ -56,7 +55,6 @@ function ClearOnSignalPlugin({
 }
 
 export default function FormLexicalEditor({
-  value = "",
   onChange,
   placeholder = "Write a message...",
   minHeight = "7rem",

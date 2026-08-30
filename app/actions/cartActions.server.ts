@@ -246,7 +246,7 @@ export async function deleteCartItem(itemId: string) {
     // trigger revalidation so UI updates
     revalidatePath("/cart");
     return { success: true };
-  } catch (error) {
+  } catch {
     return { error: "Failed to delete item" };
   }
 }
@@ -363,11 +363,6 @@ export async function checkoutAction(formData: FormData) {
   revalidatePath("/admin/store");
 
   return result;
-}
-
-interface CartItem {
-  id: string;
-  quantity: number;
 }
 
 export async function getAllOrdersByUser(userId: string) {

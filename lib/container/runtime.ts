@@ -125,5 +125,4 @@ export const chatGateway =
 
     notificationService,
     presenceService,
-    activityService,
   );

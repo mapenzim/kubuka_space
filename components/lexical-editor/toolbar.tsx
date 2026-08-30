@@ -30,7 +30,7 @@ import {
   SELECTION_CHANGE_COMMAND,
   UNDO_COMMAND,
 } from 'lexical';
-import { AlignCenterIcon, AlignJustifyIcon, AlignLeft, AlignRightIcon, Bold, ItalicIcon, ListIcon, ListOrderedIcon, RedoIcon, UnderlineIcon, UndoIcon } from 'lucide-react';
+import { AlignCenterIcon, AlignJustifyIcon, AlignLeft, AlignRightIcon, Bold, ItalicIcon, RedoIcon, UnderlineIcon, UndoIcon } from 'lucide-react';
 import {useCallback, useEffect, useRef, useState} from 'react';
 import { ListButtons } from './list-btns';
 

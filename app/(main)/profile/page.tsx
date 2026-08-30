@@ -11,7 +11,6 @@ import { Badge, Box, Button, Card, Flex, Grid, Heading, ScrollArea, Text, Avatar
 import { FacebookIcon, GithubIcon, Tag, TwitterIcon } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation"; 
-import { Key, ReactElement, JSXElementConstructor, ReactNode, ReactPortal } from "react";
 
 const ProfilePage = async () => {
   const session = await auth();

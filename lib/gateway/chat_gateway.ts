@@ -1,5 +1,4 @@
 import { ActivityType } from "../activity/activity";
-import { ActivityService } from "../activity/activity_service";
 import { MessageDto } from "../dto";
 import { ThreadDetailsDto } from "../dto/thread_details_dto";
 import { ThreadSummaryDto } from "../dto/thread_summary_dto";
@@ -42,7 +41,6 @@ export class ChatGateway {
 
     private readonly notificationService: NotificationService,
     private readonly presenceService: PresenceService,
-    private readonly activityService: ActivityService,
     
   ) {}
 

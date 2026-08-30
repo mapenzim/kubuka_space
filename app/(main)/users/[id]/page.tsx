@@ -4,7 +4,6 @@ import { auth } from "@/auth";
 import Image from "next/image";
 import Link from "next/link";
 import { formatName } from "@/lib/utils";
-import { Key, ReactElement, JSXElementConstructor, ReactNode, ReactPortal } from "react";
 
 export default async function UserProfile({
   params,
@@ -124,7 +123,7 @@ export default async function UserProfile({
             </div>
           ) : (
             <div className="grid gap-4">
-              {posts.map((post: { id: string; title: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; published: any; content: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; }) => (
+              {posts.map((post) => (
                 <Link
                   key={post.id}
                   href={`/posts/${post.id}`}

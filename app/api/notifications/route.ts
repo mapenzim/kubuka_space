@@ -31,7 +31,7 @@ export async function POST(req: Request) {
       type: "notification", payload: note,
       channel: ""
     });
-  } catch (_) {}
+  } catch {}
 
   return new Response(JSON.stringify(note), { status: 201 });
 }

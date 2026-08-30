@@ -12,7 +12,6 @@ import { ReactNode } from "react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
 import ScrollToTopButton from "@/components/scroltotop";
-import AppCookieConsent from "@/components/policies/cookie_conset";
 
 export const metadata: Metadata = {
   title: meta_config.appTitle,

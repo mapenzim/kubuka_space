@@ -2,7 +2,7 @@
 
 import { userBio } from "@/app/actions/authActions.server";
 import * as Form from "@radix-ui/react-form";
-import { Avatar, Box, Button, Flex, Popover, Text, TextArea, Tooltip } from "@radix-ui/themes";
+import { Avatar, Box, Button, Flex, Popover, TextArea, Tooltip } from "@radix-ui/themes";
 import { PlusIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";

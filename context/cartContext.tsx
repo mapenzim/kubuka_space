@@ -78,7 +78,7 @@ export function CartProvider({
   }
 
   // wrap your server fetch in debounce
-  const updateCountsFromServer = debounceQuery(async (userId: string) => {
+  const updateCountsFromServer = debounceQuery(async () => {
     const { distinctCount, totalCount, cartId } = await getCartMeta();
     setCountDistinct(distinctCount);
     setCountTotal(totalCount);
@@ -201,7 +201,7 @@ export function CartProvider({
           localStorage.removeItem("tempCart");
           localStorage.removeItem("tempCartId");
 
-          updateCountsFromServer(session.user.id); // ensure counts are accurate post-merge
+          updateCountsFromServer(); // ensure counts are accurate post-merge
 
           mergedRef.current = true;
           toast.success("Cart synced");
@@ -241,7 +241,7 @@ export function CartProvider({
         }
 
         // 🔑 Immediately refresh counts from server
-        updateCountsFromServer(session.user.id);
+        updateCountsFromServer();
 
         toast.success(`${item.title.toUpperCase()} added to cart`);
         router.refresh();
@@ -367,7 +367,7 @@ export function CartProvider({
     const fetchData = async () => {
       if (session?.user?.id) {
         try {
-          updateCountsFromServer(session.user.id);
+          updateCountsFromServer();
         } catch (err) {
           console.error(err);
         }

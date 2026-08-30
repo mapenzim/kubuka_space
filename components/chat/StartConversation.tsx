@@ -67,7 +67,6 @@ export default function StartConversationForm({
           )}
 
           <FormLexicalEditor
-            value={message}
             onChange={onMessageChange}
             placeholder="How can we help?"
             disabled={loading}

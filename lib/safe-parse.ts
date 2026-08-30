@@ -3,7 +3,7 @@ export function safeParse<T>(value: string | null): T | null {
 
   try {
     return JSON.parse(value) as T;
-  } catch (err) {
+  } catch {
     console.error("Invalid JSON:", value);
     return null;
   }

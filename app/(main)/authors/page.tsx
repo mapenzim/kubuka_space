@@ -4,7 +4,6 @@ import prisma from "@/lib/prisma";
 import Link from "next/link";
 import { formatName } from "@/lib/utils";
 import { Box, Card, Container, Flex, Grid, Heading, Text, Avatar } from "@radix-ui/themes";
-import { ReactElement, JSXElementConstructor, ReactNode, ReactPortal, Key } from "react";
 
 export default async function Authors() {
   const authors = await prisma.user.findMany({

@@ -207,7 +207,7 @@ export async function deletePost(postId: string, path: string) {
     revalidatePath(path);
 
     return { success: true };
-  } catch (error) {
+  } catch {
     return { error: "Failed to delete post." }
   }
 }

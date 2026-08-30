@@ -59,7 +59,7 @@ export default function ConversationHeader({
           </Text>
  
               <PresenceIndicator
-            connected={online}
+            connected={connected}
             online={online}
             typing={typing}
             lastSeen={lastSeen}

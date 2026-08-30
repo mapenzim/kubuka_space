@@ -104,8 +104,7 @@ export async function changePasswordAction(token: string | null, newPassword: st
 
   try {
     // TODO: Lookup user by token and update password
-    const hashed = await hash(newPassword, 10);
-    // await prisma.user.update({ where: { token }, data: { password: hashed } });
+    // Password persistence will be added with token lookup.
     return { success: true };
   } catch (err: any) {
     return { error: { message: err.message || "Failed to change password" } };

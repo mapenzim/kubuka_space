@@ -67,7 +67,7 @@ export class ThreadHub {
 
       try {
         client.connection.send(event);
-      } catch (error) {
+      } catch {
         this.remove(connectionId);
       }
     }
