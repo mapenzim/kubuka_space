@@ -74,7 +74,7 @@ export function useInbox() {
   }, []);
 
   useEffect(() => {
-    loadInbox();
+    void Promise.resolve().then(loadInbox);
   }, [loadInbox]);
 
   //--------------------------------------------------------

@@ -6,9 +6,7 @@ import {
 import {
   ConversationApi,
   SendMessageRequest,
-  ArchiveConversationRequest,
   DeleteConversationRequest,
-  MarkReadRequest,
 } from "./conversation_api";
 
 class ConversationHttpClient
@@ -66,30 +64,6 @@ class ConversationHttpClient
     return response.json();
   }
 
-  async archive(
-    request: ArchiveConversationRequest,
-  ): Promise<void> {
-    const response = await fetch(
-      "/api/chat/archive",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type":
-            "application/json",
-        },
-        body: JSON.stringify(
-          request,
-        ),
-      },
-    );
-
-    if (!response.ok) {
-      throw new Error(
-        await response.text(),
-      );
-    }
-  }
-
   async delete(
     request: DeleteConversationRequest,
   ): Promise<void> {
@@ -107,33 +81,12 @@ class ConversationHttpClient
     }
   }
 
-  async markRead(
-    request: MarkReadRequest,
-  ): Promise<void> {
+  async getThread(threadId: string, conversationKey?: string) {
+    const params = new URLSearchParams();
+    if (conversationKey) params.set("conversationKey", conversationKey);
+    const query = params.size ? `?${params.toString()}` : "";
     const response = await fetch(
-      "/api/chat/read",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type":
-            "application/json",
-        },
-        body: JSON.stringify(
-          request,
-        ),
-      },
-    );
-
-    if (!response.ok) {
-      throw new Error(
-        await response.text(),
-      );
-    }
-  }
-
-  async getThread(threadId: string) {
-    const response = await fetch(
-      `/api/chat/thread/${threadId}`,
+      `/api/chat/thread/${threadId}${query}`,
       {
         method: "GET",
         credentials: "include",

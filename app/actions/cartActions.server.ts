@@ -9,44 +9,51 @@ import { revalidatePath } from "next/cache";
 import { getDiscountedUnitPrice } from "@/lib/pricing";
 
 async function getOrCreateCart(tx: Prisma.TransactionClient | PrismaClient, userId: string, cartId?: string) {
-  // 1. Try to find by cartId first (if provided)
   if (cartId) {
-    let cart = await tx.cart.findFirst({
-      where: { id: cartId, userId },
-    });
-    if (cart) return cart;
-
-    const existingCart = await tx.cart.findUnique({
+    const requestedCart = await tx.cart.findUnique({
       where: { id: cartId },
     });
-    if (existingCart) {
+    if (requestedCart?.userId === userId) return requestedCart;
+    if (requestedCart) {
       throw new Error("Cart does not belong to this user.");
     }
 
-    // If not found, create new cart with that ID
-    cart = await tx.cart.create({
+    const userCart = await tx.cart.findUnique({ where: { userId } });
+    if (userCart) return userCart;
+
+    return tx.cart.create({
       data: {
         id: cartId,
         userId,
       },
     });
-    return cart;
   }
 
-  // 2. Otherwise, find by userId
-  let cart = await tx.cart.findFirst({ where: { userId } });
-
-  // 3. If none exists, create new with provided cartId or fresh ULID
-  if (!cart) {
-    cart = await tx.cart.create({
+  const cart = await tx.cart.findUnique({ where: { userId } });
+  return cart ?? tx.cart.create({
       data: {
         id: ulidId(),
         userId,
       },
     });
-  }
+}
 
-  return cart;
+async function getCartSnapshot(userId: string) {
+  const cart = await prisma.cart.findUnique({
+    where: { userId },
+    include: {
+      cartItems: {
+        include: {
+          merchandise: {
+            select: { id: true, title: true, body: true, price: true },
+          },
+        },
+        orderBy: { createdAt: "asc" },
+      },
+    },
+  });
+
+  return cart ? serializeDecimal(cart) : null;
 }
 
 type BatchAddInput = {
@@ -59,7 +66,7 @@ export async function batchAddToCartAction({
   userId,
   cartId,
   items,
-}: BatchAddInput): Promise<{ success?: boolean; error?: { message: string } }> {
+}: BatchAddInput) {
   const session = await auth();
   const authenticatedUserId = session?.user?.id;
 
@@ -74,43 +81,50 @@ export async function batchAddToCartAction({
   if (!items || items.length === 0) return { error: { message: "No items provided" } };
 
   try {
-    await prisma.$transaction(async (tx) => {
-      const user = await tx.user.findUnique({
-        where: { id: authenticatedUserId },
-        select: { id: true },
-      });
-
-      if (!user) {
-        throw new Error("Your account could not be found. Please sign in again.");
-      }
-
-      const cart = await getOrCreateCart(tx, user.id, cartId);
-
-      for (const item of items) {
+    const normalizedItems = Array.from(
+      items.reduce((quantities, item) => {
         if (!Number.isInteger(item.quantity) || item.quantity < 1) {
           throw new Error("Invalid quantity.");
         }
+        quantities.set(
+          item.merchandiseId,
+          (quantities.get(item.merchandiseId) ?? 0) + item.quantity,
+        );
+        return quantities;
+      }, new Map<string, number>()),
+      ([merchandiseId, quantity]) => ({ merchandiseId, quantity }),
+    );
 
-        const merchandise = await tx.merchandise.findFirst({
-          where: { id: item.merchandiseId, deletedAt: null },
-        });
+    await prisma.$transaction(async (tx) => {
+      const cart = await getOrCreateCart(tx, authenticatedUserId, cartId);
+      const merchandiseIds = normalizedItems.map((item) => item.merchandiseId);
 
-        if (!merchandise) throw new Error("Product is unavailable.");
+      const [products, existingItems] = await Promise.all([
+        tx.merchandise.findMany({
+          where: { id: { in: merchandiseIds }, deletedAt: null },
+          select: { id: true, stockQuantity: true },
+        }),
+        tx.cartItem.findMany({
+          where: { cartId: cart.id, merchandiseId: { in: merchandiseIds } },
+          select: { merchandiseId: true, quantity: true },
+        }),
+      ]);
 
-        const existing = await tx.cartItem.findUnique({
-          where: {
-            cartId_merchandiseId: {
-              cartId: cart.id,
-              merchandiseId: item.merchandiseId,
-            },
-          },
-        });
+      const productsById = new Map(products.map((product) => [product.id, product]));
+      const quantitiesById = new Map(
+        existingItems.map((item) => [item.merchandiseId, item.quantity]),
+      );
 
-        if ((existing?.quantity ?? 0) + item.quantity > merchandise.stockQuantity) {
-          throw new Error(`Only ${merchandise.stockQuantity} item(s) available.`);
+      for (const item of normalizedItems) {
+        const product = productsById.get(item.merchandiseId);
+        if (!product) throw new Error("Product is unavailable.");
+        if ((quantitiesById.get(item.merchandiseId) ?? 0) + item.quantity > product.stockQuantity) {
+          throw new Error(`Only ${product.stockQuantity} item(s) available.`);
         }
+      }
 
-        await tx.cartItem.upsert({
+      await Promise.all(normalizedItems.map((item) =>
+        tx.cartItem.upsert({
             where: {
               cartId_merchandiseId: {
                 cartId: cart.id,
@@ -126,45 +140,19 @@ export async function batchAddToCartAction({
               merchandiseId: item.merchandiseId,
               quantity: item.quantity,
             },
-          });
-      }
+          }),
+      ));
     });
 
-    return { success: true };
-  } catch (err: any) {
+    return { success: true as const, cart: await getCartSnapshot(authenticatedUserId) };
+  } catch (err: unknown) {
     console.error("batchAddToCartAction error:", err);
-    return { error: { message: err.message } };
+    return {
+      error: {
+        message: err instanceof Error ? err.message : "Unable to update cart.",
+      },
+    };
   }
-}
-
-export async function getCartMeta() {
-  const session = await auth();
-  const userId = session?.user?.id;
-  if (!userId) return { distinctCount: 0, totalCount: 0, cartId: null };
-
-  const cart = await prisma.cart.findFirst({
-    where: { userId },
-    include: {
-      cartItems: true,
-    },
-  });
-
-  if (!cart) return { distinctCount: 0, totalCount: 0, cartId: null };
-
-  // distinct items = number of cartItems
-  const distinctCount = cart.cartItems.length;
-
-  // total units = sum of quantities
-  const totalCount = cart.cartItems.reduce(
-    (sum, item) => sum + item.quantity,
-    0
-  );
-
-  return {
-    distinctCount,
-    totalCount,
-    cartId: cart.id,
-  };
 }
 
 export async function getCurrentUserCart() {
@@ -172,46 +160,7 @@ export async function getCurrentUserCart() {
   const userId = session?.user?.id;
   if (!userId) return null;
 
-  const cart = await prisma.cart.findUnique({
-    where: { userId },
-    include: {
-      cartItems: {
-        include: {
-          merchandise: {
-            select: { id: true, title: true, body: true, price: true },
-          },
-        },
-      },
-    },
-  });
-
-  return cart ? serializeDecimal(cart) : null;
-}
-
-export async function getCartById(cartId: string) {
-  const session = await auth();
-  if (!session?.user?.id) return [];
-
-  return await prisma.cart.findMany({
-    where: {
-      id: cartId,
-      userId: session.user.id,
-    },
-    include: {
-      cartItems: {
-        include: {
-          merchandise: {
-            select: {
-              id: true,
-              title: true,
-              body: true,
-              price: true
-            }
-          },
-        },
-      },
-    },
-  });
+  return getCartSnapshot(userId);
 }
 
 export async function updateCartQuantity(itemId: string, quantity: number) {

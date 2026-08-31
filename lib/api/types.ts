@@ -8,17 +8,20 @@ export interface SendMessageRequest {
   threadId: string;
   senderRole: SenderRole;
   content: string;
+  conversationKey?: string;
 }
 
 export interface SetActivityRequest {
   threadId: string;
   clientId: string;
   activity: string;
+  conversationKey?: string;
 }
 
 export interface HeartbeatRequest {
   threadId: string;
   clientId: string;
+  conversationKey?: string;
 }
 
 export interface StartConversationRequest {
@@ -32,11 +35,13 @@ export interface ConnectRequest {
   threadId: string;
   clientId: string;
   role: SenderRole;
+  conversationKey?: string;
 }
 
 export interface DisconnectRequest {
   threadId: string;
   clientId: string;
+  conversationKey?: string;
 }
 
 export type ThreadResponse = ApiResponse<ThreadDto>;

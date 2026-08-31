@@ -3,47 +3,16 @@
 import prisma from "@/lib/prisma";
 import { hash } from "bcryptjs";
 import { ulidId } from "@/lib/server-utils";
-import { auth } from "@/auth";
-import { isAdminRole } from "@/lib/roles";
 import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
+import { AdminRole, requireAdmin } from "@/lib/admin/require_admin";
 
-type AdminRole = "ADMIN" | "SUPERUSER";
 type ManageableRole = "USER" | "EDITOR" | "ADMIN";
 type ManagedUserStatus = "ACTIVE" | "SUSPENDED" | "ARCHIVED";
 
 type AdminActionResult =
   | { success: true }
   | { success: false; error: string };
-
-async function requireAdmin() {
-  const session = await auth();
-  if (!session?.user || !isAdminRole(session.user.role)) {
-    throw new Error("Administrator access required.");
-  }
-
-  const actor = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: {
-      id: true,
-      status: true,
-      role: { select: { name: true } },
-    },
-  });
-
-  if (
-    !actor ||
-    actor.status !== "ACTIVE" ||
-    !isAdminRole(actor.role?.name)
-  ) {
-    throw new Error("Administrator access required.");
-  }
-
-  return {
-    id: actor.id,
-    role: actor.role.name as AdminRole,
-  };
-}
 
 function refreshUserManagement() {
   revalidatePath("/admin");
@@ -252,13 +221,15 @@ export async function updateManagedUser(
       return { success: false, error: "The selected role is unavailable." };
     }
 
+    const passwordHash = password ? await hash(password, 10) : undefined;
+
     await prisma.$transaction(async (tx) => {
       await tx.user.update({
         where: { id: target.id },
         data: {
           name,
           roleId: role.id,
-          ...(password ? { password: await hash(password, 10) } : {}),
+          ...(passwordHash ? { password: passwordHash } : {}),
         },
       });
 
@@ -336,15 +307,16 @@ export async function deleteManagedUser(
     const target = await getManagedTarget(userId);
     assertCanManageTarget(actor, target, { destructive: true });
 
-    await prisma.user.delete({ where: { id: target.id } });
-
-    await prisma.log.create({
-      data: {
-        id: ulidId(),
-        userId: actor.id,
-        action: "USER_DELETED",
-        details: { targetUserId: target.id, email: target.email },
-      },
+    await prisma.$transaction(async (tx) => {
+      await tx.user.delete({ where: { id: target.id } });
+      await tx.log.create({
+        data: {
+          id: ulidId(),
+          userId: actor.id,
+          action: "USER_DELETED",
+          details: { targetUserId: target.id, email: target.email },
+        },
+      });
     });
 
     refreshUserManagement();

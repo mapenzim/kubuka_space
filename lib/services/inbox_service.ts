@@ -25,8 +25,8 @@ export class InboxService {
     return this.threadRepository.getInbox();
   }
 
-  async getThreadsByEmail(email: string): Promise<Thread[]> {
-    return this.threadRepository.findAllByEmail(email);
+  async getThreadsByEmail(email: string, limit?: number): Promise<Thread[]> {
+    return this.threadRepository.findAllByEmail(email, limit);
   }
   
 }

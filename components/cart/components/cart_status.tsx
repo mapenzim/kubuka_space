@@ -14,40 +14,43 @@ import {
 import { ShoppingCartIcon, Trash2 } from "lucide-react";
 import { CartItem } from "@/lib/type_interface";
 
-export default function CartStatus({ isScrolled }: { isScrolled: boolean }) {
-  const { cartCountTotal, cartId, cart, removeItem } = useCart();
-  const { status } = useSession();
-
-  // Cart trigger with badge overlay
-  const CartTrigger = () => (
+function CartTrigger({
+  isScrolled,
+  count,
+}: {
+  isScrolled: boolean;
+  count: number;
+}) {
+  return (
     <Box position="relative" display="inline-block" style={{ cursor: "pointer" }}>
       <ShoppingCartIcon
         size={32}
         className={isScrolled ? "text-gray-700 dark:text-gray-300" : "text-white dark:text-gray-300"}
       />
-      {cartCountTotal > 0 && (
+      {count > 0 && (
         <Badge
           size="1"
           radius="full"
           color="red"
           variant="solid"
-          style={{
-            position: "absolute",
-            top: -4,
-            right: -4,
-          }}
+          style={{ position: "absolute", top: -4, right: -4 }}
         >
-          {cartCountTotal}
+          {count}
         </Badge>
       )}
     </Box>
   );
+}
+
+export default function CartStatus({ isScrolled }: { isScrolled: boolean }) {
+  const { cartCountTotal, cartId, cart, removeItem } = useCart();
+  const { status } = useSession();
 
   // 1. Empty cart
   if (cartCountTotal === 0) {
     return (
       <Box aria-label="Empty shopping cart">
-        <CartTrigger />
+        <CartTrigger isScrolled={isScrolled} count={cartCountTotal} />
       </Box>
     );
   }
@@ -56,7 +59,7 @@ export default function CartStatus({ isScrolled }: { isScrolled: boolean }) {
   if (status === "authenticated") {
     return (
       <Link href={`/store/cart/${cartId}`} passHref>
-        <CartTrigger />
+        <CartTrigger isScrolled={isScrolled} count={cartCountTotal} />
       </Link>
     );
   }
@@ -66,7 +69,7 @@ export default function CartStatus({ isScrolled }: { isScrolled: boolean }) {
     <HoverCard.Root>
       <HoverCard.Trigger>
         <span tabIndex={0} style={{ display: "inline-block", outline: "none" }}>
-          <CartTrigger />
+          <CartTrigger isScrolled={isScrolled} count={cartCountTotal} />
         </span>
       </HoverCard.Trigger>
 

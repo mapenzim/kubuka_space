@@ -40,6 +40,10 @@ export class ThreadService {
     return this.threadRepository.findAll();
   }
 
+  async findAllByEmail(email: string, limit?: number) {
+    return this.threadRepository.findAllByEmail(email, limit);
+  }
+
   async markThreadRead(
     threadId: string,
   ): Promise<void> {

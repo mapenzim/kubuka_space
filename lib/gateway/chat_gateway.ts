@@ -58,8 +58,8 @@ export class ChatGateway {
     return this.getThreadsUseCase.execute();
   }
 
-  async getThreadsByEmail(email: string): Promise<ThreadDetailsDto[]> {
-    return this.getThreadsByEmailUseCase.execute(email);
+  async getThreadsByEmail(email: string, limit?: number): Promise<ThreadDetailsDto[]> {
+    return this.getThreadsByEmailUseCase.execute(email, limit);
   }
 
   async markThreadRead(

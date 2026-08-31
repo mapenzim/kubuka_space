@@ -7,8 +7,8 @@ export class GetThreadsByEmail {
     private readonly inboxService: InboxService,
   ) {}
 
-  async execute(email: string): Promise<ThreadDetailsDto[]> {
-    const threads = await this.inboxService.getThreadsByEmail(email);
+  async execute(email: string, limit?: number): Promise<ThreadDetailsDto[]> {
+    const threads = await this.inboxService.getThreadsByEmail(email, limit);
     return ThreadDetailsDtoMapper.toDtos(threads);
   }
 }

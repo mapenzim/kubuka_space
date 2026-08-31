@@ -4,6 +4,7 @@ import {
 } from "@/lib/container/runtime";
 import { ThreadEventType } from "@/lib/events/thread/thread_event_type";
 import { NextRequest } from "next/server";
+import { authorizeThreadAccess } from "@/lib/chat/server/chat_access";
 
 export const runtime = "nodejs";
 
@@ -16,11 +17,15 @@ export async function GET(
   const clientId =
     request.nextUrl.searchParams.get("clientId");
 
+  const conversationKey =
+    request.nextUrl.searchParams.get("conversationKey") ?? undefined;
+
   if (!threadId?.trim()) {
     return new Response(
       "Missing threadId.",
       { status: 402 },
     );
+
   }
 
   if (!clientId?.trim()) {
@@ -28,6 +33,12 @@ export async function GET(
       "Missing clientId.",
       { status: 401 },
     );
+  }
+
+  try {
+    await authorizeThreadAccess(threadId, conversationKey);
+  } catch {
+    return new Response("Forbidden", { status: 403 });
   }
 
   const stream =

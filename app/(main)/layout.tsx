@@ -3,7 +3,7 @@ import NavigationApp from "@/components/ui/nav";
 import { CartProvider } from "@/context/cartContext";
 import { ReactNode } from "react";
 
-export default async function MainLayout({ children }: { children: ReactNode }){
+export default function MainLayout({ children }: { children: ReactNode }){
   return (
     <CartProvider>
       <div className="public-app min-h-screen">

@@ -2,6 +2,7 @@
 
 import {
   useCallback,
+  useRef,
   useSyncExternalStore,
 } from "react";
 
@@ -21,7 +22,15 @@ import { toast } from "sonner";
 import { chatStores } from "../stores";
 
 export function useConversation() {
-  const session = useChatSession();
+  const {
+    threadId,
+    conversationKey,
+    role,
+    setThreadId,
+    setConversationKey,
+    reset,
+  } = useChatSession();
+  const loadRequestRef = useRef(0);
 
   const { conversation } =
     chatStores;
@@ -42,24 +51,23 @@ export function useConversation() {
     async (threadId: string) => {
       if (!threadId) {
         conversation.clear();
-        session.setThreadId("");
+        setThreadId("");
         return null;
       }
+
+      const requestId = ++loadRequestRef.current;
 
       const response =
         await conversationClient.getThread(
           threadId,
+          conversationKey,
         );
+
+      if (requestId !== loadRequestRef.current) return null;
 
       if (!response.data) {
         conversation.clear();
-        if (session.threadId === threadId) {
-          session.setThreadId(undefined);
-        }
-        return null;
-      }
-
-      if (session.threadId !== threadId) {
+        setThreadId(undefined);
         return null;
       }
 
@@ -67,19 +75,19 @@ export function useConversation() {
         response.data,
       );
 
-      session.setThreadId(
+      setThreadId(
         response.data.id,
       );
 
       return response.data;
     },
-    [conversation, session],
+    [conversation, conversationKey, setThreadId],
   );
 
   const setExistingThread = useCallback((existingThread: NonNullable<typeof thread>) => {
     conversation.setThread(existingThread);
-    session.setThreadId(existingThread.id);
-  }, [conversation, session]);
+    setThreadId(existingThread.id);
+  }, [conversation, setThreadId]);
 
   //--------------------------------------------------------
   // Start Conversation
@@ -125,15 +133,16 @@ export function useConversation() {
           response.data,
         );
 
-        session.setThreadId(
+        setThreadId(
           response.data.id,
         );
+        setConversationKey(conversationKey);
 
         toast.success("Message sent.");
 
         return response.data;
       },
-      [session, conversation],
+      [conversation, setConversationKey, setThreadId],
     );
 
   //--------------------------------------------------------
@@ -145,7 +154,7 @@ export function useConversation() {
       async (
         content: string,
       ) => {
-        if (!session.threadId) {
+        if (!threadId) {
           throw new Error(
             "No active conversation.",
           );
@@ -155,11 +164,10 @@ export function useConversation() {
           const response = await conversationClient.sendMessage(
             {
               threadId:
-                session.threadId,
-              senderRole: session.role,
+                threadId,
+              senderRole: role,
               content,
-              conversationKey:
-                session.conversationKey,
+              conversationKey,
             },
           );
 
@@ -180,7 +188,7 @@ export function useConversation() {
           throw error;
         }
       },
-      [conversation, session],
+      [conversation, conversationKey, role, threadId],
     );
 
   //--------------------------------------------------------
@@ -190,20 +198,20 @@ export function useConversation() {
   const clear =
     useCallback(() => {
       conversation.clear();
-      session.reset();
+      reset();
     }, [
       conversation,
-      session,
+      reset,
     ]);
 
   const deleteConversation = useCallback(async () => {
-    if (!session.threadId) {
+    if (!threadId) {
       return;
     }
 
     try {
       await conversationClient.delete({
-        threadId: session.threadId,
+        threadId,
       });
       toast.success("Conversation deleted.");
     } catch (error) {
@@ -216,8 +224,8 @@ export function useConversation() {
     }
 
     conversation.clear();
-    session.reset();
-  }, [conversation, session]);
+    reset();
+  }, [conversation, reset, threadId]);
 
   //--------------------------------------------------------
   // Public API

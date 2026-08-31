@@ -57,13 +57,37 @@ export class PrismaThreadRepository implements ThreadRepository {
         email: true,
         status: true,
         archived: true,
+        createdAt: true,
         updatedAt: true,
-        dateArchived: true,
-        conversationKeyHash: true,
+        messages: {
+          orderBy: { timestamp: "desc" },
+          take: 1,
+          select: { content: true, timestamp: true },
+        },
+        _count: {
+          select: {
+            messages: {
+              where: { senderRole: "user", readAt: null },
+            },
+          },
+        },
       },
     });
 
-    return inboxThreads as unknown as ThreadSummary[];
+    return inboxThreads.map((thread) => ({
+      id: thread.id,
+      sender: thread.sender,
+      email: thread.email,
+      status: thread.status,
+      unread: thread._count.messages > 0,
+      online: false,
+      archived: thread.archived,
+      unreadCount: thread._count.messages,
+      lastMessage: thread.messages[0]?.content ?? null,
+      lastMessageAt: thread.messages[0]?.timestamp.toISOString() ?? null,
+      createdAt: thread.createdAt.toISOString(),
+      updatedAt: thread.updatedAt.toISOString(),
+    }));
   }
 
   async getInboxThread(
@@ -80,13 +104,38 @@ export class PrismaThreadRepository implements ThreadRepository {
           email: true,
           status: true,
           archived: true,
+          createdAt: true,
           updatedAt: true,
-          dateArchived: true,
-          conversationKeyHash: true,
+          messages: {
+            orderBy: { timestamp: "desc" },
+            take: 1,
+            select: { content: true, timestamp: true },
+          },
+          _count: {
+            select: {
+              messages: {
+                where: { senderRole: "user", readAt: null },
+              },
+            },
+          },
         },
       });
 
-    return thread as ThreadSummary | null;
+    if (!thread) return null;
+    return {
+      id: thread.id,
+      sender: thread.sender,
+      email: thread.email,
+      status: thread.status,
+      unread: thread._count.messages > 0,
+      online: false,
+      archived: thread.archived,
+      unreadCount: thread._count.messages,
+      lastMessage: thread.messages[0]?.content ?? null,
+      lastMessageAt: thread.messages[0]?.timestamp.toISOString() ?? null,
+      createdAt: thread.createdAt.toISOString(),
+      updatedAt: thread.updatedAt.toISOString(),
+    };
   }
 
   async markRead(threadId: string): Promise<void> {
@@ -138,7 +187,7 @@ export class PrismaThreadRepository implements ThreadRepository {
     return threads.map(ThreadMapper.toDomain);
   }
 
-  async findAllByEmail(email: string): Promise<Thread[]> {
+  async findAllByEmail(email: string, limit?: number): Promise<Thread[]> {
     const threads = await this.prisma.thread.findMany({
       where: {
         archived: false,
@@ -157,6 +206,7 @@ export class PrismaThreadRepository implements ThreadRepository {
       orderBy: {
         updatedAt: "desc",
       },
+      take: limit,
     });
 
     return threads.map(ThreadMapper.toDomain);

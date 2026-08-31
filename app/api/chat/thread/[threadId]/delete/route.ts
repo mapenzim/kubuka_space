@@ -1,5 +1,6 @@
 import { apiHandler } from "@/lib/api/api_handler";
 import { chatGateway } from "@/lib/container/runtime";
+import { requireChatAdmin } from "@/lib/chat/server/chat_access";
 
 interface RouteProps {
   params: Promise<{
@@ -14,7 +15,8 @@ export async function DELETE(
   const { threadId } =
     await params;
 
-  return apiHandler(() =>
-    chatGateway.deleteThread(threadId),
-  );
+  return apiHandler(async () => {
+    await requireChatAdmin();
+    return chatGateway.deleteThread(threadId);
+  });
 }

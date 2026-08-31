@@ -6,6 +6,7 @@ export interface SetActivityRequest {
   clientId: string;
   role: SenderRole;
   activity: ActivityType;
+  conversationKey?: string;
 }
 
 export interface ActivityApi {

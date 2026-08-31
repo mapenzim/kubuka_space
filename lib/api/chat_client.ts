@@ -57,39 +57,6 @@ export class ChatClient extends ApiClient {
   }
 
   /**
-   * Mark an entire thread as read
-   */
-  markThreadRead(
-    threadId: string,
-  ) {
-    return this.post(
-      `/api/chat/thread/${threadId}/read`,
-    );
-  }
-
-  /**
-   * Archive a thread
-   */
-  archiveThread(
-    threadId: string,
-  ) {
-    return this.post(
-      `/api/chat/thread/${threadId}/archive`,
-    );
-  }
-
-  /**
-   * Delete a thread
-   */
-  deleteThread(
-    threadId: string,
-  ) {
-    return this.delete(
-      `/api/chat/thread/${threadId}`,
-    );
-  }
-
-  /**
    * Typing indicator
    */
   setActivity(

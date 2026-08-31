@@ -29,15 +29,29 @@ export function useActivity() {
     activity.snapshot,
   );
 
-  const session = useChatSession();
+  const {
+    threadId,
+    clientId,
+    role,
+    conversationKey,
+  } = useChatSession();
 
   useEffect(() => {
-    const timer = window.setInterval(() => {
-      activity.expireStale();
-    }, 1_000);
+    const nextExpiry = snapshot.participants
+      .filter((participant) => participant.activity === ActivityType.TYPING)
+      .reduce<number | null>((earliest, participant) => {
+        const expiresAt = new Date(participant.updatedAt).getTime() + 6_000;
+        return earliest === null || expiresAt < earliest ? expiresAt : earliest;
+      }, null);
 
-    return () => window.clearInterval(timer);
-  }, [activity]);
+    if (nextExpiry === null) return;
+    const timer = window.setTimeout(
+      () => activity.expireStale(),
+      Math.max(0, nextExpiry - Date.now()) + 25,
+    );
+
+    return () => window.clearTimeout(timer);
+  }, [activity, snapshot.participants]);
 
   //--------------------------------------------------------
   // Activity
@@ -48,7 +62,7 @@ export function useActivity() {
         activityType: ActivityType,
       ) => {
         if (
-          !session.threadId
+          !threadId
         ) {
           return;
         }
@@ -56,19 +70,21 @@ export function useActivity() {
         await activityClient.setActivity(
           {
             threadId:
-              session.threadId,
+              threadId,
 
             clientId:
-              session.clientId,
+              clientId,
 
-            role: session.role,
+            role,
+
+            conversationKey,
 
             activity: activityType,
           },
         );
 
       },
-      [session],
+      [threadId, clientId, role, conversationKey],
     );
 
   //--------------------------------------------------------
@@ -101,9 +117,9 @@ export function useActivity() {
     startTyping,
     stopTyping,
     getActivity: (clientId: string) =>
-      activity.getActivity(session.threadId, clientId),
+      activity.getActivity(threadId, clientId),
     isTyping: (role: "admin" | "user") =>
-      activity.isTyping(session.threadId, role),
+      activity.isTyping(threadId, role),
   };
 
 }

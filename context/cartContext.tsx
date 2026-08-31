@@ -4,24 +4,23 @@ import {
   batchAddToCartAction,
   deleteCartItem,
   getCurrentUserCart,
-  getCartMeta,
   updateCartQuantity,
 } from "@/app/actions/cartActions.server";
 
 import { safeParse } from "@/lib/safe-parse";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import {
+  useCallback,
   createContext,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
 import { toast } from "sonner";
 
 import { ulidId } from "@/lib/ulid";
-import { debounceQuery } from "@/lib/utils";
 import { Cart, CartItem, emptyCart, GuestCartItem, InitialCartInput, MerchandiseItem } from "@/lib/type_interface";
 
 /* ---------------------------
@@ -31,7 +30,20 @@ import { Cart, CartItem, emptyCart, GuestCartItem, InitialCartInput, Merchandise
 /* ---------------------------
    CONTEXT
 ---------------------------- */
-const CartContext = createContext<any>(null);
+type CartContextValue = {
+  cart: Cart;
+  addItem(item: MerchandiseItem): Promise<void>;
+  removeItem(id: string): Promise<void>;
+  updateQuantity(id: string, quantity: number): Promise<void>;
+  cartLoading: boolean;
+  cartCountDistinct: number;
+  cartCountTotal: number;
+  cartId: string | null;
+  isGuest: boolean;
+  clearCart(): void;
+};
+
+const CartContext = createContext<CartContextValue | null>(null);
 
 
 function normalizeCart(input?: InitialCartInput): Cart {
@@ -45,116 +57,90 @@ export function CartProvider({
   initialCart?: InitialCartInput;
   children: React.ReactNode;
 }) {
-  const { data: session } = useSession();
-  const router = useRouter();
+  const { data: session, status } = useSession();
 
-  const isGuest = !session?.user;
+  const isGuest = status === "unauthenticated";
 
   const [cart, setCart] = useState<Cart>(normalizeCart(initialCart));
   const [cartLoading, setLoading] = useState(false);
-  const [cartId, setCartId] = useState<string | null>(null);
-  const [hydrated, setHydrated] = useState(false);
-  const [cartCountDistinct, setCountDistinct] = useState(0);
-  const [cartCountTotal, setCountTotal] = useState(0);
+  const [hydrated, setHydrated] = useState(Boolean(initialCart));
 
   const mergedRef = useRef(false);
 
   /* ---------------------------
      🛠️ HELPERS
   ---------------------------- */
-  // For guest carts: recalc counts from local state
-  function updateCounts(items: CartItem[]) {
-    setCountDistinct(items.length);
-    setCountTotal(items.reduce((sum, i) => sum + i.quantity, 0));
-  }
-
-  function clearCart() {
+  const clearCart = useCallback(() => {
     setCart((currentCart) => ({
       ...currentCart,
       cartItems: [],
     }));
-    setCountDistinct(0);
-    setCountTotal(0);
-  }
+  }, []);
 
-  // wrap your server fetch in debounce
-  const updateCountsFromServer = debounceQuery(async () => {
-    const { distinctCount, totalCount, cartId } = await getCartMeta();
-    setCountDistinct(distinctCount);
-    setCountTotal(totalCount);
-    setCartId(cartId);
-  }, 500); // half a second delay
+  const cartCountDistinct = cart.cartItems.length;
+  const cartCountTotal = useMemo(
+    () => cart.cartItems.reduce((sum, item) => sum + item.quantity, 0),
+    [cart.cartItems],
+  );
+  const cartId = hydrated && cart.id !== "guest" ? cart.id : null;
 
   /* ---------------------------
     🧠 HYDRATE GUEST CART
   ---------------------------- */
   useEffect(() => {
-    if (session?.user?.id) {
-      setHydrated(false);
-      void getCurrentUserCart().then((serverCart) => {
-        if (serverCart) {
-          setCart(serverCart as Cart);
-          setCartId(serverCart.id);
-          updateCounts(serverCart.cartItems);
-        } else {
-          setCart(emptyCart);
-          setCartId(null);
-          updateCounts([]);
+    if (status === "loading") return;
+    if (initialCart) return;
+
+    let active = true;
+    const hydrate = async () => {
+      if (session?.user?.id) {
+        const pendingGuestItems = safeParse<GuestCartItem[]>(
+          localStorage.getItem("tempCart"),
+        );
+        if (pendingGuestItems?.length) return;
+
+        const serverCart = await getCurrentUserCart();
+        if (active) {
+          setCart(serverCart ? serverCart as Cart : emptyCart);
+          setHydrated(true);
         }
-        setHydrated(true);
+        return;
+      }
+
+      mergedRef.current = false;
+      await Promise.resolve();
+      const storedItems = localStorage.getItem("tempCart");
+      const storedId = localStorage.getItem("tempCartId");
+      const items = safeParse<GuestCartItem[]>(storedItems);
+      const id = storedId ?? ulidId();
+
+      if (!storedId) localStorage.setItem("tempCartId", id);
+      if (!items?.length) localStorage.removeItem("tempCart");
+      if (!active) return;
+
+      setCart({
+        ...emptyCart,
+        id,
+        cartItems: (items ?? []).map((item) => ({
+          id: ulidId(),
+          merchandise: item.merchandise,
+          quantity: item.quantity,
+        })),
       });
-      return;
-    }
-
-    if (initialCart) {
       setHydrated(true);
-      setCartId(initialCart.id ?? null);
-      return;
-    }
-
-    const storedItems = localStorage.getItem("tempCart");
-    const storedId = localStorage.getItem("tempCartId");
-
-    const items = safeParse<GuestCartItem[]>(storedItems);
-
-    // Ensure cartId exists
-    let id = storedId;
-    if (!id) {
-      id = ulidId();
-      localStorage.setItem("tempCartId", id);
-    }
-
-    if (!items || items.length === 0) {
-      localStorage.removeItem("tempCart");
-      setCart({ ...emptyCart, id });
-      setHydrated(true);
-      setCartId(id);
-      return;
-    }
-
-    const hydratedCart: Cart = {
-      ...emptyCart,
-      id,
-      cartItems: items.map((item) => ({
-        id: ulidId(),
-        merchandise: item.merchandise,
-        quantity: item.quantity,
-      })),
     };
 
-    setCart(hydratedCart);
-    setHydrated(true);
-    setCartId(id);
-  }, [initialCart, session?.user?.id]);
+    void hydrate();
+    return () => {
+      active = false;
+    };
+  }, [initialCart, session?.user?.id, status]);
 
   /* ---------------------------
     💾 PERSIST GUEST CART
   ---------------------------- */
   useEffect(() => {
     if (!hydrated || !isGuest) return;
-
-    // Only persist if user has never been authenticated in this session
-    if (session?.user) return; // prevent writing DB cart back into localStorage
 
     const minimal: GuestCartItem[] = cart?.cartItems?.map((item) => ({
       merchandise: {
@@ -168,12 +154,13 @@ export function CartProvider({
 
     localStorage.setItem("tempCart", JSON.stringify(minimal));
     if (cartId) localStorage.setItem("tempCartId", cartId);
-  }, [cart, hydrated, isGuest, cartId, session?.user]);
+  }, [cart, hydrated, isGuest, cartId]);
 
   /* ---------------------------
     🔄 MERGE GUEST CART ON LOGIN
   ---------------------------- */
   useEffect(() => {
+    let active = true;
     const mergeGuestCart = async () => {
       if (!session?.user?.id || mergedRef.current) return;
 
@@ -182,6 +169,7 @@ export function CartProvider({
       const guestItems = safeParse<GuestCartItem[]>(storedItems);
 
       if (!guestItems || guestItems.length === 0) return;
+      mergedRef.current = true;
 
       // 🔑 Normalize into { merchandiseId, quantity }
       const normalizedItems = guestItems.map((i) => ({
@@ -196,32 +184,45 @@ export function CartProvider({
           items: normalizedItems,
         });
 
-        if (res.success) {
+        if (res.success && res.cart) {
           // cleanup localStorage
           localStorage.removeItem("tempCart");
           localStorage.removeItem("tempCartId");
 
-          updateCountsFromServer(); // ensure counts are accurate post-merge
-
-          mergedRef.current = true;
+          if (!active) return;
+          setCart(res.cart as Cart);
+          setHydrated(true);
           toast.success("Cart synced");
-          router.refresh();
         } else {
+          mergedRef.current = false;
+          const serverCart = await getCurrentUserCart();
+          if (!active) return;
+          setCart(serverCart ? serverCart as Cart : emptyCart);
+          setHydrated(true);
           toast.error(res.error?.message ?? "Failed to merge cart");
         }
       } catch (err) {
+        mergedRef.current = false;
+        const serverCart = await getCurrentUserCart();
+        if (!active) return;
+        setCart(serverCart ? serverCart as Cart : emptyCart);
+        setHydrated(true);
         console.error(err);
         toast.error("Failed to merge cart");
       }
     };
 
-    mergeGuestCart();
+    void mergeGuestCart();
+    return () => {
+      active = false;
+    };
   }, [session?.user?.id]);
 
   /* ---------------------------
      ➕ ADD ITEM
   ---------------------------- */
-  const addItem = async (item: MerchandiseItem) => {
+  const addItem = useCallback(async (item: MerchandiseItem) => {
+    if (status === "loading") return;
     setLoading(true);
 
     try {
@@ -240,11 +241,11 @@ export function CartProvider({
           return;
         }
 
-        // 🔑 Immediately refresh counts from server
-        updateCountsFromServer();
+        if (res.cart) {
+          setCart(res.cart as Cart);
+        }
 
         toast.success(`${item.title.toUpperCase()} added to cart`);
-        router.refresh();
         return;
       }
 
@@ -275,27 +276,23 @@ export function CartProvider({
           ];
         }
 
-        // recalc counts
-        updateCounts(updatedItems);
-
         return {
           ...prev,
           cartItems: updatedItems,
         };
       });
 
-      router.refresh();
-
       toast.success(`${item.title.toUpperCase()} added to cart`);
     } finally {
       setLoading(false);
     }
-  };
+  }, [cartId, session?.user, status]);
 
   /* ---------------------------
     ❌ REMOVE ITEM
   ---------------------------- */
-  const removeItem = async (id: string) => {
+  const removeItem = useCallback(async (id: string) => {
+    if (status === "loading") return;
     try {
       if (!isGuest) {
         const res = await deleteCartItem(id);
@@ -306,42 +303,28 @@ export function CartProvider({
         }
 
         toast.success("Item removed");
-        router.refresh();
-      } else {
-        const stored = localStorage.getItem("tempCart");
-        const parsed = safeParse<GuestCartItem[]>(stored);
-
-        if (parsed) {
-          const updated = parsed.filter(
-            (item) => item.merchandise.id !== id
-          );
-          localStorage.setItem("tempCart", JSON.stringify(updated));
-        }
       }
 
-      // 🔑 Update cart state + counts
       setCart((prev) => {
         const updatedItems = prev?.cartItems?.filter((item) => item.id !== id) ?? [];
-
-        // recalc counts
-        updateCounts(updatedItems);
 
         return {
           ...prev,
           cartItems: updatedItems,
         };
       });
-
-      router.refresh();
     } catch (err) {
       console.error(err);
     }
-  };
+  }, [isGuest, status]);
 
   /* ---------------------------
      🔢 UPDATE QUANTITY
   ---------------------------- */
-  const updateQuantity = async (id: string, newQty: number) => {
+  const updateQuantity = useCallback(async (id: string, newQty: number) => {
+    if (status === "loading" || !Number.isInteger(newQty) || newQty < 1) return;
+    const previousQuantity = cart.cartItems.find((item) => item.id === id)?.quantity;
+
     setCart((prev) => ({
       ...prev,
       cartItems: prev?.cartItems?.map((item) =>
@@ -354,62 +337,56 @@ export function CartProvider({
     const res = await updateCartQuantity(id, newQty);
 
     if (!res || "error" in res) {
+      if (previousQuantity !== undefined) {
+        setCart((prev) => ({
+          ...prev,
+          cartItems: prev.cartItems.map((item) =>
+            item.id === id ? { ...item, quantity: previousQuantity } : item,
+          ),
+        }));
+      }
       toast.error("Failed to update quantity");
-    } else {
-      router.refresh();
     }
-  };
+  }, [cart.cartItems, isGuest, status]);
 
-  /* ---------------------------
-     📊 CART META
-  ---------------------------- */
-  useEffect(() => {
-    const fetchData = async () => {
-      if (session?.user?.id) {
-        try {
-          updateCountsFromServer();
-        } catch (err) {
-          console.error(err);
-        }
-        return;
-      }
-
-      const stored = localStorage.getItem("tempCart");
-      const items = safeParse<CartItem[]>(stored);
-
-      if (!items) {
-        setCountDistinct(0);
-        setCountTotal(0);
-        return;
-      }
-
-      updateCounts(items);
-    };
-
-    fetchData();
-  }, [session?.user?.id]);
+  const value = useMemo<CartContextValue>(() => ({
+    cart,
+    addItem,
+    removeItem,
+    updateQuantity,
+    cartLoading,
+    cartCountDistinct,
+    cartCountTotal,
+    cartId,
+    isGuest,
+    clearCart,
+  }), [
+    cart,
+    addItem,
+    removeItem,
+    updateQuantity,
+    cartLoading,
+    cartCountDistinct,
+    cartCountTotal,
+    cartId,
+    isGuest,
+    clearCart,
+  ]);
 
   /* ---------------------------
      PROVIDER
   ---------------------------- */
   return (
     <CartContext.Provider
-      value={{
-        cart,
-        addItem,
-        removeItem,
-        updateQuantity,
-        cartLoading,
-        cartCountDistinct,
-        cartCountTotal,
-        cartId,
-        isGuest,
-        clearCart,
-      }}
+      value={value}
     >
       {children}
     </CartContext.Provider>
   );
 }
 
-export const useCart = () => useContext(CartContext);
+export const useCart = () => {
+  const context = useContext(CartContext);
+  if (!context) throw new Error("useCart must be used within CartProvider.");
+  return context;
+};

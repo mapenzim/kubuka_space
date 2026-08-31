@@ -30,15 +30,6 @@ export type GuestCartItem = {
 
 export type GuestCart = GuestCartItem[];
 
-export const initialCart: Cart = {
-  id: "guest",
-  userId: undefined,
-  cartItems: [],
-  createdAt: new Date(),
-  updatedAt: new Date(),
-  deletedAt: null as any,
-};
-
 export type InitialCartInput = Cart | null | undefined;
 
 export const emptyCart: Cart = {
@@ -47,7 +38,7 @@ export const emptyCart: Cart = {
   cartItems: [],
   createdAt: new Date(),
   updatedAt: new Date(),
-  deletedAt: null as any,
+  deletedAt: null,
 };
 
 export * from "./interfaces/index";

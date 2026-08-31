@@ -57,6 +57,7 @@ export function useThreadEvents() {
   return useEventStream<ChatEvent>({
     threadId: session.threadId,
     clientId: session.clientId,
+    conversationKey: session.conversationKey,
 
     onEvent: handleEvent,
   });

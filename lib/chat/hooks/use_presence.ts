@@ -24,7 +24,12 @@ export function usePresence() {
   // 
   //--------------------------------------------------------
 
-  const session = useChatSession();
+  const {
+    threadId,
+    clientId,
+    role,
+    conversationKey,
+  } = useChatSession();
   const { presence } = chatStores;
   const snapshot = useSyncExternalStore(
     presence.subscribe,
@@ -36,21 +41,22 @@ export function usePresence() {
   //--------------------------------------------------------
   const connect =
     useCallback(async () => {
-      if (!session.threadId) {
+      if (!threadId) {
         return;
       }
 
       await presenceClient.connect({
         threadId:
-          session.threadId,
+          threadId,
 
         clientId:
-          session.clientId,
+          clientId,
 
         role:
-          session.role,
+          role,
+        conversationKey,
       });
-    }, [session]);
+    }, [threadId, clientId, role, conversationKey]);
 
   //--------------------------------------------------------
   // Disconnect
@@ -58,29 +64,30 @@ export function usePresence() {
 
   const disconnect =
     useCallback(async () => {
-      if (!session.threadId) {
+      if (!threadId) {
         return;
       }
 
       await presenceClient.disconnect({
         threadId:
-          session.threadId,
+          threadId,
 
         clientId:
-          session.clientId,
+          clientId,
+        conversationKey,
       });
 
       presence.disconnect(
-        session.clientId,
+        clientId,
       );
-    }, [session]);
+    }, [threadId, clientId, conversationKey, presence]);
 
   //--------------------------------------------------------
   // Heartbeat
   //--------------------------------------------------------
 
   useEffect(() => {
-    if (!session.threadId) {
+    if (!threadId) {
       return;
     }
 
@@ -89,9 +96,10 @@ export function usePresence() {
         presenceClient
           .heartbeat({
             threadId:
-              session.threadId!,
+                threadId,
             clientId:
-              session.clientId,
+                clientId,
+            conversationKey,
           })
           .catch(
             console.error,
@@ -100,14 +108,14 @@ export function usePresence() {
 
     return () =>
       clearInterval(id);
-  }, [session]);
+  }, [threadId, clientId, conversationKey]);
 
   //--------------------------------------------------------
   // Lifecycle
   //--------------------------------------------------------
 
   useEffect(() => {
-    if (!session.threadId) {
+    if (!threadId) {
       return;
     }
 
@@ -119,7 +127,7 @@ export function usePresence() {
       );
     };
   }, [
-    session.threadId,
+    threadId,
     connect,
     disconnect,
   ]);
@@ -143,7 +151,7 @@ export function usePresence() {
     getParticipantByRole(role: "admin" | "user") {
       return snapshot.participants.find(
         (participant) =>
-          participant.threadId === session.threadId &&
+          participant.threadId === threadId &&
           participant.role === role,
       );
     },

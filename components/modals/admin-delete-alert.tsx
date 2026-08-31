@@ -1,4 +1,5 @@
 import * as AlertDialog from "@radix-ui/react-alert-dialog";
+import AdminDialogButton from "@/components/admin/AdminDialogButton";
 
 type ConfirmDialogProps = {
   open: boolean;
@@ -42,18 +43,19 @@ export default function RemoveItemAlert({
             }}
           >
             <AlertDialog.Cancel asChild>
-              <button className="Button mauve">
+              <AdminDialogButton type="button" variant="secondary">
                 {cancelText}
-              </button>
+              </AdminDialogButton>
             </AlertDialog.Cancel>
 
             <AlertDialog.Action asChild>
-              <button
-                className="Button red"
+              <AdminDialogButton
+                type="button"
+                variant="danger"
                 onClick={onConfirm}
               >
                 {confirmText}
-              </button>
+              </AdminDialogButton>
             </AlertDialog.Action>
           </div>
         </AlertDialog.Content>

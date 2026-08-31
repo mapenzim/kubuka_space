@@ -26,7 +26,7 @@ import {
   Separator,
   Text,
 } from "@radix-ui/themes";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 
 interface AdminShellProps {
   children: React.ReactNode;
@@ -67,6 +67,31 @@ const pageTitles: Record<string, string> = {
   "/admin/profile": "Administrator Profile",
 };
 
+const ADMIN_THEME_EVENT = "kubuka-admin-theme-change";
+
+function subscribeToTheme(listener: () => void) {
+  window.addEventListener(ADMIN_THEME_EVENT, listener);
+  window.addEventListener("storage", listener);
+  return () => {
+    window.removeEventListener(ADMIN_THEME_EVENT, listener);
+    window.removeEventListener("storage", listener);
+  };
+}
+
+function getThemeSnapshot() {
+  return document.documentElement.classList.contains("dark");
+}
+
+function getServerThemeSnapshot() {
+  return false;
+}
+
+function setAdminTheme(dark: boolean) {
+  document.documentElement.classList.toggle("dark", dark);
+  window.localStorage.setItem("kubuka-admin-theme", dark ? "dark" : "light");
+  window.dispatchEvent(new Event(ADMIN_THEME_EVENT));
+}
+
 function isActivePath(pathname: string, href: string) {
   return href === "/admin"
     ? pathname === href
@@ -77,32 +102,15 @@ export default function AdminShell({ children, user }: AdminShellProps) {
   const pathname = usePathname();
   const pageTitle = pageTitles[pathname] ?? "Admin Dashboard";
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
+  const darkMode = useSyncExternalStore(
+    subscribeToTheme,
+    getThemeSnapshot,
+    getServerThemeSnapshot,
+  );
 
-  useEffect(() => {
-    const storedTheme = window.localStorage.getItem("kubuka-admin-theme");
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    setDarkMode(storedTheme ? storedTheme === "dark" : prefersDark);
-  }, []);
-
-  useEffect(() => {
-    const root = document.documentElement;
-    const hadDarkClass = root.classList.contains("dark");
-    root.classList.remove("dark");
-
-    return () => {
-      root.classList.toggle("dark", hadDarkClass);
-    };
-  }, []);
-
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", darkMode);
-    window.localStorage.setItem("kubuka-admin-theme", darkMode ? "dark" : "light");
+  const toggleTheme = useCallback(() => {
+    setAdminTheme(!darkMode);
   }, [darkMode]);
-
-  useEffect(() => {
-    setMobileMenuOpen(false);
-  }, [pathname]);
 
   useEffect(() => {
     document.body.classList.toggle("admin-menu-open", mobileMenuOpen);
@@ -120,7 +128,7 @@ export default function AdminShell({ children, user }: AdminShellProps) {
             pageTitle={pageTitle}
             darkMode={darkMode}
             user={user}
-            onToggleTheme={() => setDarkMode((current) => !current)}
+            onToggleTheme={toggleTheme}
           />
         </aside>
 
@@ -147,7 +155,7 @@ export default function AdminShell({ children, user }: AdminShellProps) {
             user={user}
             mobile
             onClose={closeMobileMenu}
-            onToggleTheme={() => setDarkMode((current) => !current)}
+            onToggleTheme={toggleTheme}
           />
         </aside>
 
@@ -308,7 +316,6 @@ function AdminAccountFooter({
     localStorage.removeItem("tempCartId");
     onNavigate?.();
     router.replace("/");
-    router.refresh();
   }
 
   return (

@@ -9,6 +9,7 @@ import {
 interface UseEventStreamOptions<TEvent> {
   threadId?: string;
   clientId?: string;
+  conversationKey?: string;
 
   reconnectDelay?: number;
 
@@ -21,6 +22,7 @@ interface UseEventStreamOptions<TEvent> {
 export function useEventStream<TEvent>({
   threadId,
   clientId,
+  conversationKey,
   reconnectDelay = 3000,
   onOpen,
   onClose,
@@ -128,6 +130,10 @@ export function useEventStream<TEvent>({
           "clientId",
           clientId,
         );
+      }
+
+      if (conversationKey) {
+        params.set("conversationKey", conversationKey);
       }
       
       source =
@@ -240,6 +246,7 @@ export function useEventStream<TEvent>({
   }, [
     threadId,
     clientId,
+    conversationKey,
     reconnectDelay,
   ]);
 

@@ -6,13 +6,13 @@ import {
   setManagedUserStatus,
   updateManagedUser,
 } from "@/app/actions/adminActions.server";
-import * as Dialog from "@radix-ui/react-dialog";
 import {
   Avatar,
   Badge,
   Box,
   Button,
   Card,
+  Dialog,
   DropdownMenu,
   Flex,
   Grid,
@@ -32,11 +32,10 @@ import {
   Trash2,
   UserCheck,
   Users,
-  X,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
+import AdminDialogButton from "./AdminDialogButton";
 
 type ManagedRole = "USER" | "EDITOR" | "ADMIN";
 type UserStatus = "ACTIVE" | "SUSPENDED" | "ARCHIVED";
@@ -90,7 +89,6 @@ export default function UserManager({
   actorRole,
   users,
 }: UserManagerProps) {
-  const router = useRouter();
   const [createOpen, setCreateOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<ManagedUser | null>(null);
   const [search, setSearch] = useState("");
@@ -126,7 +124,6 @@ export default function UserManager({
 
   function finishAction(message: string) {
     toast.success(message);
-    router.refresh();
   }
 
   function submitCreate(event: FormEvent<HTMLFormElement>) {
@@ -524,28 +521,20 @@ function UserDialog({
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/55 backdrop-blur-[2px]" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-xl border border-(--gray-a7) bg-(--color-panel-solid) p-6 text-(--gray-12) shadow-2xl outline-none">
-          <Flex justify="between" align="start" gap="4" mb="5">
-            <Box>
-              <Dialog.Title className="text-xl font-semibold">
-                {mode === "create" ? "Add user" : "Edit user"}
-              </Dialog.Title>
-              <Dialog.Description className="mt-1 text-sm text-(--gray-10)">
-                {mode === "create"
-                  ? "Create an account and assign its initial access role."
-                  : "Update account details. Email addresses are permanent."}
-              </Dialog.Description>
-            </Box>
-            <Dialog.Close asChild>
-              <IconButton variant="ghost" color="gray" aria-label="Close">
-                <X size={18} aria-hidden="true" />
-              </IconButton>
-            </Dialog.Close>
-          </Flex>
+      <Dialog.Content
+        maxWidth="520px"
+        className="bg-white! text-zinc-900 dark:bg-zinc-900! dark:text-zinc-100"
+      >
+        <Dialog.Title>
+          {mode === "create" ? "Add user" : "Edit user"}
+        </Dialog.Title>
+        <Dialog.Description size="2" color="gray">
+          {mode === "create"
+            ? "Create an account and assign its initial access role."
+            : "Update account details. Email addresses are permanent."}
+        </Dialog.Description>
 
-          <form onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={onSubmit} className="mt-4 space-y-4">
             {user && <input type="hidden" name="userId" value={user.id} />}
 
             <label className="block text-sm font-medium">
@@ -623,22 +612,28 @@ function UserDialog({
             </label>
 
             <Flex justify="end" gap="3" mt="6">
-              <Dialog.Close asChild>
-                <Button type="button" variant="soft" color="gray" disabled={pending}>
-                  Cancel
-                </Button>
-              </Dialog.Close>
-              <Button type="submit" color="indigo" disabled={pending}>
+              <AdminDialogButton
+                type="button"
+                variant="secondary"
+                disabled={pending}
+                onClick={() => onOpenChange(false)}
+              >
+                Cancel
+              </AdminDialogButton>
+              <AdminDialogButton
+                type="submit"
+                variant="primary"
+                disabled={pending}
+              >
                 {pending
                   ? "Saving…"
                   : mode === "create"
                     ? "Create user"
                     : "Save changes"}
-              </Button>
+              </AdminDialogButton>
             </Flex>
-          </form>
-        </Dialog.Content>
-      </Dialog.Portal>
+        </form>
+      </Dialog.Content>
     </Dialog.Root>
   );
 }

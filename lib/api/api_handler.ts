@@ -3,6 +3,7 @@ import {
   ApiErrorResponse,
   ApiResponse,
 } from "./response";
+import { ApiError } from "./api_error";
 
 export async function apiHandler<T>(
   action: () => Promise<T>,
@@ -30,7 +31,7 @@ export async function apiHandler<T>(
     return NextResponse.json(
       response,
       {
-        status: 500,
+        status: error instanceof ApiError ? error.status : 500,
       },
     );
   }

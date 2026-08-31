@@ -6,6 +6,7 @@ import {
 
 import { heartbeatUseCase } from "@/lib/container/runtime";
 import { apiHandler } from "@/lib/api/api_handler";
+import { authorizeThreadAccess } from "@/lib/chat/server/chat_access";
 
 export async function POST(
   request: NextRequest,
@@ -16,11 +17,13 @@ export async function POST(
   const {
     threadId,
     clientId,
+    conversationKey,
   } = body;
 
   return apiHandler(
-    () => heartbeatUseCase.execute(
-      threadId, clientId
-    )
+    async () => {
+      await authorizeThreadAccess(threadId, conversationKey);
+      return heartbeatUseCase.execute(threadId, clientId);
+    }
   );
 }

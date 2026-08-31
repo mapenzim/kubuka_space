@@ -4,4 +4,5 @@ export interface ActivityRequestDto {
   threadId: string;
   clientId: string;
   activity: ActivityType;
+  conversationKey?: string;
 }

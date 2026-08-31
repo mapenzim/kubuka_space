@@ -13,10 +13,26 @@ export default function SupportNotificationLink({
   const [count, setCount] = useState(0);
   useEffect(() => {
     let active = true;
-    const refresh = async () => { const next = await getUserSupportUnreadCount(); if (active) setCount(next); };
-    refresh();
-    const timer = window.setInterval(refresh, 30000);
-    return () => { active = false; window.clearInterval(timer); };
+    let refreshing = false;
+    const refresh = async () => {
+      if (refreshing || document.visibilityState === "hidden") return;
+      refreshing = true;
+      try {
+        const next = await getUserSupportUnreadCount();
+        if (active) setCount(next);
+      } finally {
+        refreshing = false;
+      }
+    };
+    void refresh();
+    const timer = window.setInterval(() => void refresh(), 60000);
+    const handleFocus = () => void refresh();
+    window.addEventListener("focus", handleFocus);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+      window.removeEventListener("focus", handleFocus);
+    };
   }, []);
   return <Link href="/contact_us" aria-label={count ? `${count} unread support messages` : "Support messages"} className="relative inline-flex items-center gap-2 p-2">
     <MessageSquareMoreIcon size={28} />

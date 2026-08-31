@@ -2,6 +2,7 @@
 
 import {
   useEffect,
+  useCallback,
   useState,
   useTransition,
 } from "react";
@@ -43,7 +44,7 @@ export default function AdminMessenger() {
   //--------------------------------------------------
   // Chat Session
   //--------------------------------------------------
-  const session = useChatSession();
+  const { setThreadId } = useChatSession();
 
   //--------------------------------------------------
   // Chat
@@ -70,19 +71,18 @@ export default function AdminMessenger() {
   // Selected Thread
   //--------------------------------------------------
   useEffect(() => {
-    session.setThreadId(
+    setThreadId(
       selectedThreadId as string ?? '',
     );
   }, [
     selectedThreadId,
-    session,
+    setThreadId,
   ]);
 
-  useEffect(() => {
-    if (selectedThreadId) {
-      setMobileInboxOpen(false);
-    }
-  }, [selectedThreadId]);
+  const selectThread = useCallback((threadId: string) => {
+    setSelectedThreadId(threadId);
+    setMobileInboxOpen(false);
+  }, [setSelectedThreadId]);
 
   //--------------------------------------------------
   // Load Conversation
@@ -205,7 +205,7 @@ export default function AdminMessenger() {
               selectedThreadId
             }
             onSelect={
-              setSelectedThreadId
+              selectThread
             }
           />
         </Box>

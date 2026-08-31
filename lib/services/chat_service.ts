@@ -22,10 +22,7 @@ export class ChatService {
   }
 
   async getThreadsByEmail(email: string) {
-    const threads = await this.threadService.findAll();
-    return threads.filter(
-      (thread) => thread.email.toLowerCase() === email.toLowerCase(),
-    );
+    return this.threadService.findAllByEmail(email);
   }
 
   async startConversation(

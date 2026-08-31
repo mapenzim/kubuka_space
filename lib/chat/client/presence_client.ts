@@ -63,7 +63,7 @@ class PresenceHttpClient
     request: DisconnectRequest,
   ): Promise<void> {
     const response = await fetch(
-      "/api/chat/disconnect",
+      "/api/disconnect",
       {
         method: "POST",
         headers: {

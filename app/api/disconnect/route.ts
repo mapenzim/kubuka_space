@@ -2,6 +2,7 @@ import { ApiResponse } from "@/lib/api/response";
 import { DisconnectRequest } from "@/lib/api/types";
 import { disconnectUseCase } from "@/lib/container/runtime";
 import { NextRequest, NextResponse } from "next/server";
+import { authorizeThreadAccess } from "@/lib/chat/server/chat_access";
 
 export async function POST(
   request: NextRequest,
@@ -10,7 +11,8 @@ export async function POST(
     const body =
       (await request.json()) as DisconnectRequest;
 
-    disconnectUseCase.execute(
+    await authorizeThreadAccess(body.threadId, body.conversationKey);
+    await disconnectUseCase.execute(
       body.threadId,
       body.clientId,
     );

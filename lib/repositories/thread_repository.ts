@@ -10,6 +10,7 @@ export interface ThreadRepository {
 
   findAllByEmail(
     email: string,
+    limit?: number,
   ): Promise<Thread[]>;
 
   getInbox(): Promise<ThreadSummary[]>;

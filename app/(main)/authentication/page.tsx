@@ -11,6 +11,7 @@ import Divider from "@/components/divider";
 import Fading from "@/components/fade";
 import Loading from "@/components/loading";
 import Turnstile from "react-turnstile";
+import Image from "next/image";
 
 export const VARIANTS = {
   login: "LOGIN",
@@ -44,19 +45,19 @@ const AuthenticationPage = () => {
       if (session?.user?.status && session.user.status !== "ACTIVE") {
         void signOut({ redirect: false }).then(() => {
           toast.error("This account is suspended or archived.");
-          router.refresh();
+          router.replace("/authentication?account=inactive");
         });
         return;
       }
 
-      const role = (session?.user as any)?.role;
+      const role = session?.user?.role;
       const redirect =
         role === "ADMIN" || role === "SUPERUSER" ? "/admin" :
         role === "EDITOR" ? "/admin/posts" :
         callbackUrl;
       router.replace(redirect);
     }
-  }, [status, session, router]);
+  }, [callbackUrl, status, session, router]);
 
   const onSubmitHandler = async (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -96,9 +97,7 @@ const AuthenticationPage = () => {
 
         toast.success("Logged in successfully!");
 
-        setTimeout(() => {
-          router.replace(callbackUrl);
-        }, 50);
+        router.replace(callbackUrl);
 
         return null;
       }
@@ -134,8 +133,8 @@ const AuthenticationPage = () => {
         if ("error" in res) return toast.error(res.error.message);
         toast.success("Password changed successfully!");
       }
-    } catch (err: any) {
-      toast.error(err.message || "Unexpected error");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Unexpected error");
     } finally {
       setIsLoading(false);
     }
@@ -157,9 +156,11 @@ const AuthenticationPage = () => {
         <div
           className="w-16 h-16"
         >
-          <img
+          <Image
             src="/images/Kubuka_Logo.png"
             alt="Logo"
+            width={64}
+            height={64}
             className="object-contain"
           />
         </div>

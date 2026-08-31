@@ -18,6 +18,18 @@ export const metadata: Metadata = {
   description: meta_config.appDescription,
 };
 
+const themeInitScript = `
+  (() => {
+    try {
+      const stored = localStorage.getItem("kubuka-admin-theme");
+      const dark = stored
+        ? stored === "dark"
+        : matchMedia("(prefers-color-scheme: dark)").matches;
+      document.documentElement.classList.toggle("dark", dark);
+    } catch {}
+  })();
+`;
+
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const session = await auth();
 
@@ -28,6 +40,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       className="scroll-smooth" 
       data-scroll-behavior="smooth" 
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body
         suppressHydrationWarning
         className={`${GeistSans.variable} ${GeistMono.variable} antialiased dark:bg-gray-950!`}

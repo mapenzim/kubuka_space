@@ -6,7 +6,7 @@ type ProviderProps = {
   session: Session | null;
 };
 
-export default async function Provider({
+export default function Provider({
   children,
   session,
 }: ProviderProps) {

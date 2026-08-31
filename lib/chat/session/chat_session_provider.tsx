@@ -4,7 +4,6 @@ import {
   ReactNode,
   useCallback,
   useMemo,
-  useRef,
   useState,
 } from "react";
 
@@ -24,10 +23,9 @@ export function ChatSessionProvider({
   // Stable client id
   //--------------------------------------------------------
 
-  const clientId =
-    useRef(
-      crypto.randomUUID(),
-    );
+  const [clientId] = useState(
+    () => crypto.randomUUID(),
+  );
 
   //--------------------------------------------------------
   // State
@@ -65,8 +63,7 @@ export function ChatSessionProvider({
   const value =
     useMemo(
       () => ({
-        clientId:
-          clientId.current,
+        clientId,
         role,
 
         threadId,
@@ -79,6 +76,7 @@ export function ChatSessionProvider({
       }),
       [
         role,
+        clientId,
         threadId,
         conversationKey,
         reset,

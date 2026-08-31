@@ -1,5 +1,6 @@
 import { apiHandler } from "@/lib/api/api_handler";
 import { archiveThreadUseCase } from "@/lib/container/runtime";
+import { requireChatAdmin } from "@/lib/chat/server/chat_access";
 
 interface RouteProps {
   params: Promise<{
@@ -14,7 +15,8 @@ export async function POST(
   const { threadId } =
     await params;
 
-  return apiHandler(() =>
-    archiveThreadUseCase.execute(threadId),
-  );
+  return apiHandler(async () => {
+    await requireChatAdmin();
+    return archiveThreadUseCase.execute(threadId);
+  });
 }

@@ -41,9 +41,12 @@ export function formatDate(dateString: string | Date): string {
   }).format(date);
 }
 
-export const formatTime = (date: Date | string) => {
+export const formatTime = (
+  date: Date | string,
+  currentTime: Date | number = new Date(),
+) => {
   const input = new Date(date);
-  const now = new Date();
+  const now = new Date(currentTime);
 
   const isSameDay =
     input.getFullYear() === now.getFullYear() &&
@@ -122,8 +125,15 @@ export function formatLastSeen(date: Date | string): string {
 /**
  * Recursively extracts raw text from a Lexical node tree.
  */
-function extractLexicalText(node: any): string {
-  if (!node) return "";
+type LexicalNode = {
+  type?: string;
+  text?: unknown;
+  children?: LexicalNode[];
+};
+
+function extractLexicalText(value: unknown): string {
+  if (!value || typeof value !== "object") return "";
+  const node = value as LexicalNode;
 
   // If we hit a text node, return its text content
   if (node.type === "text" && typeof node.text === "string") {
@@ -171,14 +181,6 @@ export function generateLexicalExcerpt(lexicalStateString: string, maxLength: nu
     console.error("Failed to parse Lexical JSON for excerpt:", error);
     return "Content unavailable";
   }
-}
-
-export function debounceQuery<F extends (...args: any[]) => void>(fn: F, delay: number) {
-  let timer: NodeJS.Timeout;
-  return (...args: Parameters<F>) => {
-    clearTimeout(timer);
-    timer = setTimeout(() => fn(...args), delay);
-  };
 }
 
 // role (UI) → direction (DB)

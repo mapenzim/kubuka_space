@@ -3,6 +3,7 @@ import { NextRequest } from "next/server";
 import { ConnectRequest } from "@/lib/api/types";
 import { connectUseCase } from "@/lib/container/runtime";
 import { apiHandler } from "@/lib/api/api_handler";
+import { authorizeThreadAccess } from "@/lib/chat/server/chat_access";
 
 export async function POST(
   request: NextRequest,
@@ -13,17 +14,20 @@ export async function POST(
     const {
       threadId,
       clientId,
-      role,
+      conversationKey,
     } = body;
 
     return apiHandler(
-      async () => connectUseCase.execute(
+      async () => {
+        const role = await authorizeThreadAccess(threadId, conversationKey);
+        return connectUseCase.execute(
         threadId,
         clientId,
         role,
         new Date(),
         new Date()
-      )
+        );
+      }
     );
 
 }

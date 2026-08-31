@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useState } from "react";
 
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
@@ -27,7 +27,7 @@ export default function LexicalEditor({
   initialValue,
   onChange,
 }: Props) {
-  const initialStateRef = useRef(initialValue);
+  const [initialState] = useState(initialValue);
 
   const initialConfig = {
     namespace: "kubuka-space-editor",
@@ -66,7 +66,7 @@ export default function LexicalEditor({
       <AutoFocusPlugin />
       <ListPlugin />
 
-      <InitialStatePlugin initialValue={initialStateRef.current} />
+      <InitialStatePlugin initialValue={initialState} />
 
       <OnChangePlugin
         onChange={(editorState) => {

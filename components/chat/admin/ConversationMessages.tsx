@@ -10,6 +10,7 @@ import {
 
 import MessageBubble from "./MessageBubble";
 import { MessageDto } from "@/lib/dto";
+import { useRelativeTimeClock } from "@/lib/chat/hooks/use_relative_time_clock";
 
 interface ConversationMessagesProps {
   messages: MessageDto[];
@@ -24,13 +25,15 @@ export default function ConversationMessages({
 }: ConversationMessagesProps) {
   const viewportRef =
     useRef<HTMLDivElement>(null);
+  const now = useRelativeTimeClock();
+  const lastMessageId = messages.at(-1)?.id;
 
   useEffect(() => {
     viewportRef.current?.scrollTo({
       top: viewportRef.current.scrollHeight,
       behavior: "smooth",
     });
-  }, [messages]);
+  }, [lastMessageId]);
 
   return ( 
     <Box className="flex-1 overflow-hidden">
@@ -50,6 +53,7 @@ export default function ConversationMessages({
               key={message.id}
               message={message}
               selfRole={selfRole}
+              now={now}
             />
           ))}
         </Flex>

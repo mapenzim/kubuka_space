@@ -10,8 +10,6 @@ export interface ThreadDetailsDto {
 
   archived: boolean;
 
-  conversationKeyHash: string;
-
   createdAt: string;
   updatedAt: string;
 

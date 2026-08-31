@@ -15,9 +15,6 @@ export class ThreadDetailsDtoMapper {
 
       archived: thread.archived,
 
-      conversationKeyHash:
-        thread.conversationKeyHash,
-
       createdAt:
         thread.createdAt.toISOString(),
 

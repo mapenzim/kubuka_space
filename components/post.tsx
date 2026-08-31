@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
@@ -88,12 +88,11 @@ interface PostFormProps {
 
 export function PostForm({ post }: PostFormProps) {
   const [content, setContent] = useState(post?.content || "");
-  const contentRef = useRef(content);
   const router = useRouter();
   const { data: session } = useSession();
 
   const handleSubmit = async (formData: FormData) => {
-    formData.set("content", contentRef.current);
+    formData.set("content", content);
     const res = await publishPost(formData);
 
     if ("error" in res) {
@@ -110,10 +109,15 @@ export function PostForm({ post }: PostFormProps) {
   };
 
   const isPublished = post?.published;
+  const cannotEdit = Boolean(post && session?.user.id !== post.authorId);
 
-  if (post && session?.user.id !== post.authorId) {
+  useEffect(() => {
+    if (!cannotEdit) return;
     toast.error("You don't have permission to edit this post.");
-    router.push("/posts");
+    router.replace("/posts");
+  }, [cannotEdit, router]);
+
+  if (cannotEdit) {
     return null;
   }
 
@@ -173,10 +177,7 @@ export function PostForm({ post }: PostFormProps) {
               <LexicalEditor
                 key={post?.id}
                 initialValue={post?.content as string}
-                onChange={(val) => {
-                  contentRef.current = val;
-                  setContent(val);
-                }}
+                onChange={setContent}
               />
             </Box>
 
@@ -184,7 +185,7 @@ export function PostForm({ post }: PostFormProps) {
               <SubmitButton
                 isPublished={isPublished}
                 postId={post?.id}
-                content={contentRef.current}
+                content={content}
               />
             </Flex>
           </Flex>

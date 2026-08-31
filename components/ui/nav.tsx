@@ -11,17 +11,15 @@ import Image from "next/image";
 import { isAdminRole } from "@/lib/roles";
 import SupportNotificationLink from "@/components/chat/SupportNotificationLink";
 
-const NavigationApp = () => {
-  const navLinks = [
-    { name: "Products", path: "/store" },
-    { name: "Blog", path: "/posts" },
-    { name: "Contact Us", path: "/contact_us" },
-  ];
-  const mobileNavLinks = [
-    { name: "Products", path: "/store" },
-    { name: "Blog", path: "/posts" },
-  ];
+const navLinks = [
+  { name: "Products", path: "/store" },
+  { name: "Blog", path: "/posts" },
+  { name: "Contact Us", path: "/contact_us" },
+];
 
+const mobileNavLinks = navLinks.slice(0, 2);
+
+const NavigationApp = () => {
   const { data: session } = useSession();
   const user = session?.user;
   const router = useRouter();
@@ -41,20 +39,24 @@ const NavigationApp = () => {
     await signOut({ redirect: false });
     localStorage.removeItem("tempCart");
     localStorage.removeItem("tempCartId");
-    router.refresh();
   }
 
   React.useEffect(() => {
+    let frame: number | null = null;
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
+      if (frame !== null) return;
+      frame = window.requestAnimationFrame(() => {
+        setIsScrolled(window.scrollY > 10);
+        frame = null;
+      });
     };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (frame !== null) window.cancelAnimationFrame(frame);
+    };
   }, []);
-
-  React.useEffect(() => {
-    closeMenu();
-  }, [pathname, closeMenu]);
 
   React.useEffect(() => {
     if (!isMenuOpen) {
@@ -86,7 +88,7 @@ const NavigationApp = () => {
       }
     >
       {/* Logo */}
-      <a 
+      <Link
         href="/" 
         aria-label="Prebuilt UI"
         className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/30 bg-white/90 p-1 md:h-12 md:w-12"
@@ -99,12 +101,12 @@ const NavigationApp = () => {
           sizes="48px"
           className="h-full w-full object-contain"
         />
-      </a>
+      </Link>
 
       {/* Desktop Nav with hover effect */}
       <div className="hidden md:flex items-center gap-8 ml-7">
-        {navLinks.map((link, i) => (
-            <Link key={i} href={link.path} className={`group relative h-6 overflow-hidden ${desktopLinkText}`}>
+        {navLinks.map((link) => (
+            <Link key={link.path} href={link.path} className={`group relative h-6 overflow-hidden ${desktopLinkText}`}>
             <span className="block text-inherit transition-transform duration-300 group-hover:-translate-y-full">
               {link.name}
             </span>

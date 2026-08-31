@@ -48,15 +48,12 @@ export default function UserChat({
   useEffect(() => {
     let active = true;
     if (!user?.email) {
-      setLoadingHistory(false);
       return () => { active = false; };
     }
 
     void getUserSupportThreads().then((result) => {
       if (!active) return;
-      const existing = [...result.threads]
-        .filter(Boolean)
-        .sort((a, b) => new Date(b!.updatedAt).getTime() - new Date(a!.updatedAt).getTime())[0];
+      const existing = result.threads[0];
       if (existing) setExistingThread(existing);
       setLoadingHistory(false);
     }).catch(() => {

@@ -1,18 +1,10 @@
 "use server";
 
-import { auth } from "@/auth";
-import { isAdminRole } from "@/lib/roles";
 import prisma from "@/lib/prisma";
 import { ulidId } from "@/lib/server-utils";
 import { revalidatePath } from "next/cache";
 import { chatGateway } from "@/lib/container/runtime";
-
-async function requireAdmin() {
-  const session = await auth();
-  if (!session?.user || !isAdminRole(session.user.role)) {
-    throw new Error("Administrator access required.");
-  }
-}
+import { requireAdmin } from "@/lib/admin/require_admin";
 
 export async function getMerchandiseForAdmin() {
   await requireAdmin();
@@ -25,6 +17,7 @@ export async function getMerchandiseForAdmin() {
     ...product,
     price: Number(product.price),
     stockQuantity: product.stockQuantity,
+    deletedAt: product.deletedAt?.toISOString() ?? null,
   }));
 }
 
@@ -56,7 +49,6 @@ export async function createMerchandise(input: {
   });
 
   revalidatePath("/store");
-  revalidatePath("/admin/store");
   return { ...product, price: Number(product.price) };
 }
 
@@ -89,7 +81,6 @@ export async function updateMerchandise(input: {
   });
 
   revalidatePath("/store");
-  revalidatePath("/admin/store");
   return { ...product, price: Number(product.price) };
 }
 
@@ -118,7 +109,6 @@ export async function setMerchandiseDeleted(id: string, deleted: boolean) {
   });
 
   revalidatePath("/store");
-  revalidatePath("/admin/store");
   return { ...product, price: Number(product.price) };
 }
 
@@ -142,6 +132,17 @@ export async function getOrdersForAdmin() {
     date: order.createdAt.toISOString(),
     status: order.status,
   }));
+}
+
+export async function getAdminStoreData() {
+  await requireAdmin();
+  const [products, categories, orders] = await Promise.all([
+    getMerchandiseForAdmin(),
+    getProductCategories(),
+    getOrdersForAdmin(),
+  ]);
+
+  return { products, categories, orders };
 }
 
 export async function cancelOrder(orderId: string) {

@@ -2,12 +2,19 @@ import { NextRequest } from "next/server";
 
 import { conversationHub } from "@/lib/container/runtime";
 import { ConversationClient } from "@/lib/sse/conversation_client";
+import { requireChatAdmin } from "@/lib/chat/server/chat_access";
 
 export const runtime = "nodejs";
 
 export async function GET(
   request: NextRequest,
 ) {
+  try {
+    await requireChatAdmin();
+  } catch {
+    return new Response("Forbidden", { status: 403 });
+  }
+
   const clientId =
     request.nextUrl.searchParams.get(
       "clientId",

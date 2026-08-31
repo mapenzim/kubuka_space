@@ -1,11 +1,8 @@
 import { apiHandler } from "@/lib/api/api_handler";
-import { auth } from "@/auth";
-import { isAdminRole } from "@/lib/roles";
 import {
-  chatGateway,
   sendMessageUseCase,
 } from "@/lib/container/runtime";
-import type { SenderRole } from "@/lib/interfaces/sender_role";
+import { authorizeThreadAccess } from "@/lib/chat/server/chat_access";
 import { NextResponse } from "next/server";
 
 export async function POST(
@@ -14,6 +11,7 @@ export async function POST(
   const body = await request.json() as {
     threadId?: unknown;
     content?: unknown;
+    conversationKey?: unknown;
   };
 
   if (
@@ -31,34 +29,17 @@ export async function POST(
     );
   }
 
-  const session = await auth();
-  const senderRole: SenderRole = isAdminRole(session?.user?.role)
-    ? "admin"
-    : "user";
-
-  // Authenticated users may only reply to their own support thread. Guests
-  // remain supported for existing public conversations.
-  if (senderRole === "user" && session?.user?.email) {
-    const thread = await chatGateway.getThread(body.threadId);
-    if (
-      !thread ||
-      thread.email.toLowerCase() !== session.user.email.toLowerCase()
-    ) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "You cannot reply to this conversation.",
-        },
-        { status: 403 },
-      );
-    }
-  }
-
-  return apiHandler(() =>
-    sendMessageUseCase.execute({
+  return apiHandler(async () => {
+    const senderRole = await authorizeThreadAccess(
+      body.threadId as string,
+      typeof body.conversationKey === "string"
+        ? body.conversationKey
+        : undefined,
+    );
+    return sendMessageUseCase.execute({
       threadId: body.threadId as string,
       senderRole,
       content: body.content as string,
-    }),
-  );
+    });
+  });
 }

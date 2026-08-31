@@ -4,7 +4,7 @@ import { ThreadSummary } from "../interfaces/thread_summary";
 export class ThreadSummaryDtoMapper {
   static toDto(
     thread: ThreadSummary,
-  ): ThreadSummary {
+  ): ThreadSummaryDto {
     return {
       id: thread.id,
       sender: thread.sender,

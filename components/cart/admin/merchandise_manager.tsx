@@ -1,16 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button, Card, Dialog, Flex, Heading, Text, TextField } from "@radix-ui/themes";
 import { toast } from "sonner";
 import {
   createMerchandise,
-  getMerchandiseForAdmin,
   setMerchandiseDeleted,
   updateMerchandise,
-  getProductCategories,
 } from "@/app/actions/merchandiseActions.server";
 import { useStoreProductDialog } from "./store_product_context";
+import AdminDialogButton from "@/components/admin/AdminDialogButton";
 
 type Product = {
   id: string;
@@ -27,31 +26,18 @@ type Category = { id: string; name: string };
 
 const emptyForm = { title: "", body: "", price: "", stockQuantity: "", categoryId: "" };
 
-export default function MerchandiseManager() {
+export default function MerchandiseManager({
+  initialProducts,
+  initialCategories,
+}: {
+  initialProducts: Product[];
+  initialCategories: Category[];
+}) {
   const { dialogOpen, mode, openEdit, closeDialog } = useStoreProductDialog();
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<Product[]>(initialProducts);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [categories, setCategories] = useState<Category[]>([]);
-
-  useEffect(() => {
-    if (dialogOpen && mode === "create") {
-      setEditingId(null);
-      setForm(emptyForm);
-    }
-  }, [dialogOpen, mode]);
-
-  useEffect(() => {
-    getMerchandiseForAdmin()
-      .then((items) => setProducts(items as Product[]))
-      .catch((error) => toast.error(error instanceof Error ? error.message : "Unable to load products."))
-      .finally(() => setLoading(false));
-  }, []);
-
-  useEffect(() => {
-    getProductCategories().then((items) => setCategories(items as Category[])).catch((error) => toast.error(error instanceof Error ? error.message : "Unable to load categories."));
-  }, []);
+  const [categories] = useState<Category[]>(initialCategories);
 
   async function save() {
     try {
@@ -86,10 +72,24 @@ export default function MerchandiseManager() {
     }
   }
 
+  function resetAndCloseDialog() {
+    setEditingId(null);
+    setForm(emptyForm);
+    closeDialog();
+  }
+
   return (
     <>
-      <Dialog.Root open={dialogOpen} onOpenChange={(open) => { if (!open) closeDialog(); }}>
-        <Dialog.Content maxWidth="520px">
+      <Dialog.Root
+        open={dialogOpen}
+        onOpenChange={(open) => {
+          if (!open) resetAndCloseDialog();
+        }}
+      >
+        <Dialog.Content
+          maxWidth="520px"
+          className="bg-white! text-zinc-900 dark:bg-zinc-900! dark:text-zinc-100"
+        >
           <Dialog.Title>{mode === "edit" ? "Edit product" : "Add product"}</Dialog.Title>
           <Dialog.Description size="2" color="gray">{mode === "edit" ? "Update this storefront product." : "Create a product for the storefront."}</Dialog.Description>
           <Flex direction="column" gap="3" mt="4">
@@ -97,14 +97,25 @@ export default function MerchandiseManager() {
             <TextField.Root placeholder="Description" value={form.body} onChange={(e) => setForm({ ...form, body: e.target.value })} />
             <Flex gap="2"><TextField.Root className="flex-1" type="number" min="0" step="0.01" placeholder="Price" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} /><TextField.Root className="flex-1" type="number" min="0" step="1" placeholder="Stock" value={form.stockQuantity} onChange={(e) => setForm({ ...form, stockQuantity: e.target.value })} /></Flex>
             <select value={form.categoryId} onChange={(e) => setForm({ ...form, categoryId: e.target.value })} className="h-9 rounded-md border border-gray-300 bg-transparent px-3 text-sm"><option value="">Uncategorized</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select>
-            <Flex justify="end" gap="2" mt="2"><Button variant="soft" onClick={() => { setEditingId(null); setForm(emptyForm); closeDialog(); }}>Cancel</Button><Button onClick={() => void save()}>{mode === "edit" ? "Save changes" : "Add product"}</Button></Flex>
+            <Flex justify="end" gap="2" mt="2">
+              <AdminDialogButton
+                type="button"
+                variant="secondary"
+                onClick={resetAndCloseDialog}
+              >
+                Cancel
+              </AdminDialogButton>
+              <AdminDialogButton type="button" onClick={() => void save()}>
+                {mode === "edit" ? "Save changes" : "Add product"}
+              </AdminDialogButton>
+            </Flex>
           </Flex>
         </Dialog.Content>
       </Dialog.Root>
       <Card>
       <Flex direction="column" gap="3" p="4">
         <Heading size="4">Products</Heading>
-        {loading ? <Text color="gray">Loading products…</Text> : products.map((product) => (
+        {products.map((product) => (
           <Flex key={product.id} justify="between" align="center" className="border-t pt-3">
             <Flex direction="column">
               <Text weight="bold">{product.title}{product.deletedAt ? " (removed)" : ""}</Text>

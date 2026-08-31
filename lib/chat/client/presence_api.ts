@@ -6,6 +6,7 @@ import {
 export interface HeartbeatRequest {
   threadId: string;
   clientId: string;
+  conversationKey?: string;
 }
 
 export interface PresenceApi {

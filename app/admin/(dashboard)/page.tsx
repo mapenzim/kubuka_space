@@ -3,10 +3,8 @@ import { Grid, Card, Flex, Text, Heading, Box, Badge } from "@radix-ui/themes";
 import { getAdminDashboardData } from "@/app/actions/adminActions.server";
 import { formatTime } from "@/lib/utils";
 
-export default async function AdminDashboardPage() {
-  const dashboard = await getAdminDashboardData();
-
-  const StatCard = ({ title, value, detail }: { title: string; value: string; detail: string }) => (
+function StatCard({ title, value, detail }: { title: string; value: string; detail: string }) {
+  return (
     <Card size="3" variant="surface">
       <Flex direction="column" gap="2">
         <Text size="2" color="gray" weight="medium">{title}</Text>
@@ -15,6 +13,10 @@ export default async function AdminDashboardPage() {
       </Flex>
     </Card>
   );
+}
+
+export default async function AdminDashboardPage() {
+  const dashboard = await getAdminDashboardData();
 
   return (
     <Flex direction="column" gap="6">

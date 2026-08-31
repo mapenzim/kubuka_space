@@ -14,6 +14,7 @@ import {
 
 import { ChatMessagesProps } from "@/lib/type_interface";
 import { formatTime } from "@/lib/utils";
+import { useRelativeTimeClock } from "@/lib/chat/hooks/use_relative_time_clock";
 
 export default function ChatMessages({
   thread,
@@ -25,6 +26,8 @@ export default function ChatMessages({
 
   const scrollRef =
     useRef<HTMLDivElement>(null);
+  const now = useRelativeTimeClock();
+  const lastMessageId = thread.messages.at(-1)?.id;
 
   //--------------------------------------------------
   // Auto Scroll
@@ -42,7 +45,7 @@ export default function ChatMessages({
       top: container.scrollHeight,
       behavior: "smooth",
     });
-  }, [thread.messages]);
+  }, [lastMessageId]);
 
   //--------------------------------------------------
   // UI
@@ -62,7 +65,7 @@ export default function ChatMessages({
           gap="3"
         >
           {thread.messages.map(
-            (message:any) => {
+            (message) => {
               const mine =
                 message.senderRole ===
                 selfRole;
@@ -102,6 +105,7 @@ export default function ChatMessages({
                   >
                     {formatTime(
                       message.timestamp,
+                      now,
                     )}
                   </Text>
                 </Flex>

@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
+    "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
     "db:seed": "prisma db seed",
-    "build": "pnpm prisma generate && pnpm db:migrate && pnpm db:seed && next build",
+    "db:setup": "pnpm db:generate && pnpm db:migrate && pnpm db:seed",
+    "build": "pnpm db:generate && next build",
     "start": "next start",
     "lint": "eslint ."
   },
