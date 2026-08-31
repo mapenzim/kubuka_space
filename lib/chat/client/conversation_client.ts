@@ -90,6 +90,7 @@ class ConversationHttpClient
       {
         method: "GET",
         credentials: "include",
+        cache: "no-store",
       },
     );
 

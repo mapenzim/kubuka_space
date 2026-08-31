@@ -25,6 +25,7 @@ interface UseTypingIndicatorOptions {
 export function useTypingIndicator({
   startTyping,
   stopTyping,
+  throttleMs = 3000,
   idleMs = 4500,
 }: UseTypingIndicatorOptions) {
   //--------------------------------------------------------
@@ -46,11 +47,14 @@ export function useTypingIndicator({
       //----------------------------------------------------
       // Throttle typing updates
       //----------------------------------------------------
-      if (!typingRef.current) {
+      if (
+        !typingRef.current ||
+        now - lastTypingRef.current >= throttleMs
+      ) {
         startTyping();
         typingRef.current = true;
+        lastTypingRef.current = now;
       }
-      lastTypingRef.current = now;
 
       //----------------------------------------------------
       // Reset idle timer
@@ -71,6 +75,7 @@ export function useTypingIndicator({
     }, [
       startTyping,
       stopTyping,
+      throttleMs,
       idleMs,
     ]);
 

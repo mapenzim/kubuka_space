@@ -54,6 +54,7 @@ export abstract class ApiClient {
   ): Promise<T> {
     const response = await fetch(url, {
       method: options.method,
+      cache: options.method === "GET" ? "no-store" : undefined,
       headers:
         options.body !== undefined
           ? {

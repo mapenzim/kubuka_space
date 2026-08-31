@@ -3,7 +3,6 @@ import { MessageDto } from "../dto";
 import { ThreadDetailsDto } from "../dto/thread_details_dto";
 import { ThreadSummaryDto } from "../dto/thread_summary_dto";
 import { ConversationEventType } from "../events/conversation/conversation_event_type";
-import { ThreadEventType } from "../events/thread/thread_event_type";
 import { SenderRole } from "../interfaces/sender_role";
 import { NotificationService } from "../notifications/notification_service";
 import { PresenceService } from "../presence/presence_service";
@@ -109,38 +108,11 @@ export class ChatGateway {
     senderRole: SenderRole,
     content: string,
   ): Promise<MessageDto> {
-    const message =
-      await this.sendMessageUseCase.execute({
-        threadId,
-        senderRole,
-        content,
-      });
-
-    this.notificationService.publishThread({
-      type: ThreadEventType.MESSAGE_CREATED,
+    return this.sendMessageUseCase.execute({
       threadId,
-      timestamp: new Date().toISOString(),
-      payload: {
-        message,
-      },
+      senderRole,
+      content,
     });
-    const summary =
-      await this.getThreadSummaryUseCase.execute(
-        threadId,
-      );
-
-    if (summary) {
-      this.notificationService.publishConversation({
-        type:
-          ConversationEventType.CONVERSATION_UPDATED,
-        timestamp: new Date().toISOString(),
-        payload: {
-          thread: summary,
-        },
-      });
-    }
-
-    return message;
   }
 
   async startConversation(

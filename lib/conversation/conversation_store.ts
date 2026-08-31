@@ -43,6 +43,10 @@ export class ConversationStore {
   replace(
     threads: ThreadSummaryDto[],
   ): void {
+    if (JSON.stringify(threads) === JSON.stringify(this.threads)) {
+      return;
+    }
+
     this.threads = [...threads];
 
     this.notify();

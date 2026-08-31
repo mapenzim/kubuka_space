@@ -103,6 +103,7 @@ export default function ChatMessages({
                     size="1"
                     className="text-zinc-500 dark:text-zinc-400"
                   >
+                    {message.senderRole === "bot" && "Automated reply · "}
                     {formatTime(
                       message.timestamp,
                       now,

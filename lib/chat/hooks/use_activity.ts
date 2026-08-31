@@ -93,9 +93,6 @@ export function useActivity() {
   const typingRef = useRef(false);
 
   const startTyping = useCallback(async () => {
-    if (typingRef.current) {
-      return;
-    }
     typingRef.current = true;
     await setActivity(ActivityType.TYPING);
   }, [setActivity]);

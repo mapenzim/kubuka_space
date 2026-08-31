@@ -2,7 +2,6 @@
 
 import {
   useCallback,
-  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -18,6 +17,7 @@ import { conversationStore } from "@/lib/conversation/conversation_store";
 import { useConversationEvents } from "@/lib/chat/hooks/use_conversation_events";
 import { ConversationEventType } from "@/lib/events/conversation/conversation_event_type";
 import { presenceStore } from "@/lib/chat/stores/presence_store";
+import { useVisibilityPoll } from "./use_visibility_poll";
 
 export function useInbox() {
   //--------------------------------------------------------
@@ -59,11 +59,13 @@ export function useInbox() {
       response.data,
     );
 
-    setSelectedThreadId(previous =>
-      previous ??
-      response.data[0]?.id ??
-      null,
-    );
+    setSelectedThreadId(previous => {
+      if (previous && response.data.some(thread => thread.id === previous)) {
+        return previous;
+      }
+
+      return response.data[0]?.id ?? null;
+    });
   }, []);
 
   const removeThread = useCallback((threadId: string) => {
@@ -73,9 +75,10 @@ export function useInbox() {
     );
   }, []);
 
-  useEffect(() => {
-    void Promise.resolve().then(loadInbox);
-  }, [loadInbox]);
+  useVisibilityPoll(loadInbox, {
+    intervalMs: 5000,
+    runImmediately: true,
+  });
 
   //--------------------------------------------------------
   // Event Stream

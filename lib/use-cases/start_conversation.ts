@@ -11,6 +11,9 @@ interface StartConversationRequest {
   senderRole?: "user" | "admin" | "bot";
 }
 
+const AUTOMATIC_REPLY =
+  "Thanks for reaching out to Kubuka Space. We’ve received your message and a member of our team will respond as soon as possible.";
+
 export class StartConversation {
   constructor(
     private readonly chatService: ChatService,
@@ -41,6 +44,7 @@ export class StartConversation {
 
           return ThreadDetailsDtoMapper.toDto({
             ...existingThread,
+            updatedAt: message.timestamp,
             messages: [...existingThread.messages, message],
           });
         }
@@ -60,6 +64,18 @@ export class StartConversation {
         conversationKeyHash,
         request.senderRole ?? "user",
       );
+
+    if ((request.senderRole ?? "user") === "user") {
+      const automaticReply =
+        await this.chatService.sendMessage(
+          thread.id,
+          "bot",
+          AUTOMATIC_REPLY,
+        );
+
+      thread.messages.push(automaticReply);
+      thread.updatedAt = automaticReply.timestamp;
+    }
 
     return ThreadDetailsDtoMapper.toDto(thread);
   }

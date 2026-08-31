@@ -20,6 +20,7 @@ import {
 import { toast } from "sonner";
 
 import { chatStores } from "../stores";
+import { useVisibilityPoll } from "./use_visibility_poll";
 
 export function useConversation() {
   const {
@@ -43,6 +44,29 @@ export function useConversation() {
     conversation.snapshot,
     conversation.snapshot
   );
+
+  const syncThread = useCallback(async () => {
+    if (!threadId || conversation.getThread()?.id !== threadId) {
+      return;
+    }
+
+    const response = await conversationClient.getThread(
+      threadId,
+      conversationKey,
+    );
+
+    if (
+      response.data &&
+      conversation.getThread()?.id === threadId
+    ) {
+      conversation.mergeThread(response.data);
+    }
+  }, [conversation, conversationKey, threadId]);
+
+  useVisibilityPoll(syncThread, {
+    enabled: Boolean(threadId),
+    intervalMs: 5000,
+  });
 
   //--------------------------------------------------------
   // Load Thread
@@ -133,10 +157,10 @@ export function useConversation() {
           response.data,
         );
 
+        setConversationKey(conversationKey);
         setThreadId(
           response.data.id,
         );
-        setConversationKey(conversationKey);
 
         toast.success("Message sent.");
 

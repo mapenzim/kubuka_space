@@ -36,16 +36,26 @@ export class PrismaMessageRepository implements MessageRepository {
   }
 
   async create(data: Message): Promise<Message> {
-    const message = await this.prisma.message.create({
-      data: {
-        id: data.id,
-        threadId: data.threadId,
-        senderRole: data.senderRole,
-        content: data.content,
-        timestamp: data.timestamp,
-        readAt: data.readAt,
-      },
-    });
+    const [message] = await this.prisma.$transaction([
+      this.prisma.message.create({
+        data: {
+          id: data.id,
+          threadId: data.threadId,
+          senderRole: data.senderRole,
+          content: data.content,
+          timestamp: data.timestamp,
+          readAt: data.readAt,
+        },
+      }),
+      this.prisma.thread.update({
+        where: {
+          id: data.threadId,
+        },
+        data: {
+          updatedAt: data.timestamp,
+        },
+      }),
+    ]);
 
     return MessageMapper.toDomain(message);
   }

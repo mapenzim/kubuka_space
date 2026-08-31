@@ -39,7 +39,12 @@ export default function MessageBubble({
       </Box>
 
       <Text size="1" color="gray">
-        {mine ? "Sent" : "Received"} {formatTime(message.timestamp, now)}
+        {message.senderRole === "bot"
+          ? "Automated reply"
+          : mine
+            ? "Sent"
+            : "Received"}{" "}
+        {formatTime(message.timestamp, now)}
       </Text>
     </Flex>
   );
