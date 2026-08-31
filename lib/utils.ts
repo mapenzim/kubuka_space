@@ -48,12 +48,20 @@ export const formatTime = (
   const input = new Date(date);
   const now = new Date(currentTime);
 
+  if (Number.isNaN(input.getTime()) || Number.isNaN(now.getTime())) {
+    return "Just now";
+  }
+
+  if (input.getTime() > now.getTime()) {
+    return "0 seconds ago";
+  }
+
   const isSameDay =
     input.getFullYear() === now.getFullYear() &&
     input.getMonth() === now.getMonth() &&
     input.getDate() === now.getDate();
 
-  const diffMs = now.getTime() - input.getTime();
+  const diffMs = Math.max(0, now.getTime() - input.getTime());
 
   const seconds = Math.floor(diffMs / 1000);
   const minutes = Math.floor(diffMs / (1000 * 60));

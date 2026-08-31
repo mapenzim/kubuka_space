@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-const RELATIVE_TIME_REFRESH_MS = 60_000;
+const RELATIVE_TIME_REFRESH_MS = 1_000;
 
 export function useRelativeTimeClock() {
   const [now, setNow] = useState(() => Date.now());

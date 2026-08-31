@@ -10,6 +10,7 @@ import {
 } from "@radix-ui/themes";
 
 import { ThreadSummaryDto } from "@/lib/dto/thread_summary_dto";
+import { useRelativeTimeClock } from "@/lib/chat/hooks/use_relative_time_clock";
 import { formatTime } from "@/lib/utils";
 
 interface InboxSidebarProps {
@@ -21,12 +22,14 @@ interface InboxSidebarProps {
 interface InboxSidebarItemProps {
   thread: ThreadSummaryDto;
   selected: boolean;
+  now: number;
   onSelect: (threadId: string) => void;
 }
 
 const InboxSidebarItem = memo(function InboxSidebarItem({
   thread,
   selected,
+  now,
   onSelect,
 }: InboxSidebarItemProps) {
   return (
@@ -61,7 +64,7 @@ const InboxSidebarItem = memo(function InboxSidebarItem({
 
         {thread.lastMessageAt && (
           <Text size="1" color="gray">
-            {formatTime(thread.lastMessageAt)}
+            {formatTime(thread.lastMessageAt, now)}
           </Text>
         )}
       </Flex>
@@ -83,6 +86,8 @@ export default function InboxSidebar({
   selectedThreadId,
   onSelect,
 }: InboxSidebarProps) {
+  const now = useRelativeTimeClock();
+
   return (
     <Card className="flex h-full w-full flex-col overflow-hidden">
       <ScrollArea className="flex-1">
@@ -102,6 +107,7 @@ export default function InboxSidebar({
               key={thread.id}
               thread={thread}
               selected={selectedThreadId === thread.id}
+              now={now}
               onSelect={onSelect}
             />
           ))
