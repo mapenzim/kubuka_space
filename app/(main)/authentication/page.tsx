@@ -3,41 +3,51 @@
 import { useEffect, useState, SyntheticEvent } from "react";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { AnimatePresence, motion, useAnimationControls } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { AtSignIcon, CircleEllipsisIcon, EyeIcon, EyeOff, User2Icon } from "lucide-react";
 import { toast } from "sonner";
-import { createUser, resetPasswordAction, changePasswordAction } from "@/app/actions/authActions.server";
+import { createUser } from "@/app/actions/authActions.server";
 import Divider from "@/components/divider";
 import Fading from "@/components/fade";
 import Loading from "@/components/loading";
 import Turnstile from "react-turnstile";
 import Image from "next/image";
+import Link from "next/link";
 
-export const VARIANTS = {
+const VARIANTS = {
   login: "LOGIN",
   register: "REGISTER",
-  reset: "RESET PASSWORD",
-  change: "CHANGE PASSWORD",
-};
+} as const;
+
+type AuthenticationVariant = (typeof VARIANTS)[keyof typeof VARIANTS];
+
+function safeCallbackUrl(value: string | null): string {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) {
+    return "/";
+  }
+
+  return value;
+}
 
 const AuthenticationPage = () => {
-  const [variant, setVariant] = useState(VARIANTS.login);
+  const [variant, setVariant] = useState<AuthenticationVariant>(VARIANTS.login);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [turnstileKey, setTurnstileKey] = useState("signup");
+  const [turnstileKey, setTurnstileKey] = useState(0);
   const [accountCaptchaToken, setAccountCaptchaToken] = useState<string | null>(null);
 
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const token = searchParams.get("token");
-  const callbackUrl = searchParams.get("callbackUrl") || "/";
-  const controls = useAnimationControls();
+  const callbackUrl = safeCallbackUrl(searchParams.get("callbackUrl"));
+  const accountInactive = searchParams.get("account") === "inactive";
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_SIGNUP_FORM;
 
-  const changeVariant = async (next: string) => {
-    await controls.start({ x: -500, opacity: 0, transition: { duration: 0.4 } });
+  const changeVariant = (next: AuthenticationVariant) => {
     setVariant(next);
-    await controls.start({ x: 0, opacity: 1, transition: { duration: 0.4 } });
+    setShowPassword(false);
+    setAccountCaptchaToken(null);
+    setTurnstileKey((current) => current + 1);
   };
 
   useEffect(() => {
@@ -62,32 +72,24 @@ const AuthenticationPage = () => {
   const onSubmitHandler = async (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const form = new FormData(e.currentTarget);
+    const formElement = e.currentTarget;
+    const form = new FormData(formElement);
     setIsLoading(true);
 
     try {
-      if (variant === VARIANTS.reset) {
-        const res = await resetPasswordAction(form.get("email") as string);
-        if ("error" in res) return toast.error(res.error.message);
-        toast.success("Reset link sent!");
-        changeVariant(VARIANTS.change);
-        router.replace(`/auth?token=${res.token}`);
-        return;
-      }
-
       if (variant === VARIANTS.login) {
-        const email = form.get("email");
-        const pwd = form.get("password");
+        const email = String(form.get("email") ?? "").trim().toLowerCase();
+        const password = String(form.get("password") ?? "");
 
-        if (!email || !pwd) {
-          toast.error("Email or Password required.");
+        if (!email || !password) {
+          toast.error("Email and password are required.");
           return;
         }
 
         const res = await signIn("credentials", {
           redirect: false,
           email,
-          password: pwd,
+          password,
         });
 
         if (res?.error) {
@@ -96,15 +98,15 @@ const AuthenticationPage = () => {
         }
 
         toast.success("Logged in successfully!");
-
-        router.replace(callbackUrl);
-
-        return null;
+        return;
       }
 
       if (variant === VARIANTS.register) {
+        if (!turnstileSiteKey) {
+          toast.error("Account registration is temporarily unavailable.");
+          return;
+        }
 
-        // 🚫 Block if captcha not completed 
         if (!accountCaptchaToken) {
           toast.error("Please complete the captcha.");
           return;
@@ -116,22 +118,27 @@ const AuthenticationPage = () => {
         form.append("captchaToken", accountCaptchaToken);
 
         const res = await createUser(form);
-        if ("error" in res) return toast.error(res.error.message);
-
-        toast.success("User created successfully!");
-        e.currentTarget.reset();
-        
-        // 🔄 Reset Turnstile widget by forcing re-render
-        setTurnstileKey((prev) => prev + 1);
+        setTurnstileKey((current) => current + 1);
         setAccountCaptchaToken(null);
 
-        return;
-      }
-
-      if (variant === VARIANTS.change) {
-        const res = await changePasswordAction(token, form.get("password") as string);
         if ("error" in res) return toast.error(res.error.message);
-        toast.success("Password changed successfully!");
+
+        formElement.reset();
+
+        const loginResult = await signIn("credentials", {
+          redirect: false,
+          email: String(form.get("email") ?? "").trim().toLowerCase(),
+          password,
+        });
+
+        if (loginResult?.error) {
+          toast.success("Account created. Please sign in.");
+          changeVariant(VARIANTS.login);
+          return;
+        }
+
+        toast.success("Account created successfully!");
+        return;
       }
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Unexpected error");
@@ -140,7 +147,13 @@ const AuthenticationPage = () => {
     }
   };
 
-  if (status === "authenticated") return null;
+  if (status === "authenticated") {
+    return (
+      <div className="rounded-xl bg-white/90 px-6 py-8 text-center text-sm text-zinc-600 shadow-xl dark:bg-zinc-900/90 dark:text-zinc-300">
+        Redirecting to your account…
+      </div>
+    );
+  }
 
   return (
     <AnimatePresence mode="wait">
@@ -169,7 +182,12 @@ const AuthenticationPage = () => {
         </Fading>
 
         <form onSubmit={onSubmitHandler} className="relative">
-          <fieldset disabled={isLoading} className="opacity-90">
+          <fieldset disabled={isLoading || status === "loading"} className="opacity-90">
+            {accountInactive && (
+              <p role="alert" className="mb-4 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+                This account is suspended or archived.
+              </p>
+            )}
             {/* Inputs */}
             {/* 🧠 Honeypot (hidden spam trap) */}
             <input
@@ -189,19 +207,21 @@ const AuthenticationPage = () => {
                       name="name"
                       placeholder="Name"
                       autoComplete="name"
+                      required
                       className="w-full rounded-md border border-gray-300 bg-gray-50 dark:bg-gray-600 dark:border-gray-500 p-2 pl-10 pr-10 text-gray-900 focus:border-sky-500 focus:ring-sky-500 dark:text-gray-200"
                     />
                     <User2Icon className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                   </div>
                 )}
 
-                {(variant === VARIANTS.login || variant === VARIANTS.register || variant === VARIANTS.reset) && (
+                {(variant === VARIANTS.login || variant === VARIANTS.register) && (
                   <div className="relative w-full mb-4">
                     <input
-                      type="text"
+                      type="email"
                       name="email"
                       placeholder="Email"
                       autoComplete="email"
+                      required
                       className="w-full rounded-md border border-gray-300 bg-gray-50 p-2 pl-10 pr-10 text-gray-900 focus:border-sky-500 focus:ring-sky-500 dark:bg-gray-600 dark:border-gray-500 dark:text-gray-200"
                     />
                     <AtSignIcon className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
@@ -221,7 +241,9 @@ const AuthenticationPage = () => {
                       type={showPassword ? "text" : "password"}
                       name="password"
                       placeholder="Password"
-                      autoComplete="current-password"
+                      autoComplete={variant === VARIANTS.register ? "new-password" : "current-password"}
+                      minLength={variant === VARIANTS.register ? 8 : undefined}
+                      required
                       className="w-full rounded-md border border-gray-300 bg-gray-50 p-2 pl-10 pr-10 text-gray-900 focus:border-sky-500 focus:ring-sky-500 dark:bg-gray-600 dark:border-gray-500 dark:text-gray-200"
                     />
 
@@ -250,26 +272,37 @@ const AuthenticationPage = () => {
                       type={showPassword ? "text" : "password"}
                       name="confirmPassword"
                       placeholder="Confirm Password"
-                      autoComplete="current-confirm-password"
+                      autoComplete="new-password"
+                      minLength={8}
+                      required
                       className="w-full rounded-md border border-gray-300 bg-gray-50 p-2 pl-10 pr-10 text-gray-900 focus:border-sky-500 focus:ring-sky-500 dark:bg-gray-600 dark:border-gray-500 dark:text-gray-200"
                     />
                   </div>
                 )}
                 <div className="my-3 flex flex-col justify-between text-sm text-sky-600 dark:text-gray-400">
                   {/** check for captcha verification during signup */}
-                  {variant === VARIANTS.register && !accountCaptchaToken && (
+                  {variant === VARIANTS.register && !accountCaptchaToken && turnstileSiteKey && (
                     <Turnstile
                       key={turnstileKey}
-                      sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_SIGNUP_FORM!}
+                      sitekey={turnstileSiteKey}
                       onVerify={(token) => setAccountCaptchaToken(token)}
                       onExpire={() => setAccountCaptchaToken(null)}
+                      onError={() => {
+                        setAccountCaptchaToken(null);
+                        toast.error("Captcha could not be loaded. Please try again.");
+                      }}
                     />
+                  )}
+                  {variant === VARIANTS.register && !turnstileSiteKey && (
+                    <p role="alert" className="text-center text-red-600 dark:text-red-300">
+                      Account registration is temporarily unavailable.
+                    </p>
                   )}
                   {variant === VARIANTS.login && (
                     <>
-                      <button type="button" onClick={() => changeVariant(VARIANTS.reset)} className="hover:underline">
+                      <Link href="/contact_us" className="text-center hover:underline">
                         Forgot password?
-                      </button>
+                      </Link>
                       <button type="button" onClick={() => changeVariant(VARIANTS.register)} className="hover:underline">
                         Create account
                       </button>
@@ -288,15 +321,13 @@ const AuthenticationPage = () => {
             <Fading delay={0.8} direction="left" fullWidth padding={0}>
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || status === "loading"}
                 className="w-full rounded-md bg-linear-to-r from-sky-500 to-indigo-500 px-4 py-2 text-white font-semibold shadow hover:from-sky-600 hover:to-indigo-600 focus:ring-2 focus:ring-sky-400 flex items-center justify-center gap-2 dark:from-gray-400 dark:to-zinc-600 dark:text-gray-800 dark:hover:from-gray-500 dark:hover:to-zinc-700 dark:focus:ring-gray-400"
 
               >
-                {isLoading && <Loading />}
+                {(isLoading || status === "loading") && <Loading />}
                 {(variant === VARIANTS.login && VARIANTS.login) ||
-                  (variant === VARIANTS.register && VARIANTS.register) ||
-                  (variant === VARIANTS.reset && VARIANTS.reset) ||
-                  (variant === VARIANTS.change && VARIANTS.change)}
+                  (variant === VARIANTS.register && VARIANTS.register)}
               </button>
             </Fading>
           </fieldset>

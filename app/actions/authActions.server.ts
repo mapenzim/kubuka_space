@@ -10,43 +10,63 @@ type CreateUserResult =
   | { error: { message: string } };
 
 export async function createUser(form: FormData): Promise<CreateUserResult> {
-  const name = form.get("name") as string;
+  const name = String(form.get("name") ?? "").trim();
   const email = String(form.get("email") ?? "").trim().toLowerCase();
-  const password = form.get("password") as string;
-  const confirm = form.get("confirmPassword") as string;
+  const password = String(form.get("password") ?? "");
+  const confirm = String(form.get("confirmPassword") ?? "");
 
   // Honeypot
   if (form.get("company")) {
     return { error: { message: "Spam detected." } };
   }
 
-  // CAPTCHA verify
-  const captchaToken = form.get("captchaToken");
-
-  const verifyRes = await fetch(
-    "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        secret: process.env.TURNSTILE_SECRET_KEY_SIGNUP_FORM!,
-        response: String(captchaToken),
-      }),
-    }
-  );
-
-  const data = await verifyRes.json();
-
-  if (!data.success) {
-    return { error: { message: "Captcha failed." } };
-  }
-
   if (!name || !email || !password || !confirm) {
     return { error: { message: "All fields are required" } };
   }
 
+  if (!/^\S+@\S+\.\S+$/.test(email)) {
+    return { error: { message: "Enter a valid email address." } };
+  }
+
   if (password !== confirm) {
     return { error: { message: "Passwords do not match" } };
+  }
+
+  if (password.length < 8) {
+    return { error: { message: "Password must contain at least 8 characters." } };
+  }
+
+  const captchaToken = String(form.get("captchaToken") ?? "");
+  const captchaSecret = process.env.TURNSTILE_SECRET_KEY_SIGNUP_FORM;
+
+  if (!captchaToken || !captchaSecret) {
+    return { error: { message: "Captcha verification is unavailable." } };
+  }
+
+  try {
+    const verifyRes = await fetch(
+      "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          secret: captchaSecret,
+          response: captchaToken,
+        }),
+        cache: "no-store",
+      },
+    );
+
+    if (!verifyRes.ok) {
+      return { error: { message: "Captcha verification failed." } };
+    }
+
+    const data = await verifyRes.json() as { success?: boolean };
+    if (!data.success) {
+      return { error: { message: "Captcha verification failed." } };
+    }
+  } catch {
+    return { error: { message: "Captcha verification is temporarily unavailable." } };
   }
 
   try {
@@ -76,47 +96,6 @@ export async function createUser(form: FormData): Promise<CreateUserResult> {
     return {
       error: {
         message: err instanceof Error ? err.message : "Failed to create user",
-      },
-    };
-  }
-}
-
-type ResetPasswordResult =
-  | { success: true; token: string }
-  | { error: { message: string } };
-
-export async function resetPasswordAction(email: string): Promise<ResetPasswordResult> {
-  if (!email) return { error: { message: "Email is required" } };
-
-  try {
-    // TODO: Implement your real password reset logic (send email, generate token)
-    const token = Math.random().toString(36).substring(2, 15); // example token
-    return { success: true, token };
-  } catch (err: unknown) {
-    return {
-      error: {
-        message: err instanceof Error ? err.message : "Failed to reset password",
-      },
-    };
-  }
-}
-
-type ChangePasswordResult =
-  | { success: true }
-  | { error: { message: string } };
-
-export async function changePasswordAction(token: string | null, newPassword: string): Promise<ChangePasswordResult> {
-  if (!token) return { error: { message: "Invalid token" } };
-  if (!newPassword) return { error: { message: "Password is required" } };
-
-  try {
-    // TODO: Lookup user by token and update password
-    // Password persistence will be added with token lookup.
-    return { success: true };
-  } catch (err: unknown) {
-    return {
-      error: {
-        message: err instanceof Error ? err.message : "Failed to change password",
       },
     };
   }
