@@ -3,18 +3,26 @@
 import { deleteUserWorkExperience } from "@/app/actions/authActions.server";
 import { Tooltip } from "@radix-ui/themes";
 import { ArchiveIcon } from "lucide-react";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import RemoveAlert from "../modals/alert";
 
-export const DeleteUserExperience = ({ id }: {  id: string }) => {
-  const { update } = useSession();
-  const router = useRouter();
-
+export const DeleteUserExperience = ({
+  id,
+  onDeleted,
+}: {
+  id: string;
+  onDeleted: (id: string) => void;
+}) => {
   const handleDelete = async (id: string) => {
-    await deleteUserWorkExperience(id);
-    await update();
-    router.refresh();
+    const result = await deleteUserWorkExperience(id);
+
+    if ("error" in result) {
+      toast.error(result.error.message);
+      return;
+    }
+
+    onDeleted(id);
+    toast.success("Work experience deleted");
   }
 
   return ( 

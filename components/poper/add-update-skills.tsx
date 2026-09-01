@@ -4,24 +4,32 @@ import { userSkillAction } from "@/app/actions/authActions.server";
 import * as Form from "@radix-ui/react-form";
 import { Avatar, Box, Button, Checkbox, Flex, Popover, Text, TextField } from "@radix-ui/themes";
 import { PlusIcon, TagIcon } from "lucide-react";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { toast } from "sonner";
 
-type UserSkill = {
+export type UserSkill = {
+  id: string;
+  text: string;
+  userId: string;
+};
+
+type UserSkillProps = {
   skill: {
     id: string;
     text: string;
     userId: string;
   } | null;
+  onSaved: (skill: UserSkill) => void;
 }
 
-export const AddUpdateSkillPopover = ({ skill }: UserSkill) => {
-  const { data: session, update } = useSession();
-  const user = session?.user;
-  const router = useRouter();
+export const AddUpdateSkillPopover = ({ skill, onSaved }: UserSkillProps) => {
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const handleActionSubmit = async (formData: FormData) => {
+    if (saving) return;
+
+    setSaving(true);
     try {
       const res = await userSkillAction(formData);
 
@@ -30,22 +38,18 @@ export const AddUpdateSkillPopover = ({ skill }: UserSkill) => {
         return;
       }
 
-      await update({
-        skill: {
-          text: formData.get("text") as string,
-          userId: formData.get("userId") as string
-        }
-      });
-
-      router.refresh();
+      onSaved(res.skill);
+      setOpen(false);
       toast.success("Skill saved");
-    } catch (error: any) {
-      toast.error(error?.message || "Error saving skill.")
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Error saving skill.")
+    } finally {
+      setSaving(false);
     }
   }
 
   return (
-    <Popover.Root>
+    <Popover.Root open={open} onOpenChange={setOpen}>
       <Popover.Trigger>
         <Button variant="ghost" size={"1"}>
           <PlusIcon className="w-4 h-auto text-zinc-700 dark:text-zinc-400" />
@@ -61,8 +65,6 @@ export const AddUpdateSkillPopover = ({ skill }: UserSkill) => {
           />
           <Box flexGrow={"1"}>
             <Form.Root action={handleActionSubmit}>
-              {/** Hidden input to control saving data */}
-              <input type="hidden" name="userId" value={user?.id} />
               <Flex gap={"1"} justify={"between"} mb={"4"}>
                 <Flex align={"center"} gap={"1"} asChild>
                   <Text as="label" size={"1"}>
@@ -74,6 +76,7 @@ export const AddUpdateSkillPopover = ({ skill }: UserSkill) => {
                       className="w-88"
                       name="text"
                       defaultValue={skill?.text}
+                      required
                     >
                       <TextField.Slot>
                         <TagIcon width={"16"} height={"16"} />
@@ -82,7 +85,7 @@ export const AddUpdateSkillPopover = ({ skill }: UserSkill) => {
                   </Text>
                 </Flex>
                 <Form.Submit asChild>
-                  <Button size={"1"} type="submit">
+                  <Button size={"1"} type="submit" loading={saving} disabled={saving}>
                     Add
                   </Button> 
                 </Form.Submit>

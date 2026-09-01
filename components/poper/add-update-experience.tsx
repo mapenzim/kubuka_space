@@ -15,35 +15,51 @@ import {
 import * as Form from "@radix-ui/react-form";
 import { CalendarRangeIcon, CaseUpperIcon, FactoryIcon, FileEditIcon, PlusIcon } from "lucide-react";
 import { userWorkExperience } from "@/app/actions/authActions.server";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 
-type WorkExperience = {
-  workExperience?: {
-    id: string;
-    jobTitle: string;
-    companyName: string;
-    dates: string;
-    duties: string;
-  };
+export type UserWorkExperience = {
+  id: string;
+  jobTitle: string;
+  companyName: string;
+  dates: string;
+  duties: string;
+  userId: string;
+};
+
+type WorkExperienceProps = {
+  workExperience?: UserWorkExperience;
+  onSaved: (experience: UserWorkExperience) => void;
 }
 
-export const AddUpdateExperiencePopover = ({ workExperience }: WorkExperience) => {
-  const router = useRouter();
+export const AddUpdateExperiencePopover = ({ workExperience, onSaved }: WorkExperienceProps) => {
   const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const userExperienceAction = async (formData: FormData) => {
-    const result = await userWorkExperience(formData);
+    if (saving) return;
 
-    if ("error" in result) {
-      setSubmitError(result.error.message);
-      return;
+    setSaving(true);
+    try {
+      const result = await userWorkExperience(formData);
+
+      if ("error" in result) {
+        setSubmitError(result.error.message);
+        return;
+      }
+
+      onSaved(result.experience);
+      setSubmitError(null);
+      setOpen(false);
+      toast.success("Work experience saved");
+    } catch (error: unknown) {
+      setSubmitError(
+        error instanceof Error ? error.message : "Unable to save work experience.",
+      );
+    } finally {
+      setSaving(false);
     }
-
-    setSubmitError(null);
-    setOpen(false);
-    router.refresh();
   }
 
   const statement = (word: string) => `${word} work experience`;
@@ -73,6 +89,7 @@ export const AddUpdateExperiencePopover = ({ workExperience }: WorkExperience) =
           />
           <Box flexGrow={"1"}>
             <Form.Root action={userExperienceAction}>
+              <input type="hidden" name="experienceId" value={workExperience?.id ?? ""} />
               <Flex direction={"column"} gapY={"3"} gap={"3"} mb={"3"} >
                 <TextField.Root 
                   placeholder="Job Title" 
@@ -132,6 +149,8 @@ export const AddUpdateExperiencePopover = ({ workExperience }: WorkExperience) =
                   <Button 
                     size={"1"}
                     type="submit"
+                    loading={saving}
+                    disabled={saving}
                   >
                     {!workExperience?.id ? "Create" : "Update"}
                   </Button>

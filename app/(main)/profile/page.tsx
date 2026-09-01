@@ -2,13 +2,12 @@ import { getUserAllExperience, getUserBio, getUserSkills } from "@/app/actions/a
 import { getAllOrdersByUser } from "@/app/actions/cartActions.server";
 import { getOwnPosts } from "@/app/actions/postActions.server";
 import { auth } from "@/auth";
-import { DeleteUserExperience } from "@/components/buttons/delete-experience-btn";
 import { CartLink } from "@/components/cart/components/cart_status";
-import { AddUpdateBioPopover } from "@/components/poper/add-update-bio";
-import { AddUpdateExperiencePopover } from "@/components/poper/add-update-experience";
-import { AddUpdateSkillPopover } from "@/components/poper/add-update-skills";
-import { Badge, Box, Button, Card, Flex, Grid, Heading, ScrollArea, Text, Avatar, Separator } from "@radix-ui/themes";
-import { FacebookIcon, GithubIcon, Tag, TwitterIcon } from "lucide-react";
+import BioSection from "@/components/profile/bio_section";
+import SkillsCard from "@/components/profile/skills_card";
+import WorkExperienceSection from "@/components/profile/work_experience_section";
+import { Badge, Box, Button, Card, Flex, Grid, Heading, Text, Avatar, Separator } from "@radix-ui/themes";
+import { FacebookIcon, GithubIcon, TwitterIcon } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation"; 
 
@@ -67,34 +66,7 @@ const ProfilePage = async () => {
               </Flex>
             </Card>
 
-            {/* Skills Card */} 
-            <Card size="1" variant="ghost" className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 shadow-sm rounded-2xl">
-              <Flex align="center" justify="between" mb="4">
-                <Heading as="h3" size="4" className="text-zinc-900 dark:text-zinc-100">
-                  Skills
-                </Heading>
-                <AddUpdateSkillPopover skill={null} />
-              </Flex>
-              
-              <ScrollArea type="auto" scrollbars="vertical" className="max-h-64 pr-3">
-                <Flex direction="column" gap="2">
-                  {userSkill?.length > 0 ? (
-                    userSkill.map((skill) => (
-                      <Flex key={skill.id} align="center" gap="2" className="bg-zinc-100 dark:bg-zinc-800/50 p-2 rounded-lg">
-                        <Tag className="w-4 h-4 text-(--iris-11)" />
-                        <Text size="2" weight="medium" className="text-zinc-700 dark:text-zinc-300">
-                          {skill?.text}
-                        </Text>
-                      </Flex>
-                    ))
-                  ) : (
-                    <Text size="2" color="gray" className="italic text-center py-4 border border-dashed border-zinc-200 dark:border-zinc-700 rounded-lg">
-                      No skills added yet.
-                    </Text>
-                  )}
-                </Flex>
-              </ScrollArea>
-            </Card>
+            <SkillsCard initialSkills={userSkill} />
 
           </Flex>
 
@@ -107,22 +79,7 @@ const ProfilePage = async () => {
             <Card size="1" variant="ghost" className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 shadow-sm rounded-2xl">
               <Flex direction="column" gap="8">
 
-                {/* --- About Me Section --- */}
-                <Box>
-                  <Flex align="center" justify="between" mb="3">
-                    <Heading as="h3" size="5" className="text-zinc-900 dark:text-zinc-300">About Me</Heading>
-                    <AddUpdateBioPopover bio={bio} />
-                  </Flex>
-                  <Text as="div" size="3" className="text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                    {bio?.text ? (
-                      <span className="whitespace-pre-wrap">{bio.text}</span>
-                    ) : (
-                      <Text size="2" color="gray" className="italic block p-4 border border-dashed border-zinc-200 dark:border-zinc-700 rounded-lg text-center dark:text-zinc-500!">
-                        Add something about yourself... 
-                      </Text>
-                    )}
-                  </Text>
-                </Box>
+                <BioSection initialBio={bio} />
 
                 <Separator size="4" className="bg-zinc-200 dark:bg-zinc-600!" />
 
@@ -146,48 +103,7 @@ const ProfilePage = async () => {
 
                 <Separator size="4" className="bg-zinc-200 dark:bg-zinc-800!" />
 
-                {/* --- Work Experience Section --- */}
-                <Box>
-                  <Flex align="center" justify="between" mb="5">
-                    <Heading as="h3" size="5" className="text-zinc-900 dark:text-zinc-300">Work Experience</Heading>
-                    <AddUpdateExperiencePopover />
-                  </Flex>
-                  
-                  <Flex direction="column" gap="4" ml="3">
-                    {workExperience.length ? (
-                      workExperience.map((exp) => (
-                        <Box key={exp.id} className="relative pl-6 border-l-2 border-zinc-200 dark:border-zinc-800 pb-2 last:pb-0">
-                          {/* Timeline dot */}
-                          <div className="absolute w-3 h-3 bg-(--iris-9) rounded-full -left-1.75 top-1.5 ring-4 ring-white dark:ring-zinc-900" />
-                          
-                          <Flex justify="between" align="start" wrap="wrap" gap="4" mb="2">
-                            <Box>
-                              <Heading as="h4" size="4" className="text-zinc-900 dark:text-zinc-100">
-                                {exp.jobTitle}
-                              </Heading>
-                              <Text size="2" color="gray" weight="bold" className="mt-1 flex items-center gap-2">
-                                {exp.companyName} <span>•</span> {exp.dates}
-                              </Text>
-                            </Box>
-                            
-                            <Flex gap="4">
-                              <AddUpdateExperiencePopover workExperience={exp} />
-                              <DeleteUserExperience id={exp.id} />
-                            </Flex>
-                          </Flex>
-                          
-                          <Text as="p" size="2" className="text-zinc-600 dark:text-zinc-400 whitespace-pre-wrap mt-2">
-                            {exp.duties}
-                          </Text>
-                        </Box>
-                      ))
-                    ) : (
-                      <Text size="2" color="gray" className="italic p-6 border border-dashed border-zinc-200 dark:border-zinc-700 dark:text-zinc-600! rounded-lg text-center">
-                        No work experience added yet.
-                      </Text>
-                    )}
-                  </Flex>
-                </Box>
+                <WorkExperienceSection initialExperiences={workExperience} />
 
                 <Separator size="4" className="bg-zinc-200 dark:bg-zinc-800!" />
 
