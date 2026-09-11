@@ -55,7 +55,11 @@ export const AddUpdateSkillPopover = ({ skill, onSaved }: UserSkillProps) => {
           <PlusIcon className="w-4 h-auto text-zinc-700 dark:text-zinc-400" />
         </Button>
       </Popover.Trigger>
-      <Popover.Content width={"520px"} side="right">
+      <Popover.Content
+        width={"520px"}
+        side="right"
+        className="bg-white! text-zinc-900! shadow-xl dark:bg-zinc-900! dark:text-zinc-100!"
+      >
         <Flex gap={"3"}>
           <Avatar 
             size={"1"}
@@ -67,13 +71,13 @@ export const AddUpdateSkillPopover = ({ skill, onSaved }: UserSkillProps) => {
             <Form.Root action={handleActionSubmit}>
               <Flex gap={"1"} justify={"between"} mb={"4"}>
                 <Flex align={"center"} gap={"1"} asChild>
-                  <Text as="label" size={"1"}>
-                    <Text as="span">
+                  <Text as="label" size={"1"} className="text-zinc-700 dark:text-zinc-200">
+                    <Text as="span" className="text-zinc-700 dark:text-zinc-200">
                       Skill
                     </Text>
                     <TextField.Root 
                       size={"1"} 
-                      className="w-88"
+                      className="w-88 dark:bg-zinc-950! dark:text-zinc-100!"
                       name="text"
                       defaultValue={skill?.text}
                       required
@@ -91,9 +95,9 @@ export const AddUpdateSkillPopover = ({ skill, onSaved }: UserSkillProps) => {
                 </Form.Submit>
               </Flex>
               <Flex gap={"4"} justify={"start"}>
-                <Text as="label" size={"1"}>
+                <Text as="label" size={"1"} className="text-zinc-600 dark:text-zinc-300">
                   <Checkbox size={"1"} />
-                  <Text size={"1"} ml={"3"}>Terms and conditions apply.</Text>
+                  <Text size={"1"} ml={"3"} className="text-zinc-600 dark:text-zinc-300">Terms and conditions apply.</Text>
                 </Text>
               </Flex>
             </Form.Root>

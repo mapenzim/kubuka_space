@@ -264,7 +264,7 @@ export default function UserManager({
               onChange={(event) =>
                 setStatusFilter(event.target.value as "ALL" | UserStatus)
               }
-              className="rounded-md border border-(--gray-a7) bg-(--color-panel-solid) px-3 py-2.5 text-sm outline-none focus:border-indigo-500"
+              className="rounded-md border border-(--gray-a7) bg-(--color-panel-solid) h-10 px-3 py-2.5 text-sm outline-none focus:border-indigo-500"
             >
               <option value="ALL">All statuses</option>
               <option value="ACTIVE">Active</option>
@@ -574,7 +574,7 @@ function UserDialog({
                 required
                 defaultValue={user?.role ?? "USER"}
                 disabled={editingSelf || adminRoleLocked}
-                className={fieldClass}
+                className="mt-1.5 h-12 w-full rounded-md border border-(--gray-a7) bg-(--color-panel-solid) px-3 py-2.5 text-sm text-(--gray-12) outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <option value="USER">User</option>
                 <option value="EDITOR">Editor</option>

@@ -13,20 +13,38 @@ interface WorkExperienceSectionProps {
   initialExperiences: UserWorkExperience[];
 }
 
+function sortExperiences(experiences: UserWorkExperience[]) {
+  return [...experiences].sort((left, right) => {
+    if (left.isCurrent !== right.isCurrent) {
+      return Number(right.isCurrent) - Number(left.isCurrent);
+    }
+
+    const leftStart = left.startDate ? new Date(left.startDate).getTime() : 0;
+    const rightStart = right.startDate ? new Date(right.startDate).getTime() : 0;
+    if (leftStart !== rightStart) return rightStart - leftStart;
+
+    const leftEnd = left.endDate ? new Date(left.endDate).getTime() : 0;
+    const rightEnd = right.endDate ? new Date(right.endDate).getTime() : 0;
+    return rightEnd - leftEnd;
+  });
+}
+
 export default function WorkExperienceSection({
   initialExperiences,
 }: WorkExperienceSectionProps) {
-  const [experiences, setExperiences] = useState(initialExperiences);
+  const [experiences, setExperiences] = useState(() =>
+    sortExperiences(initialExperiences),
+  );
 
   const handleSaved = useCallback((savedExperience: UserWorkExperience) => {
     setExperiences((current) => {
-      if (!current.some((experience) => experience.id === savedExperience.id)) {
-        return [...current, savedExperience];
-      }
+      const updated = current.some((experience) => experience.id === savedExperience.id)
+        ? current.map((experience) =>
+            experience.id === savedExperience.id ? savedExperience : experience,
+          )
+        : [...current, savedExperience];
 
-      return current.map((experience) =>
-        experience.id === savedExperience.id ? savedExperience : experience,
-      );
+      return sortExperiences(updated);
     });
   }, []);
 
@@ -59,7 +77,7 @@ export default function WorkExperienceSection({
                   <Heading as="h4" size="4" className="text-zinc-900 dark:text-zinc-100">
                     {experience.jobTitle}
                   </Heading>
-                  <Text size="2" color="gray" weight="bold" className="mt-1 flex items-center gap-2">
+                  <Text size="2" color="gray" weight="bold" className="mt-1 flex items-center gap-2 dark:text-zinc-400!">
                     {experience.companyName} <span>•</span> {experience.dates}
                   </Text>
                 </Box>
@@ -82,7 +100,7 @@ export default function WorkExperienceSection({
           <Text
             size="2"
             color="gray"
-            className="rounded-lg border border-dashed border-zinc-200 p-6 text-center italic dark:border-zinc-700 dark:text-zinc-600!"
+            className="rounded-lg border border-dashed border-zinc-200 p-6 text-center italic dark:border-zinc-700 dark:text-zinc-400!"
           >
             No work experience added yet.
           </Text>

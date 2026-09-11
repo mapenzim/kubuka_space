@@ -22,9 +22,7 @@ const themeInitScript = `
   (() => {
     try {
       const stored = localStorage.getItem("kubuka-admin-theme");
-      const dark = stored
-        ? stored === "dark"
-        : matchMedia("(prefers-color-scheme: dark)").matches;
+      const dark = stored === "dark";
       document.documentElement.classList.toggle("dark", dark);
     } catch {}
   })();

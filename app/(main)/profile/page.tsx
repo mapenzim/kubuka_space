@@ -55,7 +55,7 @@ const ProfilePage = async () => {
                   <Heading as="h1" size="6" weight="bold" className="text-zinc-900 dark:text-zinc-300">
                     {user?.name}
                   </Heading>
-                  <Text as="p" size="2" color="gray" mt="1" className="dark:text-zinc-500!">
+                  <Text as="p" size="2" color="gray" mt="1" className="dark:text-zinc-300!">
                     {user?.email}
                   </Text>
                 </Box>
@@ -133,7 +133,7 @@ const ProfilePage = async () => {
                         </Card>
                       ))
                     ) : (
-                      <Text size="2" color="gray" className="col-span-full italic p-6 border border-dashed border-zinc-200 dark:border-zinc-700 rounded-lg text-center dark:text-zinc-600!">
+                      <Text size="2" color="gray" className="col-span-full italic p-6 border border-dashed border-zinc-200 dark:border-zinc-700 rounded-lg text-center dark:text-zinc-400!">
                         No publications found.
                       </Text>
                     )}
@@ -156,7 +156,7 @@ const ProfilePage = async () => {
                       orders.map((order) => (
                         <Card key={order.id} variant="ghost" size="2" className="bg-zinc-500 dark:bg-zinc-900! border border-zinc-200 dark:border-zinc-800" m={{ sm: "1", md: "4" }}>
                           <Flex justify="between" align="center" wrap="wrap" gap="4" mb="3">
-                            <Text size="2" weight="bold" className="text-zinc-700 dark:text-zinc-600">
+                            <Text size="2" weight="bold" className="text-zinc-700 dark:text-zinc-300">
                               Order #: {String(order.id).slice(-6).toUpperCase()}
                             </Text>
                             <Flex gap="2" align="center">
@@ -167,7 +167,7 @@ const ProfilePage = async () => {
                             </Flex>
                           </Flex>
                           
-                          <Flex direction="column" gap="1" className="text-sm text-zinc-600 dark:text-zinc-500">
+                          <Flex direction="column" gap="1" className="text-sm text-zinc-600 dark:text-zinc-300">
                             {order.items.map((itm) => (
                               <Flex key={itm.id} justify="between" className="border-t border-zinc-200 dark:border-zinc-800/50 pt-1 mt-1">
                                 <Text size="1" className="line-clamp-1">{itm.title}</Text>
@@ -178,7 +178,7 @@ const ProfilePage = async () => {
                         </Card>
                       ))
                     ) : (
-                      <Text size="2" color="gray" className="col-span-full italic p-6 border border-dashed border-zinc-200 dark:border-zinc-700 rounded-lg text-center dark:text-zinc-600!">
+                      <Text size="2" color="gray" className="col-span-full italic p-6 border border-dashed border-zinc-200 dark:border-zinc-700 rounded-lg text-center dark:text-zinc-400!">
                         Your order history is empty.
                       </Text>
                     )}

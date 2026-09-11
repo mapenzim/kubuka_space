@@ -53,17 +53,14 @@ export default function StartConversationForm({
           )}
 
           {user && (
-            <Box>
-              <Text size="2" className="text-zinc-600 dark:text-zinc-400">Signed in as</Text>
+            <Flex direction="row" gap="1">
+              <Text size="2" className="text-zinc-600 dark:text-zinc-400">Chatting as</Text>
 
-              <Text weight="bold" className="text-zinc-900 dark:text-zinc-100">
+              <Text size="2" weight="bold" className="text-zinc-900 dark:text-zinc-100">
                 {user.name}
               </Text>
 
-              <Text className="text-zinc-500 dark:text-zinc-400">
-                {user.email}
-              </Text>
-            </Box>
+            </Flex>
           )}
 
           <FormLexicalEditor

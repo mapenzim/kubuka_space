@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "@radix-ui/themes/styles.css";
+@custom-variant dark (&:where(.dark, .dark *));
 /*@import "@radix-ui/colors/black-alpha.css";
 @import "@radix-ui/colors/green.css";
 @import "@radix-ui/colors/mauve.css";
@@ -8,13 +9,13 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  color-scheme: dark;
 }
 
 html {
@@ -91,38 +92,35 @@ body {
 	}
 }
 
-@media (prefers-color-scheme: dark) {
-	#featured-solutions a[href="/store"] {
+.dark #featured-solutions a[href="/store"] {
 		border-color: #ffffff;
 		background-color: #ffffff;
 		color: #2e1065;
 		box-shadow: 0 4px 10px rgb(0 0 0 / 0.2);
-	}
+}
 
-	#featured-solutions a[href="/store"]:hover {
+.dark #featured-solutions a[href="/store"]:hover {
 		border-color: #ede9fe;
 		background-color: #ede9fe;
-	}
+}
 
-	#featured-solutions a[href="/contact_us"] {
+.dark #featured-solutions a[href="/contact_us"] {
 		border-color: rgb(196 181 253 / 0.5);
 		background-color: transparent;
 		color: #ffffff;
-	}
+}
 
-	#featured-solutions a[href="/contact_us"]:hover {
+.dark #featured-solutions a[href="/contact_us"]:hover {
 		border-color: #ddd6fe;
 		background-color: rgb(255 255 255 / 0.1);
-	}
 }
 
 /*
  * Public application theme
  *
- * Radix Themes switches its dark tokens only when its root has a `.dark`
- * class. The app currently follows the system color scheme instead, so keep
- * the token correction scoped to the public layout. The admin layout is not
- * inside .public-app and keeps its own visual system.
+ * Radix Themes and Tailwind dark utilities both follow the app-owned `.dark`
+ * class. Keep the token correction scoped to the public layout; the admin
+ * layout is not inside .public-app and keeps its own visual system.
  */
 .public-app,
 body:has(.public-app) {
@@ -144,9 +142,8 @@ body:has(.public-app) {
 	background-color: var(--public-background);
 }
 
-@media (prefers-color-scheme: dark) {
-	.public-app,
-	body:has(.public-app) {
+.dark .public-app,
+html.dark body:has(.public-app) {
 		--public-background: #09090b;
 		--public-panel: #18181b;
 		--public-foreground: #f4f4f5;
@@ -163,7 +160,6 @@ body:has(.public-app) {
 		--gray-12: var(--public-foreground);
 		color: var(--public-foreground);
 		background-color: var(--public-background);
-	}
 }
 
 .public-app button:disabled {
@@ -269,10 +265,8 @@ body.admin-menu-open {
 	background-color: #ffffff !important;
 }
 
-@media (prefers-color-scheme: dark) {
-	.contact-chat-surface {
+.dark .contact-chat-surface {
 		background-color: #18181b !important;
-	}
 }
 
 .contact-start-button {
@@ -499,6 +493,38 @@ body.admin-menu-open {
 }
 .Button.mauve:hover {
 	background-color: var(--mauve-5);
+}
+
+.dark .AlertDialogContent {
+	background-color: #18181b;
+	color: #f4f4f5;
+}
+
+.dark .AlertDialogTitle {
+	color: #f4f4f5;
+}
+
+.dark .AlertDialogDescription {
+	color: #d4d4d8;
+}
+
+.dark .Button.mauve {
+	background-color: #3f3f46;
+	color: #f4f4f5;
+}
+
+.dark .Button.mauve:hover {
+	background-color: #52525b;
+}
+
+.dark .Button.red {
+	background-color: #4c0519;
+	color: #fda4af;
+}
+
+.dark .Button.red:hover {
+	background-color: #881337;
+	color: #ffe4e6;
 }
 
 @keyframes overlayShow {

@@ -39,7 +39,7 @@ function OrderTable({
         align="center"
         justify="center"
         p="6"
-        className="rounded-lg border-2 border-dashed border-(--gray-a6) text-gray-500"
+        className="rounded-lg border-2 border-dashed border-(--gray-a6) text-(--gray-6)"
       >
         <Text>No items currently in this category.</Text>
       </Flex>
@@ -146,18 +146,18 @@ export default async function AdminStorePage() {
       {/* 3. The Tabs Component managing the categories */}
       <Tabs.Root defaultValue="paid" className="admin-tabs rounded-b-md">
         <Tabs.List size="2" className="overflow-x-auto">
-          <Tabs.Trigger value="pending" style={{ cursor: "pointer", color: "var(--gray-2)" }}>
+          <Tabs.Trigger value="pending" style={{ cursor: "pointer", color: "var(--gray-6)" }}>
             Pending
             <Badge size="1" color="orange" variant="solid" radius="full" className="ml-2">{orders.filter((order) => order.status === "pending").length}</Badge>
           </Tabs.Trigger>
-          <Tabs.Trigger value="paid" style={{ cursor: "pointer", color: "var(--gray-2)" }}>
+          <Tabs.Trigger value="paid" style={{ cursor: "pointer", color: "var(--gray-6)" }}>
             Paid
             <Badge size="1" color="indigo" variant="solid" radius="full" className="ml-2">{orders.filter((order) => order.status === "paid").length}</Badge>
           </Tabs.Trigger>
-          <Tabs.Trigger value="shipped" style={{ cursor: "pointer", color: "var(--gray-2)" }}>
+          <Tabs.Trigger value="shipped" style={{ cursor: "pointer", color: "var(--gray-6)" }}>
             Shipped
           </Tabs.Trigger>
-          <Tabs.Trigger value="delivered" style={{ cursor: "pointer", color: "var(--gray-2)" }}>
+          <Tabs.Trigger value="delivered" style={{ cursor: "pointer", color: "var(--gray-6)" }}>
             Delivered
           </Tabs.Trigger>
         </Tabs.List>

@@ -103,12 +103,16 @@ model WorkExperience {
   jobTitle      String
   companyName   String
   dates         String
+  startDate     DateTime?
+  endDate       DateTime?
+  isCurrent     Boolean     @default(false)
   duties        String
 
   userId        String 
   users         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, jobTitle, companyName])
+  @@index([userId, isCurrent, startDate])
 }
 
 model Account {

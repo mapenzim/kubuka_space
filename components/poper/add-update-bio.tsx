@@ -58,7 +58,11 @@ export const AddUpdateBioPopover = ({
           </Tooltip>
         </Button>
       </Popover.Trigger>
-      <Popover.Content width={"480px"} side="left">
+      <Popover.Content
+        width={"480px"}
+        side="left"
+        className="bg-white! text-zinc-900! shadow-xl dark:bg-zinc-900! dark:text-zinc-100!"
+      >
         <Flex gap={"3"}>
           <Avatar 
             size={"1"}
@@ -74,6 +78,7 @@ export const AddUpdateBioPopover = ({
               name="bio" 
               defaultValue={bio?.text}
               required
+              className="dark:bg-zinc-950! dark:text-zinc-100! dark:placeholder:text-zinc-500!"
             />
             <Flex gap={"3"} mt={"3"} justify={"between"} >
               <Flex align={"center"} gap={"2"} asChild>

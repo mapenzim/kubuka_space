@@ -61,7 +61,7 @@ export default function SkillsCard({ initialSkills }: SkillsCardProps) {
             <Text
               size="2"
               color="gray"
-              className="rounded-lg border border-dashed border-zinc-200 py-4 text-center italic dark:border-zinc-700"
+              className="rounded-lg border border-dashed border-zinc-200 py-4 text-center italic dark:border-zinc-700 dark:text-zinc-400!"
             >
               No skills added yet.
             </Text>

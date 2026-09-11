@@ -34,7 +34,7 @@ export default function BioSection({ initialBio }: BioSectionProps) {
           <Text
             size="2"
             color="gray"
-            className="block rounded-lg border border-dashed border-zinc-200 p-4 text-center italic dark:border-zinc-700 dark:text-zinc-500!"
+            className="block rounded-lg border border-dashed border-zinc-200 p-4 text-center italic dark:border-zinc-700 dark:text-zinc-400!"
           >
             Add something about yourself...
           </Text>

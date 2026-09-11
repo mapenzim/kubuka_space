@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { ulidId } from "@/lib/server-utils";
 import { hash } from "bcryptjs";
 import { auth } from "@/auth";
+import type { WorkExperience } from "@prisma/client";
 
 type CreateUserResult =
   | { success: true }
@@ -149,17 +150,50 @@ export async function getUserBio(userId: string) {
   });
 }
 
+type WorkExperienceDto = Omit<WorkExperience, "startDate" | "endDate"> & {
+  startDate: string | null;
+  endDate: string | null;
+};
+
+function toWorkExperienceDto(experience: WorkExperience): WorkExperienceDto {
+  return {
+    ...experience,
+    startDate: experience.startDate?.toISOString() ?? null,
+    endDate: experience.endDate?.toISOString() ?? null,
+  };
+}
+
+function parseExperienceMonth(monthValue: string, yearValue: string): Date | null {
+  let month = Number(monthValue.trim());
+  let year = Number(yearValue.trim());
+
+  // Accept the former YYYY-MM field shape from a page left open during deployment.
+  if (!yearValue.trim()) {
+    const legacyValue = /^(\d{4})-(\d{2})$/.exec(monthValue.trim());
+    if (legacyValue) {
+      year = Number(legacyValue[1]);
+      month = Number(legacyValue[2]);
+    }
+  }
+
+  if (!Number.isInteger(month) || month < 1 || month > 12) return null;
+  if (!Number.isInteger(year) || year < 1900 || year > 2100) return null;
+
+  return new Date(Date.UTC(year, month - 1, 1));
+}
+
+function formatExperienceMonth(date: Date): string {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(date);
+}
+
 type WorkExperienceSubmitResult =
   | {
       success: true;
-      experience: {
-        id: string;
-        jobTitle: string;
-        companyName: string;
-        dates: string;
-        duties: string;
-        userId: string;
-      };
+      experience: WorkExperienceDto;
     }
   | { error: { message: string } };
 
@@ -169,16 +203,39 @@ export async function userWorkExperience(form: FormData): Promise<WorkExperience
   const experienceId = String(form.get("experienceId") ?? "").trim();
   const jobTitle = String(form.get("jobTitle") ?? "").trim();
   const companyName = String(form.get("companyName") ?? "").trim();
-  const dates = String(form.get("dates") ?? "").trim();
+  const startDate = parseExperienceMonth(
+    String(form.get("startMonth") ?? ""),
+    String(form.get("startYear") ?? ""),
+  );
+  const isCurrent = ["true", "on"].includes(String(form.get("isCurrent") ?? ""));
+  const endDate = isCurrent
+    ? null
+    : parseExperienceMonth(
+        String(form.get("endMonth") ?? ""),
+        String(form.get("endYear") ?? ""),
+      );
   const duties = String(form.get("duties") ?? "").trim();
 
   if (!userId || session.user.status !== "ACTIVE") {
     return { error: { message: "Please sign in before adding work experience." } };
   }
 
-  if (!jobTitle || !companyName || !dates || !duties) {
-    return { error: { message: "Complete all work experience fields." } };
+  if (!jobTitle) return { error: { message: "Enter a job title." } };
+  if (!companyName) return { error: { message: "Enter a company name." } };
+  if (!startDate) return { error: { message: "Select the From month and year." } };
+  if (!isCurrent && !endDate) {
+    return { error: { message: "Select the To month and year, or choose Present." } };
   }
+  if (!duties) return { error: { message: "Describe your duties." } };
+
+  if (endDate && endDate < startDate) {
+    return { error: { message: "The To date cannot be earlier than the From date." } };
+  }
+
+  const endLabel = isCurrent || !endDate
+    ? "Present"
+    : formatExperienceMonth(endDate);
+  const dates = `${formatExperienceMonth(startDate)} – ${endLabel}`;
 
   try {
     if (experienceId) {
@@ -193,28 +250,39 @@ export async function userWorkExperience(form: FormData): Promise<WorkExperience
 
       const experience = await prisma.workExperience.update({
         where: { id: experienceId },
-        data: { jobTitle, companyName, dates, duties },
+        data: {
+          jobTitle,
+          companyName,
+          dates,
+          startDate,
+          endDate,
+          isCurrent,
+          duties,
+        },
       });
 
-      return { success: true, experience };
+      return { success: true, experience: toWorkExperienceDto(experience) };
     }
 
     const experience = await prisma.workExperience.upsert({
       where: {
         userId_jobTitle_companyName: { userId, jobTitle, companyName },
       },
-      update: { dates, duties },
+      update: { dates, startDate, endDate, isCurrent, duties },
       create: {
         id: ulidId(),
         userId,
         jobTitle,
         companyName,
         dates,
+        startDate,
+        endDate,
+        isCurrent,
         duties,
       },
     });
 
-    return { success: true, experience };
+    return { success: true, experience: toWorkExperienceDto(experience) };
   } catch {
     return { error: { message: "Unable to save work experience right now." } };
   }
@@ -229,9 +297,16 @@ export async function getUserExperience(id: string) {
 }
 
 export async function getUserAllExperience(userId: string) {
-  return prisma.workExperience.findMany({
-    where: { userId }
+  const experiences = await prisma.workExperience.findMany({
+    where: { userId },
+    orderBy: [
+      { isCurrent: "desc" },
+      { startDate: { sort: "desc", nulls: "last" } },
+      { endDate: { sort: "desc", nulls: "last" } },
+    ],
   });
+
+  return experiences.map(toWorkExperienceDto);
 }
 
 export async function deleteUserWorkExperience(expId: string): Promise<
