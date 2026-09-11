@@ -1,63 +1,36 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import Fading from "../fade";
+import Image from "next/image";
+import DeferredHeroVideo from "./deferred_hero_video";
 
 const HeroSection = () => {
-  const [loadVideo, setLoadVideo] = useState(false);
-
-  useEffect(() => {
-    const connection = (navigator as Navigator & {
-      connection?: { saveData?: boolean };
-    }).connection;
-    const prefersReducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-
-    if (prefersReducedMotion || connection?.saveData) return;
-
-    // Let the poster and the first paint win before downloading the decorative video.
-    const timer = window.setTimeout(() => setLoadVideo(true), 1200);
-    return () => window.clearTimeout(timer);
-  }, []);
-  
   return (
     <div
       className="relative flex flex-col items-center justify-center w-full min-h-screen"
     >
       {/** Background */}
       <div className="absolute inset-0 overflow-hidden bg-indigo-500 dark:bg-gray-900">
-        <video
-          className="h-full w-full object-cover"
-          autoPlay={loadVideo}
-          muted
-          loop
-          playsInline
-          preload="none"
-          poster="/images/hero.jpg"
-          aria-hidden="true"
-        >
-          {loadVideo && (
-            <>
-            <source src="/vids/bg-vid.webm" type="video/webm" />
-            <source src="/vids/bg-vid.mp4" type="video/mp4" />
-            </>
-          )}
-        </video>
+        <Image
+          src="/images/hero.jpg"
+          alt=""
+          fill
+          priority
+          fetchPriority="high"
+          sizes="100vw"
+          className="object-cover"
+        />
+        <DeferredHeroVideo />
+        <div className="absolute inset-0 bg-black/25" aria-hidden="true" />
       </div>
 
       {/* Content */}
-      <div className="absolute flex flex-col max-w-2xl h-full mx-auto mt-64">
-        <Fading delay={0.7} direction="down" fullWidth={null} padding={null}>
-          <div className="inline-block items-center space-y-3 sm:px-4 justify-center text-slate-400">
-            <h1 className="text-3xl md:text-[62px] text-center">
-              Kubuka Space PBC
-            </h1>
-            <p className="md:text-xs text-[10px] text-center">
-              Unlocking Hidden Potential to Accelerate Business Growth.
-            </p>
-          </div>
-        </Fading>
+      <div className="relative z-10 mx-auto flex h-full max-w-2xl flex-col justify-start px-4 pt-64 text-white">
+        <div className="space-y-3 text-center drop-shadow-lg">
+          <h1 className="text-3xl md:text-[62px]">
+            Kubuka Space PBC
+          </h1>
+          <p className="text-[10px] md:text-xs">
+            Unlocking Hidden Potential to Accelerate Business Growth.
+          </p>
+        </div>
       </div>
     </div>
   );

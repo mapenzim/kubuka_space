@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Fading from "../fade";
 import { StoreIcon } from "lucide-react";
 import Link from "next/link";
 
@@ -9,8 +8,7 @@ export const IntroSection = () => {
       <div className="w-full mx-auto px-4">
         <div className="max-w-5xl justify-center mx-auto flex flex-col md:flex-row -mt-48">
           <div className="lg:pt-12 pt-6 w-full md:w-4/12 px-4 text-center">
-            <Fading delay={0.4} direction="up" fullWidth={null} padding={null}>
-              <div className="relative flex flex-col min-w-0 wrap-break-word bg-linear-to-br from-teal-200 via-lime-300 to-green-300 dark:from-slate-700 dark:via-slate-900 dark:to-zinc-700 w-full mb-8 shadow-lg rounded-lg">
+            <div className="relative flex flex-col min-w-0 wrap-break-word bg-linear-to-br from-teal-200 via-lime-300 to-green-300 dark:from-slate-700 dark:via-slate-900 dark:to-zinc-700 w-full mb-8 shadow-lg rounded-lg">
                 <div className="px-4 py-5 flex-auto text-slate-600 dark:text-zinc-400">
                   <div className="relative text-white p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-red-400">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
@@ -23,12 +21,10 @@ export const IntroSection = () => {
                     Our products are designed to seamlessly integrate into your portfolio, helping you build solutions that truly meet your needs. Whether you&apos;re expanding your offerings or tailoring a product to fit a specific vision, we provide the flexibility and reliability to make it happen.
                   </p>
                 </div>
-              </div>
-            </Fading>
+            </div>
           </div>
           <div className="w-full md:w-4/12 px-4 text-center">
-            <Fading delay={0.6} direction="up" fullWidth={null} padding={null}>
-              <div className="relative flex flex-col min-w-0 wrap-break-word bg-linear-to-t from-teal-200 via-lime-300 to-green-300 dark:from-slate-700 dark:via-slate-900 dark:to-zinc-700 w-full mb-8 shadow-lg rounded-lg">
+            <div className="relative flex flex-col min-w-0 wrap-break-word bg-linear-to-t from-teal-200 via-lime-300 to-green-300 dark:from-slate-700 dark:via-slate-900 dark:to-zinc-700 w-full mb-8 shadow-lg rounded-lg">
                 <div className="px-4 py-5 flex-auto text-slate-600 dark:text-zinc-400">
                   <div className="text-white p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-blue-400">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
@@ -43,12 +39,10 @@ export const IntroSection = () => {
                     We generate tailored ideas for your organization and align them with your business environment, ensuring solutions that truly fit your goals and aspirations. Our approach is to understand your unique challenges and opportunities, allowing us to create innovative strategies that drive success and growth for your business.
                   </p>
                 </div>
-              </div>
-            </Fading>
+            </div>
           </div>
           <div className="pt-6 w-full md:w-4/12 px-4 text-center">
-            <Fading delay={0.8} direction="up" fullWidth={null} padding={null}>
-              <div className="relative flex flex-col min-w-0 wrap-break-word bg-linear-to-bl from-teal-200 via-lime-300 to-green-300 dark:from-slate-700 dark:via-slate-900 dark:to-zinc-700 w-full mb-8 shadow-lg rounded-lg">
+            <div className="relative flex flex-col min-w-0 wrap-break-word bg-linear-to-bl from-teal-200 via-lime-300 to-green-300 dark:from-slate-700 dark:via-slate-900 dark:to-zinc-700 w-full mb-8 shadow-lg rounded-lg">
                 <div className="px-4 py-5 flex-auto text-slate-600 dark:text-zinc-400">
                   <div className="text-white p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-green-400">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
@@ -63,8 +57,7 @@ export const IntroSection = () => {
                     We operate with transparency and integrity, giving you the confidence that your business is in safe hands. We are committed to maintaining the highest standards of professionalism and accountability in all our dealings, ensuring that your partnership with us is built on trust and reliability.
                   </p>
                 </div>
-              </div>
-            </Fading>
+            </div>
           </div>
         </div>
 

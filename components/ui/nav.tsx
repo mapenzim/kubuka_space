@@ -20,7 +20,7 @@ const navLinks = [
 const mobileNavLinks = navLinks.slice(0, 2);
 
 const NavigationApp = () => {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const user = session?.user;
   const router = useRouter();
   const pathname = usePathname();
@@ -121,7 +121,12 @@ const NavigationApp = () => {
       <div className="hidden items-center justify-center gap-6 md:flex">
         <CartStatus isScrolled={isScrolled} />
         {user && <SupportNotificationLink />}
-        {user 
+        {status === "loading" ? (
+          <span
+            aria-label="Checking session"
+            className="h-9 w-24 animate-pulse rounded-full bg-white/25 dark:bg-zinc-700"
+          />
+        ) : user
           ? (	
               <DropdownMenu.Root>
                 <DropdownMenu.Trigger>
@@ -250,7 +255,9 @@ const NavigationApp = () => {
         </nav>
 
         <div className="mt-8 border-t border-zinc-200 pt-6 dark:border-zinc-800">
-          {user ? (
+          {status === "loading" ? (
+            <div className="h-11 w-full animate-pulse rounded-lg bg-zinc-100 dark:bg-zinc-800" />
+          ) : user ? (
             <div className="flex flex-col gap-2">
               <Link href="/profile" onClick={closeMenu} className="rounded-lg px-3 py-3 font-medium hover:bg-zinc-100 dark:hover:bg-zinc-800">
                 Profile

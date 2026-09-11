@@ -3,7 +3,7 @@ import type { Session } from "next-auth";
 
 type ProviderProps = {
   children: React.ReactNode;
-  session: Session | null;
+  session?: Session | null;
 };
 
 export default function Provider({
