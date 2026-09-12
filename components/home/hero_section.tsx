@@ -22,7 +22,7 @@ const HeroSection = () => {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 mx-auto flex h-full max-w-2xl flex-col justify-start px-4 pt-64 text-white">
+      <div className="relative z-10 mx-auto flex h-screen max-w-2xl flex-col justify-start px-4 pt-64 text-white">
         <div className="space-y-3 text-center drop-shadow-lg">
           <h1 className="text-3xl md:text-[62px]">
             Kubuka Space PBC

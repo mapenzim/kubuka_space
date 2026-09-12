@@ -35,7 +35,7 @@ export default function SkillsCard({ initialSkills }: SkillsCardProps) {
   return (
     <Card size="1" variant="ghost" className="rounded-2xl border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
       <Flex align="center" justify="between" mb="4">
-        <Heading as="h3" size="4" className="text-zinc-900 dark:text-zinc-100">
+        <Heading as="h3" size="4" className="text-zinc-900 dark:text-zinc-100 uppercase">
           Skills
         </Heading>
         <AddUpdateSkillPopover skill={null} onSaved={handleSaved} />

@@ -21,7 +21,7 @@ export default function BioSection({ initialBio }: BioSectionProps) {
   return (
     <Box>
       <Flex align="center" justify="between" mb="3">
-        <Heading as="h3" size="5" className="text-zinc-900 dark:text-zinc-300">
+        <Heading as="h3" size="5" className="text-zinc-900 dark:text-zinc-300 uppercase">
           About Me
         </Heading>
         <AddUpdateBioPopover bio={bio} onSaved={handleSaved} />

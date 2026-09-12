@@ -57,7 +57,7 @@ export default function WorkExperienceSection({
   return (
     <Box>
       <Flex align="center" justify="between" mb="5">
-        <Heading as="h3" size="5" className="text-zinc-900 dark:text-zinc-300">
+        <Heading as="h3" size="5" className="text-zinc-900 dark:text-zinc-300 uppercase">
           Work Experience
         </Heading>
         <AddUpdateExperiencePopover onSaved={handleSaved} />
