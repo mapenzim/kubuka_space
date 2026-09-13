@@ -9,6 +9,7 @@
     "db:seed": "prisma db seed",
     "db:setup": "pnpm db:generate && pnpm db:migrate && pnpm db:seed",
     "build": "pnpm db:generate && next build",
+    "vercel-build": "pnpm db:generate && if [ \"$VERCEL_ENV\" = \"production\" ]; then pnpm db:migrate; fi && next build",
     "start": "next start",
     "lint": "eslint ."
   },

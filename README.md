@@ -182,7 +182,7 @@ Before deploying:
 4. Run `pnpm build` and deploy the generated application.
 5. Seed only when creating a new environment, and provide secure superuser credentials.
 
-The application is prepared for Vercel deployment and includes Vercel Analytics and Speed Insights. Authenticated and account-specific pages remain dynamic, while public content uses caching where appropriate.
+The application is prepared for Vercel deployment and includes Vercel Analytics and Speed Insights. Its production Vercel build command automatically applies committed Prisma migrations before compiling the application; preview builds do not alter the production schema. Authenticated and account-specific pages remain dynamic, while public content uses caching where appropriate.
 
 ## Payment launch checklist
 
