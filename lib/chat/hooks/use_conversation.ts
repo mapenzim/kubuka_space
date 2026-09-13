@@ -56,12 +56,21 @@ export function useConversation() {
     );
 
     if (
-      response.data &&
       conversation.getThread()?.id === threadId
     ) {
+      if (!response.data) {
+        conversation.clear();
+        reset();
+
+        if (role === "user") {
+          toast.info("This support conversation is no longer active.");
+        }
+        return;
+      }
+
       conversation.mergeThread(response.data);
     }
-  }, [conversation, conversationKey, threadId]);
+  }, [conversation, conversationKey, reset, role, threadId]);
 
   useVisibilityPoll(syncThread, {
     enabled: Boolean(threadId),
@@ -251,6 +260,27 @@ export function useConversation() {
     reset();
   }, [conversation, reset, threadId]);
 
+  const archiveConversation = useCallback(async () => {
+    if (!threadId) {
+      return;
+    }
+
+    try {
+      await conversationClient.archive({ threadId });
+      toast.success("Conversation archived.");
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Unable to archive the conversation.",
+      );
+      throw error;
+    }
+
+    conversation.clear();
+    reset();
+  }, [conversation, reset, threadId]);
+
   //--------------------------------------------------------
   // Public API
   //--------------------------------------------------------
@@ -264,6 +294,7 @@ export function useConversation() {
     startConversation,
     sendMessage,
     clear,
+    archiveConversation,
     deleteConversation,
   };
 }

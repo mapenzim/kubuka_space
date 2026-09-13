@@ -120,7 +120,7 @@ export default function ConversationComposer({
   }, []);
 
   //--------------------------------------------------------
-  // Render
+  // Render 
   //--------------------------------------------------------
   return (
     <Box className="border-t border-zinc-200 bg-white/80 p-4 dark:border-zinc-800 dark:bg-zinc-900/60">
@@ -139,7 +139,7 @@ export default function ConversationComposer({
               placeholder={
                 placeholder
               }
-              minHeight="4rem"
+              height="7rem"
               disabled={
                 disabled
               }

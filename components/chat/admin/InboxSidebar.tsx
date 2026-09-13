@@ -36,9 +36,9 @@ const InboxSidebarItem = memo(function InboxSidebarItem({
     <button
       type="button"
       onClick={() => onSelect(thread.id)}
-      className={`w-full text-left border-b p-3 transition-colors hover:bg-amber-300 ${
+      className={`w-full text-left border-b p-3 transition-colors dark:hover:bg-indigo-600 hover:bg-indigo-300 ${
         selected
-          ? "bg-amber-200"
+          ? "dark:bg-indigo-500 bg-indigo-200"
           : "bg-(--gray-a3)"
       }`}
     >
@@ -53,13 +53,6 @@ const InboxSidebarItem = memo(function InboxSidebarItem({
           <Text size="1" color="gray">
             {thread.email}
           </Text>
-
-          <Text
-            size="1"
-            color={thread.online ? "green" : "gray"}
-          >
-            {thread.online ? "Online" : "Offline"}
-          </Text>
         </Flex>
 
         {thread.lastMessageAt && (
@@ -69,14 +62,6 @@ const InboxSidebarItem = memo(function InboxSidebarItem({
         )}
       </Flex>
 
-      <Text
-        mt="2"
-        size="2"
-        color="gray"
-        className="line-clamp-2 italic"
-      >
-        {thread.lastMessage ?? "No messages"}
-      </Text>
     </button>
   );
 });

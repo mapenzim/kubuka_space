@@ -23,6 +23,7 @@ export async function getUserSupportUnreadCount() {
       senderRole: "admin",
       readAt: null,
       thread: {
+        archived: false,
         email: { equals: email, mode: "insensitive" },
       },
     },

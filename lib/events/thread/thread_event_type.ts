@@ -8,6 +8,12 @@ export enum ThreadEventType {
   MESSAGE_READ = "message.read",
 
   //--------------------------------------------------------
+  // Thread lifecycle
+  //--------------------------------------------------------
+  THREAD_ARCHIVED = "thread.archived",
+  THREAD_DELETED = "thread.deleted",
+
+  //--------------------------------------------------------
   // Presence
   //--------------------------------------------------------
   PRESENCE_CHANGED = "presence.changed",

@@ -3,7 +3,7 @@
 import { userSkillAction } from "@/app/actions/authActions.server";
 import * as Form from "@radix-ui/react-form";
 import { Avatar, Box, Button, Checkbox, Flex, Popover, Text, TextField } from "@radix-ui/themes";
-import { PlusIcon, TagIcon } from "lucide-react";
+import { FileEditIcon, PlusIcon, TagIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -51,8 +51,16 @@ export const AddUpdateSkillPopover = ({ skill, onSaved }: UserSkillProps) => {
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>
       <Popover.Trigger>
-        <Button variant="ghost" size={"1"}>
-          <PlusIcon className="w-4 h-auto text-zinc-700 dark:text-zinc-400" />
+        <Button
+          variant="ghost"
+          size={"1"}
+          aria-label={skill ? `Edit ${skill.text}` : "Add skill"}
+        >
+          {skill ? (
+            <FileEditIcon className="h-auto w-4 text-zinc-700 dark:text-zinc-300" />
+          ) : (
+            <PlusIcon className="h-auto w-4 text-zinc-700 dark:text-zinc-400" />
+          )}
         </Button>
       </Popover.Trigger>
       <Popover.Content
@@ -69,6 +77,7 @@ export const AddUpdateSkillPopover = ({ skill, onSaved }: UserSkillProps) => {
           />
           <Box flexGrow={"1"}>
             <Form.Root action={handleActionSubmit}>
+              <input type="hidden" name="skillId" value={skill?.id ?? ""} />
               <Flex gap={"1"} justify={"between"} mb={"4"}>
                 <Flex align={"center"} gap={"1"} asChild>
                   <Text as="label" size={"1"} className="text-zinc-700 dark:text-zinc-200">
@@ -90,7 +99,7 @@ export const AddUpdateSkillPopover = ({ skill, onSaved }: UserSkillProps) => {
                 </Flex>
                 <Form.Submit asChild>
                   <Button size={"1"} type="submit" loading={saving} disabled={saving}>
-                    Add
+                    {skill ? "Update" : "Add"}
                   </Button> 
                 </Form.Submit>
               </Flex>

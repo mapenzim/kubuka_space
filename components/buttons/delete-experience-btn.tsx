@@ -28,7 +28,11 @@ export const DeleteUserExperience = ({
   return ( 
     <RemoveAlert
       trigger={
-        <button className="text-orange-600 hover:text-red-600">
+        <button
+          type="button"
+          aria-label="Delete work experience"
+          className="inline-flex size-7 items-center justify-center rounded-md text-orange-600 transition-colors hover:bg-red-50 hover:text-red-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 dark:hover:bg-red-950/50"
+        >
           <Tooltip content="Delete this entry">
             <ArchiveIcon className="w-4 h-auto" />
           </Tooltip>

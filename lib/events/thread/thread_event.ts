@@ -71,6 +71,19 @@ export interface MessageReadEvent
 }
 
 //--------------------------------------------------------
+// Thread lifecycle
+//--------------------------------------------------------
+export interface ThreadArchivedEvent extends BaseThreadEvent {
+  type: ThreadEventType.THREAD_ARCHIVED;
+  payload: Record<string, never>;
+}
+
+export interface ThreadDeletedEvent extends BaseThreadEvent {
+  type: ThreadEventType.THREAD_DELETED;
+  payload: Record<string, never>;
+}
+
+//--------------------------------------------------------
 // Presence
 //--------------------------------------------------------
 export interface PresenceChangedEvent
@@ -108,5 +121,7 @@ export type ThreadEvent =
   | MessageUpdatedEvent
   | MessageDeletedEvent
   | MessageReadEvent
+  | ThreadArchivedEvent
+  | ThreadDeletedEvent
   | PresenceChangedEvent
   | ActivityChangedEvent;

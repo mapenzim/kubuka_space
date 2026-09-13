@@ -68,7 +68,7 @@ export default function WorkExperienceSection({
           experiences.map((experience) => (
             <Box
               key={experience.id}
-              className="relative border-l-2 border-zinc-200 pb-2 pl-6 last:pb-0 dark:border-zinc-800"
+              className="group relative rounded-r-lg border-l-2 border-zinc-200 py-2 pr-2 pl-6 transition-colors hover:bg-zinc-50 focus-within:bg-zinc-50 last:pb-2 dark:border-zinc-800 dark:hover:bg-zinc-800/40 dark:focus-within:bg-zinc-800/40"
             >
               <div className="absolute -left-1.75 top-1.5 size-3 rounded-full bg-(--iris-9) ring-4 ring-white dark:ring-zinc-900" />
 
@@ -82,7 +82,10 @@ export default function WorkExperienceSection({
                   </Text>
                 </Box>
 
-                <Flex gap="4">
+                <Flex
+                  gap="2"
+                  className="opacity-100 transition-opacity sm:pointer-events-none sm:opacity-0 sm:group-hover:pointer-events-auto sm:group-hover:opacity-100 sm:group-focus-within:pointer-events-auto sm:group-focus-within:opacity-100"
+                >
                   <AddUpdateExperiencePopover
                     workExperience={experience}
                     onSaved={handleSaved}

@@ -58,6 +58,7 @@ export default function AdminMessenger() {
     sendMessage,
     startTyping,
     stopTyping,
+    archiveConversation,
     deleteConversation,
   } = useChat();
 
@@ -114,6 +115,15 @@ export default function AdminMessenger() {
     }
 
     await deleteConversation();
+    removeThread(selectedThreadId);
+  }
+
+  async function archiveCurrentConversation() {
+    if (!selectedThreadId) {
+      return;
+    }
+
+    await archiveConversation();
     removeThread(selectedThreadId);
   }
 
@@ -217,7 +227,7 @@ export default function AdminMessenger() {
               : "hidden md:flex"
           }`}
         >
-          {selectedThreadId && (
+          {/*selectedThreadId && (
             <Box className="border-b border-zinc-200 p-2 dark:border-zinc-800 md:hidden">
               <IconButton
                 variant="ghost"
@@ -227,7 +237,7 @@ export default function AdminMessenger() {
                 <ArrowLeft size={18} />
               </IconButton>
             </Box>
-          )}
+          )*/}
           {!thread ? (
             <Flex
               align="center"
@@ -246,6 +256,7 @@ export default function AdminMessenger() {
                 online={getParticipantByRole("user")?.online ?? false}
                 typing={isTyping("user")}
                 lastSeen={getParticipantByRole("user")?.lastSeen}
+                onArchive={archiveCurrentConversation}
                 onDelete={deleteCurrentConversation}
               /> 
 

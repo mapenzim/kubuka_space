@@ -107,11 +107,17 @@ export function useInbox() {
           conversationStore.archive(
             event.payload.threadId,
           );
+          setSelectedThreadId((current) =>
+            current === event.payload.threadId ? null : current,
+          );
           break;
 
         case ConversationEventType.CONVERSATION_DELETED:
           conversationStore.remove(
             event.payload.threadId,
+          );
+          setSelectedThreadId((current) =>
+            current === event.payload.threadId ? null : current,
           );
           break;
       }

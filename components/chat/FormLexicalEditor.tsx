@@ -23,7 +23,7 @@ function onError(error: Error) {
 type Props = {
   onChange: (text: string) => void;
   placeholder?: string;
-  minHeight?: string;
+  height?: string;
   disabled?: boolean;
 
   /**
@@ -57,7 +57,7 @@ function ClearOnSignalPlugin({
 export default function FormLexicalEditor({
   onChange,
   placeholder = "Write a message...",
-  minHeight = "7rem",
+  height = "7rem",
   disabled = false,
   clearSignal,
 }: Props) {
@@ -98,7 +98,7 @@ export default function FormLexicalEditor({
           }
         `}
         style={{
-          minHeight,
+          height, overflow: "auto"
         }}
       >
         <RichTextPlugin

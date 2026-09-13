@@ -1,5 +1,5 @@
 import { apiHandler } from "@/lib/api/api_handler";
-import { archiveThreadUseCase } from "@/lib/container/runtime";
+import { chatGateway } from "@/lib/container/runtime";
 import { requireChatAdmin } from "@/lib/chat/server/chat_access";
 
 interface RouteProps {
@@ -17,6 +17,6 @@ export async function POST(
 
   return apiHandler(async () => {
     await requireChatAdmin();
-    return archiveThreadUseCase.execute(threadId);
+    return chatGateway.archiveThread(threadId);
   });
 }

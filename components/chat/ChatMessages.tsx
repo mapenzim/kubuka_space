@@ -6,8 +6,8 @@ import {
 } from "react";
 
 import {
+  Badge,
   Box,
-  Flex,
   ScrollArea,
   Text,
 } from "@radix-ui/themes";
@@ -15,6 +15,7 @@ import {
 import { ChatMessagesProps } from "@/lib/type_interface";
 import { formatTime } from "@/lib/utils";
 import { useRelativeTimeClock } from "@/lib/chat/hooks/use_relative_time_clock";
+import { Bot } from "lucide-react";
 
 export default function ChatMessages({
   thread,
@@ -60,60 +61,82 @@ export default function ChatMessages({
           padding: 16,
         }}
       >
-        <Flex
-          direction="column"
-          gap="3"
-        >
+        <div className="grid w-full min-w-0 grid-cols-1 gap-3">
           {thread.messages.map(
             (message) => {
               const mine =
                 message.senderRole ===
                 selfRole;
+              const isBot =
+                message.senderRole ===
+                "bot";
 
               return (
-                <Flex
+                <div
                   key={message.id}
-                  direction="column"
-                  align={
-                    mine
-                      ? "end"
-                      : "start"
-                  }
+                  data-sender-role={message.senderRole}
+                  className={`flex w-full min-w-0 ${
+                    isBot
+                      ? "justify-center"
+                      : mine
+                        ? "justify-end"
+                        : "justify-start"
+                  }`}
                 >
-                  <Box
-                    className={`max-w-[80%] rounded-2xl px-4 py-2 ${
-                      mine
-                        ? "bg-indigo-600 text-white"
-                        : "border border-zinc-200 bg-white text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                  <div
+                    className={`flex min-w-0 max-w-[80%] flex-col ${
+                      isBot
+                        ? "items-center"
+                        : mine
+                          ? "items-end"
+                          : "items-start"
                     }`}
                   >
-                    <Text
-                      size="2"
-                      className={`whitespace-pre-wrap break-word ${
-                        mine
-                          ? "text-white"
-                          : "text-zinc-900 dark:text-zinc-100"
+                    <Box
+                      className={`w-fit max-w-full rounded-2xl px-4 py-2 ${
+                        isBot
+                          ? "border border-violet-300 bg-violet-50 text-violet-950 dark:border-violet-700 dark:bg-violet-950/40 dark:text-violet-100"
+                          : mine
+                            ? "bg-indigo-600 text-white"
+                            : "border border-zinc-200 bg-white text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
                       }`}
                     >
-                      {message.content}
-                    </Text>
-                  </Box>
+                      {isBot && (
+                        <Badge color="violet" variant="soft" radius="full" mb="1">
+                          <Bot aria-hidden="true" size={13} />
+                          Kubuka Bot
+                        </Badge>
+                      )}
+                      <Text
+                        size="2"
+                        className={`whitespace-pre-wrap break-word ${
+                          isBot
+                            ? "text-violet-950 dark:text-violet-100"
+                            : mine
+                            ? "text-white"
+                            : "text-zinc-900 dark:text-zinc-100"
+                        }`}
+                      >
+                        {message.content}
+                      </Text>
+                    </Box>
 
-                  <Text
-                    size="1"
-                    className="text-zinc-500 dark:text-zinc-400"
-                  >
-                    {message.senderRole === "bot" && "Automated reply · "}
-                    {formatTime(
-                      message.timestamp,
-                      now,
-                    )}
-                  </Text>
-                </Flex>
+                    <Text
+                      size="1"
+                      className="text-zinc-500 dark:text-zinc-400"
+                    >
+                      {message.senderRole === "bot" && "Automated reply · "}
+                      {formatTime(
+                        message.timestamp,
+                        now,
+                      )}
+                    </Text>
+                  </div>
+                </div>
               );
             },
           )}
-        </Flex>
+        </div>
       </ScrollArea>
     </Box>
   );

@@ -344,6 +344,7 @@ type SkillSubmitResult =
 export async function userSkillAction(formData: FormData): Promise<SkillSubmitResult> {
   const session = await auth();
   const userId = session?.user?.id;
+  const skillId = String(formData.get("skillId") ?? "").trim();
   const text = String(formData.get("text") ?? "").trim();
 
   if (!userId || session.user.status !== "ACTIVE") {
@@ -355,6 +356,33 @@ export async function userSkillAction(formData: FormData): Promise<SkillSubmitRe
   }
   
   try {
+    if (skillId) {
+      const existing = await prisma.skill.findFirst({
+        where: { id: skillId, userId },
+        select: { id: true },
+      });
+
+      if (!existing) {
+        return { error: { message: "Skill not found." } };
+      }
+
+      const duplicate = await prisma.skill.findUnique({
+        where: { text_userId: { text, userId } },
+        select: { id: true },
+      });
+
+      if (duplicate && duplicate.id !== skillId) {
+        return { error: { message: "That skill is already on your profile." } };
+      }
+
+      const skill = await prisma.skill.update({
+        where: { id: skillId },
+        data: { text },
+      });
+
+      return { success: true, skill };
+    }
+
     const skill = await prisma.skill.upsert({
       where: {
         text_userId: {
@@ -388,10 +416,29 @@ export async function getUserSkills(userId: string) {
   });
 }
 
-export async function deleteUserSkill(id: string) {
-  return prisma.skill.delete({
-    where: {
-      id
+type SkillDeleteResult =
+  | { success: true }
+  | { error: { message: string } };
+
+export async function deleteUserSkill(id: string): Promise<SkillDeleteResult> {
+  const session = await auth();
+  const userId = session?.user?.id;
+
+  if (!userId || session.user.status !== "ACTIVE") {
+    return { error: { message: "Please sign in before deleting a skill." } };
+  }
+
+  try {
+    const result = await prisma.skill.deleteMany({
+      where: { id, userId },
+    });
+
+    if (result.count === 0) {
+      return { error: { message: "Skill not found." } };
     }
-  });
+
+    return { success: true };
+  } catch {
+    return { error: { message: "Unable to delete the skill right now." } };
+  }
 }

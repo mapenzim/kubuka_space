@@ -46,7 +46,7 @@ export interface DisconnectRequest {
 
 export type ThreadResponse = ApiResponse<ThreadDto>;
 
-export type ConversationThreadResponse = ApiResponse<ThreadDetailsDto>;
+export type ConversationThreadResponse = ApiResponse<ThreadDetailsDto | null>;
 
 export type InboxThreadsResponse = ApiResponse<ThreadSummaryDto[]>;
 

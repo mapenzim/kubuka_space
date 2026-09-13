@@ -2,6 +2,7 @@ import {
   ConversationThreadResponse,
   SendMessageResponse,
   StartConversationRequest,
+  StartConversationResponse,
 } from "@/lib/api/types";
 import {
   ConversationApi,
@@ -14,7 +15,7 @@ class ConversationHttpClient
 {
   async startConversation(
     request: StartConversationRequest,
-  ): Promise<ConversationThreadResponse> {
+  ): Promise<StartConversationResponse> {
     const response = await fetch(
       "/api/chat/start",
       {
@@ -81,7 +82,27 @@ class ConversationHttpClient
     }
   }
 
-  async getThread(threadId: string, conversationKey?: string) {
+  async archive(
+    request: DeleteConversationRequest,
+  ): Promise<void> {
+    const response = await fetch(
+      `/api/chat/thread/${request.threadId}/archive`,
+      {
+        method: "POST",
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        await response.text(),
+      );
+    }
+  }
+
+  async getThread(
+    threadId: string,
+    conversationKey?: string,
+  ): Promise<ConversationThreadResponse> {
     const params = new URLSearchParams();
     if (conversationKey) params.set("conversationKey", conversationKey);
     const query = params.size ? `?${params.toString()}` : "";
@@ -95,6 +116,13 @@ class ConversationHttpClient
     );
 
     if (!response.ok) {
+      if (response.status === 404 || response.status === 410) {
+        return {
+          success: true,
+          data: null,
+        };
+      }
+
       throw new Error(
         "Failed to load conversation.",
       );

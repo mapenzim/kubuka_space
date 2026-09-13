@@ -17,7 +17,13 @@ export async function GET(
 
   return apiHandler(async () => {
     const conversationKey = new URL(request.url).searchParams.get("conversationKey") ?? undefined;
-    await authorizeThreadAccess(threadId, conversationKey);
-    return getThreadUseCase.execute(threadId);
+    const role = await authorizeThreadAccess(threadId, conversationKey);
+    const thread = await getThreadUseCase.execute(threadId);
+
+    if (role === "user" && thread?.archived) {
+      return null;
+    }
+
+    return thread;
   });
 }

@@ -3,6 +3,7 @@ import { MessageDto } from "../dto";
 import { ThreadDetailsDto } from "../dto/thread_details_dto";
 import { ThreadSummaryDto } from "../dto/thread_summary_dto";
 import { ConversationEventType } from "../events/conversation/conversation_event_type";
+import { ThreadEventType } from "../events/thread/thread_event_type";
 import { SenderRole } from "../interfaces/sender_role";
 import { NotificationService } from "../notifications/notification_service";
 import { PresenceService } from "../presence/presence_service";
@@ -76,10 +77,19 @@ export class ChatGateway {
       threadId,
     );
 
+    const timestamp = new Date().toISOString();
+
+    this.notificationService.publishThread({
+      type: ThreadEventType.THREAD_ARCHIVED,
+      threadId,
+      timestamp,
+      payload: {},
+    });
+
     this.notificationService.publishConversation({
       type:
         ConversationEventType.CONVERSATION_ARCHIVED,
-      timestamp: new Date().toISOString(),
+      timestamp,
       payload: {
         threadId,
       },
@@ -93,10 +103,19 @@ export class ChatGateway {
       threadId,
     );
 
+    const timestamp = new Date().toISOString();
+
+    this.notificationService.publishThread({
+      type: ThreadEventType.THREAD_DELETED,
+      threadId,
+      timestamp,
+      payload: {},
+    });
+
     this.notificationService.publishConversation({
       type:
         ConversationEventType.CONVERSATION_DELETED,
-      timestamp: new Date().toISOString(),
+      timestamp,
       payload: {
         threadId,
       },

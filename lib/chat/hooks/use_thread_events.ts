@@ -5,9 +5,10 @@ import { useCallback } from "react";
 import { useChatSession } from "@/lib/chat/session";
 import { conversationStore } from "@/lib/chat/stores/conversation_store";
 import { chatStores } from "@/lib/chat/stores";
-import { ChatEvent } from "@/lib/events/chat_event";
-import { ChatEventType } from "@/lib/events/chat_event_type";
+import { ThreadEvent } from "@/lib/events/thread/thread_event";
+import { ThreadEventType } from "@/lib/events/thread/thread_event_type";
 import { useEventStream } from "./use_event_stream";
+import { toast } from "sonner";
 
 export function useThreadEvents() {
   const session = useChatSession();
@@ -17,15 +18,15 @@ export function useThreadEvents() {
   // Dispatch every event to the correct store
   //----------------------------------------------------------
   const handleEvent = useCallback(
-    (event: ChatEvent) => {
+    (event: ThreadEvent) => {
       switch (event.type) {
-        case ChatEventType.MESSAGE_CREATED:
+        case ThreadEventType.MESSAGE_CREATED:
           conversationStore.appendMessage(
             event.payload.message,
           );
           break; 
 
-        case ChatEventType.ACTIVITY_CHANGED:
+        case ThreadEventType.ACTIVITY_CHANGED:
           activity.setActivity({
             threadId: event.threadId,
             clientId: event.payload.clientId,
@@ -35,7 +36,7 @@ export function useThreadEvents() {
 
           break;
 
-        case ChatEventType.PRESENCE_CHANGED:
+        case ThreadEventType.PRESENCE_CHANGED:
           presence.setPresence({
             clientId: event.payload.clientId,
             threadId: event.threadId,
@@ -45,16 +46,34 @@ export function useThreadEvents() {
           });
           break;
 
+        case ThreadEventType.THREAD_ARCHIVED:
+        case ThreadEventType.THREAD_DELETED:
+          if (conversationStore.getThread()?.id !== event.threadId) break;
+
+          conversationStore.clear();
+          presence.clear();
+          activity.clear();
+          session.reset();
+
+          if (session.role === "user") {
+            toast.info(
+              event.type === ThreadEventType.THREAD_ARCHIVED
+                ? "This support conversation was archived."
+                : "This support conversation was deleted.",
+            );
+          }
+          break;
+
       }
     },
-    [presence, activity],
+    [presence, activity, session],
   );
 
   //----------------------------------------------------------
   // Single SSE connection
   //----------------------------------------------------------
 
-  return useEventStream<ChatEvent>({
+  return useEventStream<ThreadEvent>({
     threadId: session.threadId,
     clientId: session.clientId,
     conversationKey: session.conversationKey,
