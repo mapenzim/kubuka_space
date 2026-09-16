@@ -24,6 +24,9 @@ export default function CheckoutForm({
     try {
       const result = await checkoutAction(formData);
       clearCart();
+      if (result.snippetPurchase) {
+        window.dispatchEvent(new Event("kubuka-support-message"));
+      }
       router.replace(`/store/receipt/${result.orderId}`);
     } catch (checkoutError) {
       setError(

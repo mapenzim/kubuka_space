@@ -27,11 +27,14 @@ export default function SupportNotificationLink({
     void refresh();
     const timer = window.setInterval(() => void refresh(), 60000);
     const handleFocus = () => void refresh();
+    const handleSupportMessage = () => void refresh();
     window.addEventListener("focus", handleFocus);
+    window.addEventListener("kubuka-support-message", handleSupportMessage);
     return () => {
       active = false;
       window.clearInterval(timer);
       window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("kubuka-support-message", handleSupportMessage);
     };
   }, []);
   return <Link href="/contact_us" aria-label={count ? `${count} unread support messages` : "Support messages"} className="relative inline-flex items-center gap-2 p-2">

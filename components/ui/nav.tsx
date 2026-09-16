@@ -143,7 +143,7 @@ const NavigationApp = () => {
                   </DropdownMenu.Item>
                   {isAdminRole(user.role) && (
                     <DropdownMenu.Item shortcut="⌘ D" asChild>
-                      <Link href="/admin" className="w-full" referrerPolicy="no-referrer" target="_blank">
+                      <Link href="/admin" className="w-full" prefetch={false}>
                         Admin Dashboard
                       </Link>
                     </DropdownMenu.Item>

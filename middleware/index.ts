@@ -1,32 +1,22 @@
-import { getToken } from "next-auth/jwt";
-import { NextRequest, NextResponse } from "next/server";
+import type { NextAuthRequest } from "next-auth";
+import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-const authSecret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
-
-function isExpired(token: { exp?: number } | null) {
-  return Boolean(token?.exp && Date.now() >= token.exp * 1000);
-}
-
-export async function middleware(req: NextRequest) {
-  const token = await getToken({
-    req,
-    secret: authSecret,
-    secureCookie: process.env.NODE_ENV === "production" || req.nextUrl.protocol === "https:",
-  });
+export async function middleware(req: NextAuthRequest) {
   const { pathname } = req.nextUrl;
-  const account = token?.id
+  const sessionUser = req.auth?.user;
+  const account = sessionUser?.id
     ? await prisma.user.findUnique({
-        where: { id: String(token.id) },
+        where: { id: String(sessionUser.id) },
         select: {
           status: true,
           role: { select: { name: true } },
         },
       })
     : null;
-  const accountStatus = token
+  const accountStatus = sessionUser
     ? account?.status ?? "ARCHIVED"
     : undefined;
   const accountRole = account?.role?.name;
@@ -38,7 +28,7 @@ export async function middleware(req: NextRequest) {
   };
 
   if (pathname.startsWith("/admin")) {
-    if (!token || isExpired(token)) {
+    if (!sessionUser) {
       return redirectToAuthentication();
     }
 
@@ -52,7 +42,7 @@ export async function middleware(req: NextRequest) {
   }
 
   if (pathname.startsWith("/dashboard")) {
-    if (!token || isExpired(token)) {
+    if (!sessionUser) {
       return redirectToAuthentication();
     }
 
@@ -84,8 +74,7 @@ export async function middleware(req: NextRequest) {
 
   if (pathname.startsWith("/profile")) {
     if (
-      !token ||
-      isExpired(token) ||
+      !sessionUser ||
       (accountStatus && accountStatus !== "ACTIVE")
     ) {
       return redirectToAuthentication();
@@ -95,7 +84,7 @@ export async function middleware(req: NextRequest) {
   if (
     (pathname.startsWith("/store/cart") ||
       pathname.startsWith("/store/receipt")) &&
-    token &&
+    sessionUser &&
     accountStatus !== "ACTIVE"
   ) {
     return redirectToAuthentication();
@@ -103,7 +92,7 @@ export async function middleware(req: NextRequest) {
 
   if (
     pathname.startsWith("/authentication") &&
-    token &&
+    sessionUser &&
     (!accountStatus || accountStatus === "ACTIVE")
   ) {
     const redirectUrl =

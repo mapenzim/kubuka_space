@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
-import { CheckCircle2, MapPin, ReceiptText } from "lucide-react";
+import { CheckCircle2, Code2, MapPin, ReceiptText } from "lucide-react";
+import { humanizeSnippetValue } from "@/lib/snippets";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
@@ -54,6 +55,15 @@ export default async function ReceiptPage({ params }: ReceiptPageProps) {
         orderBy: {
           createdAt: "asc",
         },
+        include: {
+          merchandise: {
+            select: {
+              snippetProduct: {
+                select: { language: true },
+              },
+            },
+          },
+        },
       },
       shippingAddress: true,
       payments: {
@@ -74,6 +84,8 @@ export default async function ReceiptPage({ params }: ReceiptPageProps) {
   const receiptNumber = order.id.slice(-10).toUpperCase();
   const isComplete =
     order.status === "paid" && order.paymentStatus === "PAID";
+  const snippetItems = order.items.filter((item) => item.merchandise.snippetProduct);
+  const snippetCredits = snippetItems.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
     <main className="min-h-screen bg-zinc-50 px-4 py-16 text-zinc-900 transition-colors dark:bg-zinc-950 dark:text-zinc-100 sm:px-6">
@@ -173,6 +185,32 @@ export default async function ReceiptPage({ params }: ReceiptPageProps) {
                 </div>
               </div>
             </section>
+
+            {snippetItems.length > 0 && (
+              <section className="rounded-2xl border border-indigo-200 bg-indigo-50 p-5 dark:border-indigo-800 dark:bg-indigo-950/30" aria-labelledby="snippet-delivery-next-step">
+                <div className="flex items-start gap-4">
+                  <span className="grid size-11 shrink-0 place-content-center rounded-xl bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
+                    <Code2 aria-hidden="true" size={22} />
+                  </span>
+                  <div>
+                    <h2 id="snippet-delivery-next-step" className="text-lg font-semibold text-indigo-950 dark:text-indigo-100">
+                      Your snippet request {snippetCredits === 1 ? "credit is" : "credits are"} ready
+                    </h2>
+                    <p className="mt-2 text-sm leading-6 text-indigo-900/80 dark:text-indigo-200/80">
+                      This is a developer-prepared product rather than an instant download. We have acknowledged your purchase in support chat. Send your component requirements there and the completed source files will be delivered securely in the same conversation.
+                    </p>
+                    <ul className="mt-3 space-y-1 text-sm text-indigo-900 dark:text-indigo-200">
+                      {snippetItems.map((item) => (
+                        <li key={item.id}>{item.quantity} × {item.title} · {humanizeSnippetValue(item.merchandise.snippetProduct!.language)}</li>
+                      ))}
+                    </ul>
+                    <Link href="/contact_us" className="mt-4 inline-flex rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700">
+                      Submit snippet requirements
+                    </Link>
+                  </div>
+                </div>
+              </section>
+            )}
 
             <div className="grid gap-6 border-t border-zinc-200 pt-8 dark:border-zinc-800 sm:grid-cols-2">
               <section aria-labelledby="delivery-address">

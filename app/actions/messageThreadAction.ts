@@ -20,7 +20,7 @@ export async function getUserSupportUnreadCount() {
 
   return prisma.message.count({
     where: {
-      senderRole: "admin",
+      senderRole: { in: ["admin", "bot"] },
       readAt: null,
       thread: {
         archived: false,
@@ -39,7 +39,7 @@ export async function markUserSupportRead() {
   await prisma.$transaction([
     prisma.message.updateMany({
       where: {
-        senderRole: "admin",
+        senderRole: { in: ["admin", "bot"] },
         readAt: null,
         thread: {
           email: { equals: email, mode: "insensitive" },

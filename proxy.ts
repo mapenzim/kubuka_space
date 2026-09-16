@@ -1,10 +1,9 @@
-// Next.js 16 discovers request guards from proxy.ts.
+// Next.js 16 discovers request guards from proxy.ts. Auth.js decodes its own
+// cookie, then the application proxy performs the database-backed checks.
+import { auth } from "./auth";
 import { middleware as authenticationProxy } from "./middleware/index";
-import type { NextRequest } from "next/server";
 
-export function proxy(request: NextRequest) {
-  return authenticationProxy(request);
-}
+export const proxy = auth((request) => authenticationProxy(request));
 
 export const config = {
   matcher: [

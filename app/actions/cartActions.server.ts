@@ -7,6 +7,8 @@ import { ulidId } from "@/lib/server-utils";
 import { Prisma, PrismaClient } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { getDiscountedUnitPrice } from "@/lib/pricing";
+import { chatGateway } from "@/lib/container/runtime";
+import { humanizeSnippetValue } from "@/lib/snippets";
 
 async function getOrCreateCart(tx: Prisma.TransactionClient | PrismaClient, userId: string, cartId?: string) {
   if (cartId) {
@@ -221,7 +223,15 @@ export async function checkoutAction(formData: FormData) {
       where: { userId },
       include: {
         cartItems: {
-          include: { merchandise: true },
+          include: {
+            merchandise: {
+              include: {
+                snippetProduct: {
+                  select: { language: true },
+                },
+              },
+            },
+          },
         },
       },
     });
@@ -304,14 +314,68 @@ export async function checkoutAction(formData: FormData) {
       where: { cartId: cart.id },
     });
 
-    return { success: true, orderId: order.id };
+    const snippetItems = cart.cartItems.flatMap((item) =>
+      item.merchandise.snippetProduct
+        ? [{
+            title: item.merchandise.title,
+            language: item.merchandise.snippetProduct.language,
+            quantity: item.quantity,
+          }]
+        : [],
+    );
+
+    return { success: true, orderId: order.id, snippetItems };
   });
+
+  if (result.snippetItems.length > 0 && session.user.email) {
+    const totalCredits = result.snippetItems.reduce((sum, item) => sum + item.quantity, 0);
+    const productSummary = result.snippetItems
+      .map((item) => `${item.quantity}× ${item.title} (${humanizeSnippetValue(item.language)})`)
+      .join(", ");
+    const acknowledgement =
+      `Your code snippet purchase is confirmed: ${productSummary}. ` +
+      `${totalCredits} request credit${totalCredits === 1 ? " is" : "s are"} now available. ` +
+      "Open this conversation and choose “Request purchased snippet” to send your requirements. " +
+      "A developer will review the request and deliver the completed source files securely in this chat.";
+
+    try {
+      const existingThread = await prisma.thread.findFirst({
+        where: {
+          archived: false,
+          email: { equals: session.user.email, mode: "insensitive" },
+        },
+        orderBy: { updatedAt: "desc" },
+        select: { id: true },
+      });
+
+      if (existingThread) {
+        await chatGateway.sendMessage(existingThread.id, "bot", acknowledgement);
+      } else {
+        await chatGateway.startConversation(
+          session.user.name ?? fullName,
+          session.user.email,
+          acknowledgement,
+          undefined,
+          "bot",
+        );
+      }
+    } catch (error) {
+      // Checkout has already committed successfully. A transient chat failure
+      // must not turn a paid order into a failed checkout response.
+      console.error("Unable to send snippet purchase acknowledgement.", error);
+    }
+  }
 
   revalidatePath("/store");
   revalidatePath("/profile");
   revalidatePath("/admin/store");
+  revalidatePath("/contact_us");
 
-  return result;
+  return {
+    success: result.success,
+    orderId: result.orderId,
+    snippetPurchase: result.snippetItems.length > 0,
+  };
 }
 
 export async function getAllOrdersByUser(userId: string) {
