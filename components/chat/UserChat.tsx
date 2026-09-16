@@ -16,6 +16,9 @@ import { useChat } from "@/lib/chat/hooks/use_chat";
 import { UserChatProps } from "@/lib/type_interface";
 import { getUserSupportThreads } from "@/app/actions/messageThreadAction";
 import { useEffect } from "react";
+import SnippetRequestDialog from "@/components/snippets/SnippetRequestDialog";
+import { Separator } from "@radix-ui/themes";
+import { getGuestChatSession } from "@/lib/chat/client/guest_session";
 
 export default function UserChat({
   user,
@@ -28,7 +31,7 @@ export default function UserChat({
   const [guestEmail, setGuestEmail] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [loadingHistory, setLoadingHistory] = useState(Boolean(user));
+  const [loadingHistory, setLoadingHistory] = useState(true);
 
   //--------------------------------------------------
   // Chat
@@ -39,6 +42,7 @@ export default function UserChat({
     startConversation,
     sendMessage,
     setExistingThread,
+    restoreConversation,
     startTyping,
     stopTyping,
     isTyping,
@@ -47,21 +51,28 @@ export default function UserChat({
 
   useEffect(() => {
     let active = true;
-    if (!user?.email) {
-      return () => { active = false; };
-    }
-
-    void getUserSupportThreads().then((result) => {
-      if (!active) return;
-      const existing = result.threads[0];
-      if (existing) setExistingThread(existing);
-      setLoadingHistory(false);
-    }).catch(() => {
-      if (active) setLoadingHistory(false);
-    });
+    void (async () => {
+      try {
+        if (user?.email) {
+          const result = await getUserSupportThreads();
+          if (!active) return;
+          const existing = result.threads[0];
+          if (existing) setExistingThread(existing);
+        } else {
+          const saved = getGuestChatSession();
+          if (saved) {
+            await restoreConversation(saved.threadId, saved.conversationKey);
+          }
+        }
+      } catch {
+        if (active) setError("Unable to restore the previous conversation.");
+      } finally {
+        if (active) setLoadingHistory(false);
+      }
+    })();
 
     return () => { active = false; };
-  }, [user?.email, setExistingThread]);
+  }, [user?.email, restoreConversation, setExistingThread]);
 
   //--------------------------------------------------
   // Start Conversation
@@ -191,6 +202,15 @@ export default function UserChat({
         thread={thread}
         selfRole="user"
       />
+
+      {user?.id && (
+        <>
+          <Separator />
+          <div className="flex justify-end bg-white px-3 py-2 dark:bg-zinc-900">
+            <SnippetRequestDialog threadId={thread.id} />
+          </div>
+        </>
+      )}
 
       <ConversationComposer
         placeholder={`Reply as ${thread.sender}...`}

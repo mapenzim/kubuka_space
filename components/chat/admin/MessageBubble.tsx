@@ -5,6 +5,8 @@ import { Bot } from "lucide-react";
 
 import { formatTime } from "@/lib/utils";
 import { MessageDto } from "@/lib/dto";
+import SnippetDeliveryCard from "@/components/snippets/SnippetDeliveryCard";
+import { parseSnippetDeliveryMarker } from "@/lib/snippets";
 
 interface MessageBubbleProps {
   message: MessageDto;
@@ -19,6 +21,15 @@ export default function MessageBubble({
 }: MessageBubbleProps) {
   const mine = message.senderRole === selfRole;
   const isBot = message.senderRole === "bot";
+  const snippetRequestId = parseSnippetDeliveryMarker(message.content);
+
+  if (snippetRequestId) {
+    return (
+      <div className="flex w-full justify-center py-2">
+        <SnippetDeliveryCard requestId={snippetRequestId} />
+      </div>
+    );
+  }
 
   return (
     <div

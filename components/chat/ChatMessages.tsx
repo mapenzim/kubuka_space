@@ -16,6 +16,8 @@ import { ChatMessagesProps } from "@/lib/type_interface";
 import { formatTime } from "@/lib/utils";
 import { useRelativeTimeClock } from "@/lib/chat/hooks/use_relative_time_clock";
 import { Bot } from "lucide-react";
+import SnippetDeliveryCard from "@/components/snippets/SnippetDeliveryCard";
+import { parseSnippetDeliveryMarker } from "@/lib/snippets";
 
 export default function ChatMessages({
   thread,
@@ -64,6 +66,14 @@ export default function ChatMessages({
         <div className="grid w-full min-w-0 grid-cols-1 gap-3">
           {thread.messages.map(
             (message) => {
+              const snippetRequestId = parseSnippetDeliveryMarker(message.content);
+              if (snippetRequestId) {
+                return (
+                  <div key={message.id} className="flex w-full justify-center py-2">
+                    <SnippetDeliveryCard requestId={snippetRequestId} />
+                  </div>
+                );
+              }
               const mine =
                 message.senderRole ===
                 selfRole;

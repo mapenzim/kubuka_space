@@ -59,6 +59,7 @@ model User {
   settings      Settings[]
   wishlists     Wishlist[]
   addresses     Address[]
+  snippetRequests SnippetRequest[]
 
   @@index([email])
   @@index([status])
@@ -246,6 +247,8 @@ model Merchandise {
 
   orderItems OrderItem[]
 
+  snippetProduct SnippetProduct?
+
   @@index([categoryId])
 }
 
@@ -312,6 +315,8 @@ model OrderItem {
   quantity      Int
 
   createdAt     DateTime    @default(now())
+
+  snippetRequests SnippetRequest[]
 }
 
 model Payment {
@@ -442,6 +447,7 @@ model Thread {
   dateArchived DateTime?      
 
   messages   Message[]
+  snippetRequests SnippetRequest[]
 }
 
 model Message {
@@ -453,4 +459,84 @@ model Message {
   readAt        DateTime?
 
   timestamp     DateTime          @default(now())
+}
+
+enum SnippetLanguage {
+  HTML
+  REACT
+  PYTHON
+}
+
+enum SnippetCategory {
+  HEADER
+  FOOTER
+  CARD
+  BUTTON
+  BADGE
+  DROPDOWN
+  UTILITY
+}
+
+enum SnippetRequestStatus {
+  PENDING
+  GENERATING
+  REVIEW
+  READY
+  DELIVERED
+  REJECTED
+}
+
+model SnippetProduct {
+  id            String            @id @db.Char(26)
+  merchandiseId String            @unique @db.Char(26)
+  merchandise   Merchandise       @relation(fields: [merchandiseId], references: [id], onDelete: Cascade)
+  language      SnippetLanguage
+  categories    SnippetCategory[]
+  requests      SnippetRequest[]
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt @default(now())
+}
+
+model SnippetRequest {
+  id              String               @id @db.Char(26)
+  userId          String               @db.Char(26)
+  user            User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  threadId        String?              @db.Char(26)
+  thread          Thread?              @relation(fields: [threadId], references: [id], onDelete: SetNull)
+  orderItemId     String               @db.Char(26)
+  orderItem       OrderItem            @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  snippetProductId String              @db.Char(26)
+  snippetProduct  SnippetProduct       @relation(fields: [snippetProductId], references: [id], onDelete: Restrict)
+  language        SnippetLanguage
+  category        SnippetCategory
+  primaryColor    String?
+  textColor       String?
+  backgroundColor String?
+  fontFamily      String?
+  appearance      String?
+  responsive      Boolean              @default(true)
+  instructions    String?
+  status          SnippetRequestStatus @default(PENDING)
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt @default(now())
+  delivery        SnippetDelivery?
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+  @@index([orderItemId])
+}
+
+model SnippetDelivery {
+  id                String         @id @db.Char(26)
+  requestId         String         @unique @db.Char(26)
+  request           SnippetRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  title             String
+  description       String
+  files             Json
+  dependencies      String[]
+  usageInstructions String
+  version           Int            @default(1)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt @default(now())
+  deliveredAt       DateTime?
 }

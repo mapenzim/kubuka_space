@@ -9,6 +9,7 @@ import { ThreadEvent } from "@/lib/events/thread/thread_event";
 import { ThreadEventType } from "@/lib/events/thread/thread_event_type";
 import { useEventStream } from "./use_event_stream";
 import { toast } from "sonner";
+import { clearGuestChatSession } from "@/lib/chat/client/guest_session";
 
 export function useThreadEvents() {
   const session = useChatSession();
@@ -56,6 +57,7 @@ export function useThreadEvents() {
           session.reset();
 
           if (session.role === "user") {
+            clearGuestChatSession();
             toast.info(
               event.type === ThreadEventType.THREAD_ARCHIVED
                 ? "This support conversation was archived."

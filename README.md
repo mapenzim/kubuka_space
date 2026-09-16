@@ -15,6 +15,7 @@ The application combines a public marketing website and online store with authen
 - A blog with author pages and visible publication dates.
 - Contact and real-time support chat for guests and signed-in users.
 - Automatic chat acknowledgement, typing and presence indicators, and live message updates with a polling fallback.
+- A purchase-gated code snippet marketplace for HTML, React, and Python deliveries.
 - Authentication, account navigation, light/dark themes, and responsive layouts.
 - Privacy, cookie, licence, and terms pages.
 
@@ -37,6 +38,7 @@ The protected `/admin` area provides:
 - Product, category, stock, and order management.
 - Blog post creation and editing with a rich-text editor.
 - A support inbox for guest and customer conversations.
+- Snippet product creation, customer requirement tracking, manual review, versioning, and secure delivery through chat.
 - Conversation archiving and deletion that is reflected in the customer chat interface.
 - Administrative profile and application settings.
 
@@ -77,6 +79,23 @@ Paynow configuration is scaffolded in the project, but live Paynow payment proce
 - Server-Sent Events with polling fallback for support chat
 - Cloudflare Turnstile for anti-bot form protection
 - Vercel Analytics and Speed Insights
+
+## Local Ollama snippet workflow
+
+Ollama generation stays on the developer's machine and is never called by Vercel:
+
+1. Open `/admin/snippets` and export the customer's Ollama brief.
+2. Ensure Ollama is running and the desired coding model is installed.
+3. Generate a structured delivery locally:
+
+```bash
+OLLAMA_MODEL="qwen2.5-coder:7b" pnpm snippet:generate -- ~/Downloads/snippet-request-ID.json
+```
+
+4. Review and test the generated `.delivery.json` and its source files.
+5. Open the request's delivery dialog, import the reviewed JSON, make any corrections, and deliver it to chat.
+
+Set `OLLAMA_URL` only when Ollama is not available at `http://127.0.0.1:11434`. Generated code remains local until an administrator explicitly delivers it.
 
 ## Getting started
 
@@ -160,6 +179,7 @@ Open [http://localhost:3000](http://localhost:3000).
 | `/profile` | Customer profile, experience, skills, publications, and orders. |
 | `/authentication` | Sign-in and registration experience. |
 | `/admin` | Role-protected administration workspace. |
+| `/admin/snippets` | Snippet catalogue and fulfilment queue. |
 
 ## Project structure
 

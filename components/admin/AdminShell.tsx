@@ -10,6 +10,7 @@ import {
   NotebookTabs,
   LogOut,
   ShoppingCart,
+  Code2,
   Sun,
   Users,
   X,
@@ -53,6 +54,7 @@ const navigationGroups = [
     label: "Operations",
     items: [
       { href: "/admin/store", label: "Storefront", icon: ShoppingCart },
+      { href: "/admin/snippets", label: "Code Snippets", icon: Code2 },
       { href: "/admin/messages", label: "Messages", icon: MailPlus },
     ],
   },
@@ -63,6 +65,7 @@ const pageTitles: Record<string, string> = {
   "/admin/posts": "All Posts",
   "/admin/users": "User Management",
   "/admin/store": "Storefront & Orders",
+  "/admin/snippets": "Snippet Marketplace",
   "/admin/messages": "Messages",
   "/admin/profile": "Administrator Profile",
 };

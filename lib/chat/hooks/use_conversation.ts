@@ -21,6 +21,11 @@ import { toast } from "sonner";
 
 import { chatStores } from "../stores";
 import { useVisibilityPoll } from "./use_visibility_poll";
+import {
+  clearGuestChatSession,
+  getGuestChatSession,
+  saveGuestChatSession,
+} from "@/lib/chat/client/guest_session";
 
 export function useConversation() {
   const {
@@ -63,6 +68,7 @@ export function useConversation() {
         reset();
 
         if (role === "user") {
+          clearGuestChatSession();
           toast.info("This support conversation is no longer active.");
         }
         return;
@@ -101,6 +107,7 @@ export function useConversation() {
       if (!response.data) {
         conversation.clear();
         setThreadId(undefined);
+        if (role === "user") clearGuestChatSession();
         return null;
       }
 
@@ -114,13 +121,38 @@ export function useConversation() {
 
       return response.data;
     },
-    [conversation, conversationKey, setThreadId],
+    [conversation, conversationKey, role, setThreadId],
   );
 
   const setExistingThread = useCallback((existingThread: NonNullable<typeof thread>) => {
     conversation.setThread(existingThread);
     setThreadId(existingThread.id);
   }, [conversation, setThreadId]);
+
+  const restoreConversation = useCallback(async (
+    restoredThreadId: string,
+    restoredConversationKey: string,
+  ) => {
+    try {
+      const response = await conversationClient.getThread(
+        restoredThreadId,
+        restoredConversationKey,
+      );
+      if (!response.data) {
+        clearGuestChatSession();
+        conversation.clear();
+        reset();
+        return null;
+      }
+      conversation.setThread(response.data);
+      setConversationKey(restoredConversationKey);
+      setThreadId(response.data.id);
+      return response.data;
+    } catch (error) {
+      clearGuestChatSession();
+      throw error;
+    }
+  }, [conversation, reset, setConversationKey, setThreadId]);
 
   //--------------------------------------------------------
   // Start Conversation
@@ -171,11 +203,18 @@ export function useConversation() {
           response.data.id,
         );
 
+        if (role === "user") {
+          saveGuestChatSession({
+            threadId: response.data.id,
+            conversationKey,
+          });
+        }
+
         toast.success("Message sent.");
 
         return response.data;
       },
-      [conversation, setConversationKey, setThreadId],
+      [conversation, role, setConversationKey, setThreadId],
     );
 
   //--------------------------------------------------------
@@ -187,20 +226,39 @@ export function useConversation() {
       async (
         content: string,
       ) => {
-        if (!threadId) {
-          throw new Error(
-            "No active conversation.",
-          );
-        }
+      const visibleThread = conversation.getThread();
+      const storedGuestSession = role === "user" ? getGuestChatSession() : null;
+      const legacyConversationKey = role === "user" && visibleThread?.email
+        ? window.localStorage.getItem(`kubuka:conversation-key:${visibleThread.email.trim().toLowerCase()}`) ?? undefined
+        : undefined;
+      const activeThreadId = threadId ?? visibleThread?.id ?? storedGuestSession?.threadId;
+      const activeConversationKey = conversationKey ?? (
+        storedGuestSession && storedGuestSession.threadId === activeThreadId
+          ? storedGuestSession.conversationKey
+          : legacyConversationKey
+      );
 
-        try {
-          const response = await conversationClient.sendMessage(
-            {
-              threadId:
-                threadId,
+      if (!activeThreadId) {
+        throw new Error(
+          "No active conversation.",
+        );
+      }
+
+      if (activeThreadId !== threadId) setThreadId(activeThreadId);
+      if (activeConversationKey && activeConversationKey !== conversationKey) {
+        setConversationKey(activeConversationKey);
+      }
+      if (role === "user" && activeConversationKey) {
+        saveGuestChatSession({ threadId: activeThreadId, conversationKey: activeConversationKey });
+      }
+
+      try {
+        const response = await conversationClient.sendMessage(
+          {
+              threadId: activeThreadId,
               senderRole: role,
               content,
-              conversationKey,
+              conversationKey: activeConversationKey,
             },
           );
 
@@ -221,7 +279,7 @@ export function useConversation() {
           throw error;
         }
       },
-      [conversation, conversationKey, role, threadId],
+      [conversation, conversationKey, role, setConversationKey, setThreadId, threadId],
     );
 
   //--------------------------------------------------------
@@ -232,9 +290,11 @@ export function useConversation() {
     useCallback(() => {
       conversation.clear();
       reset();
+      if (role === "user") clearGuestChatSession();
     }, [
       conversation,
       reset,
+      role,
     ]);
 
   const deleteConversation = useCallback(async () => {
@@ -258,7 +318,8 @@ export function useConversation() {
 
     conversation.clear();
     reset();
-  }, [conversation, reset, threadId]);
+    if (role === "user") clearGuestChatSession();
+  }, [conversation, reset, role, threadId]);
 
   const archiveConversation = useCallback(async () => {
     if (!threadId) {
@@ -279,7 +340,8 @@ export function useConversation() {
 
     conversation.clear();
     reset();
-  }, [conversation, reset, threadId]);
+    if (role === "user") clearGuestChatSession();
+  }, [conversation, reset, role, threadId]);
 
   //--------------------------------------------------------
   // Public API
@@ -291,6 +353,7 @@ export function useConversation() {
 
     loadThread,
     setExistingThread,
+    restoreConversation,
     startConversation,
     sendMessage,
     clear,

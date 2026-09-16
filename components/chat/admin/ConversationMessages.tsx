@@ -21,7 +21,7 @@ interface ConversationMessagesProps {
 export default function ConversationMessages({
   messages,
   selfRole,
-  height = 360,
+  height = 560,
 }: ConversationMessagesProps) {
   const viewportRef =
     useRef<HTMLDivElement>(null);
