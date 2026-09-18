@@ -3,9 +3,13 @@
 import { auth } from "@/auth";
 import { requireAdmin } from "@/lib/admin/require_admin";
 import { chatGateway } from "@/lib/container/runtime";
+import { getSnippetDatabase } from "@/lib/database/snippet_database";
 import prisma from "@/lib/prisma";
 import { ulidId } from "@/lib/server-utils";
-import { generateSnippetDeliveryWithOllama } from "@/lib/snippets/ollama.server";
+import {
+  generateSnippetDeliveryWithOllama,
+  type OllamaSnippetBrief,
+} from "@/lib/snippets/ollama.server";
 import {
   createSnippetDeliveryMarker,
   humanizeSnippetValue,
@@ -37,6 +41,48 @@ function isCategory(value: unknown): value is SnippetCategoryValue {
 
 function isRequestStatus(value: unknown): value is SnippetRequestStatusValue {
   return typeof value === "string" && SNIPPET_REQUEST_STATUSES.includes(value as SnippetRequestStatusValue);
+}
+
+function parseUploadedOllamaBrief(input: unknown, expectedRequestId: string): OllamaSnippetBrief {
+  if (!input || typeof input !== "object" || Array.isArray(input)) {
+    throw new Error("Choose a valid exported Ollama request JSON.");
+  }
+
+  const brief = input as Record<string, unknown>;
+  const preferences = brief.preferences;
+  if (!preferences || typeof preferences !== "object" || Array.isArray(preferences)) {
+    throw new Error("The Ollama request JSON is missing its preferences.");
+  }
+  const preferenceValues = preferences as Record<string, unknown>;
+
+  if (brief.requestId !== expectedRequestId) {
+    throw new Error("The uploaded JSON belongs to a different snippet request.");
+  }
+  if (typeof brief.product !== "string" || !brief.product.trim() || brief.product.length > 160) {
+    throw new Error("The uploaded JSON has an invalid product name.");
+  }
+  if (!isLanguage(brief.language) || !isCategory(brief.category)) {
+    throw new Error("The uploaded JSON has an invalid language or component category.");
+  }
+  if (typeof preferenceValues.responsive !== "boolean") {
+    throw new Error("The uploaded JSON must specify whether the snippet is responsive.");
+  }
+
+  return {
+    requestId: expectedRequestId,
+    product: brief.product.trim(),
+    language: brief.language,
+    category: brief.category,
+    preferences: {
+      primaryColor: optionalText(preferenceValues.primaryColor, 40),
+      textColor: optionalText(preferenceValues.textColor, 40),
+      backgroundColor: optionalText(preferenceValues.backgroundColor, 40),
+      fontFamily: optionalText(preferenceValues.fontFamily, 80),
+      appearance: optionalText(preferenceValues.appearance, 20),
+      responsive: preferenceValues.responsive,
+    },
+    instructions: optionalText(brief.instructions, 2000),
+  };
 }
 
 export async function getSnippetEntitlements() {
@@ -253,13 +299,15 @@ export async function createSnippetProduct(input: {
 }
 
 export async function getAdminSnippetData() {
-  await requireAdmin();
+  const actor = await requireAdmin();
+  const snippetDatabase = getSnippetDatabase(actor);
+  const snippetPrisma = snippetDatabase.client;
   const [products, requests] = await Promise.all([
-    prisma.snippetProduct.findMany({
+    snippetPrisma.snippetProduct.findMany({
       include: { merchandise: true },
       orderBy: { createdAt: "desc" },
     }),
-    prisma.snippetRequest.findMany({
+    snippetPrisma.snippetRequest.findMany({
       include: {
         user: { select: { name: true, email: true } },
         snippetProduct: { include: { merchandise: { select: { title: true } } } },
@@ -270,6 +318,7 @@ export async function getAdminSnippetData() {
   ]);
 
   return {
+    dataSource: snippetDatabase.dataSource,
     products: products.map(({ merchandise, ...product }) => ({
       id: product.id,
       merchandiseId: merchandise.id,
@@ -304,22 +353,33 @@ export async function getAdminSnippetData() {
 }
 
 export async function updateSnippetRequestStatus(id: string, status: SnippetRequestStatusValue) {
-  await requireAdmin();
+  const actor = await requireAdmin();
+  const snippetPrisma = getSnippetDatabase(actor).client;
   if (!isRequestStatus(status) || status === "DELIVERED") {
     throw new Error("Choose a valid non-delivery status.");
   }
-  const request = await prisma.snippetRequest.update({ where: { id }, data: { status } });
+  const request = await snippetPrisma.snippetRequest.update({ where: { id }, data: { status } });
   revalidatePath("/admin/snippets");
   return { id: request.id, status: request.status };
 }
 
-export async function generateSnippetWithOllama(requestId: string) {
-  await requireAdmin();
+export async function getAdminActiveSnippetRequestCount() {
+  const actor = await requireAdmin();
+  const snippetPrisma = getSnippetDatabase(actor).client;
+  return snippetPrisma.snippetRequest.count({
+    where: { status: { notIn: ["DELIVERED", "REJECTED"] } },
+  });
+}
+
+export async function generateSnippetWithOllama(requestId: string, uploadedBrief: unknown) {
+  const actor = await requireAdmin();
   if (process.env.NODE_ENV !== "development") {
     throw new Error("Local Ollama generation is available only in the development environment.");
   }
 
-  const request = await prisma.snippetRequest.findUnique({
+  const snippetPrisma = getSnippetDatabase(actor).client;
+
+  const request = await snippetPrisma.snippetRequest.findUnique({
     where: { id: requestId },
     include: {
       snippetProduct: {
@@ -330,28 +390,23 @@ export async function generateSnippetWithOllama(requestId: string) {
   if (!request) throw new Error("Snippet request not found.");
   if (request.status === "REJECTED") throw new Error("A rejected request cannot be generated.");
 
+  const brief = parseUploadedOllamaBrief(uploadedBrief, request.id);
+  if (
+    brief.product !== request.snippetProduct.merchandise.title ||
+    brief.language !== request.language ||
+    brief.category !== request.category
+  ) {
+    throw new Error("The uploaded JSON does not match this snippet request.");
+  }
+
   const previousStatus = request.status;
-  await prisma.snippetRequest.update({
+  await snippetPrisma.snippetRequest.update({
     where: { id: request.id },
     data: { status: "GENERATING" },
   });
 
   try {
-    const generated = await generateSnippetDeliveryWithOllama({
-      requestId: request.id,
-      product: request.snippetProduct.merchandise.title,
-      language: request.language,
-      category: request.category,
-      preferences: {
-        primaryColor: request.primaryColor,
-        textColor: request.textColor,
-        backgroundColor: request.backgroundColor,
-        fontFamily: request.fontFamily,
-        appearance: request.appearance,
-        responsive: request.responsive,
-      },
-      instructions: request.instructions,
-    });
+    const generated = await generateSnippetDeliveryWithOllama(brief);
 
     const title = generated.delivery.title.trim();
     const description = generated.delivery.description.trim();
@@ -367,7 +422,7 @@ export async function generateSnippetWithOllama(requestId: string) {
     const dependencies = [...new Set(generated.delivery.dependencies.map((item) => item.trim()).filter(Boolean))];
     if (dependencies.length > 30) throw new Error("Ollama generated too many dependencies.");
 
-    await prisma.snippetRequest.update({
+    await snippetPrisma.snippetRequest.update({
       where: { id: request.id },
       data: { status: "REVIEW" },
     });
@@ -383,7 +438,7 @@ export async function generateSnippetWithOllama(requestId: string) {
       status: "REVIEW" as const,
     };
   } catch (error) {
-    await prisma.snippetRequest.update({
+    await snippetPrisma.snippetRequest.update({
       where: { id: request.id },
       data: { status: previousStatus },
     }).catch(() => undefined);
@@ -418,7 +473,9 @@ export async function deliverSnippetRequest(input: {
   dependencies: string[];
   usageInstructions: string;
 }) {
-  await requireAdmin();
+  const actor = await requireAdmin();
+  const snippetDatabase = getSnippetDatabase(actor);
+  const snippetPrisma = snippetDatabase.client;
   const title = input.title.trim();
   const description = input.description.trim();
   const usageInstructions = input.usageInstructions.trim();
@@ -432,7 +489,7 @@ export async function deliverSnippetRequest(input: {
   const dependencies = [...new Set(input.dependencies.map((item) => item.trim()).filter(Boolean))];
   if (dependencies.length > 30) throw new Error("Too many dependencies were supplied.");
 
-  const request = await prisma.snippetRequest.findUnique({
+  const request = await snippetPrisma.snippetRequest.findUnique({
     where: { id: input.requestId },
     include: {
       user: { select: { name: true, email: true } },
@@ -444,32 +501,76 @@ export async function deliverSnippetRequest(input: {
 
   const deliveredAt = new Date();
   const version = (request.delivery?.version ?? 0) + 1;
-  await prisma.$transaction([
-    prisma.snippetDelivery.upsert({
-      where: { requestId: request.id },
-      update: { title, description, files, dependencies, usageInstructions, version, deliveredAt },
-      create: {
-        id: ulidId(),
-        requestId: request.id,
-        title,
-        description,
-        files,
-        dependencies,
-        usageInstructions,
-        version,
-        deliveredAt,
-      },
-    }),
-    prisma.snippetRequest.update({
-      where: { id: request.id },
-      data: { status: "DELIVERED" },
-    }),
-  ]);
-
   const marker = createSnippetDeliveryMarker(request.id);
-  if (request.thread && !request.thread.archived) {
-    await chatGateway.sendMessage(request.thread.id, "admin", marker);
+  const deliveryCreate = {
+    id: ulidId(),
+    requestId: request.id,
+    title,
+    description,
+    files,
+    dependencies,
+    usageInstructions,
+    version,
+    deliveredAt,
+  };
+  const deliveryUpdate = {
+    title,
+    description,
+    files,
+    dependencies,
+    usageInstructions,
+    version,
+    deliveredAt,
+  };
+
+  if (snippetDatabase.isRemoteProduction) {
+    if (!request.thread || request.thread.archived) {
+      throw new Error(
+        "The production request no longer has an active conversation. Reconnect the customer conversation before delivery.",
+      );
+    }
+    const timestamp = new Date();
+    await snippetPrisma.$transaction([
+      snippetPrisma.snippetDelivery.upsert({
+        where: { requestId: request.id },
+        update: deliveryUpdate,
+        create: deliveryCreate,
+      }),
+      snippetPrisma.snippetRequest.update({
+        where: { id: request.id },
+        data: { status: "DELIVERED" },
+      }),
+      snippetPrisma.message.create({
+        data: {
+          id: ulidId(),
+          threadId: request.thread.id,
+          senderRole: "admin",
+          content: marker,
+          timestamp,
+        },
+      }),
+      snippetPrisma.thread.update({
+        where: { id: request.thread.id },
+        data: { updatedAt: timestamp },
+      }),
+    ]);
   } else {
+    await snippetPrisma.$transaction([
+      snippetPrisma.snippetDelivery.upsert({
+        where: { requestId: request.id },
+        update: deliveryUpdate,
+        create: deliveryCreate,
+      }),
+      snippetPrisma.snippetRequest.update({
+        where: { id: request.id },
+        data: { status: "DELIVERED" },
+      }),
+    ]);
+  }
+
+  if (!snippetDatabase.isRemoteProduction && request.thread && !request.thread.archived) {
+    await chatGateway.sendMessage(request.thread.id, "admin", marker);
+  } else if (!snippetDatabase.isRemoteProduction) {
     const thread = await chatGateway.startConversation(
       request.user.name ?? "Customer",
       request.user.email,
@@ -477,7 +578,7 @@ export async function deliverSnippetRequest(input: {
       undefined,
       "admin",
     );
-    await prisma.snippetRequest.update({ where: { id: request.id }, data: { threadId: thread.id } });
+    await snippetPrisma.snippetRequest.update({ where: { id: request.id }, data: { threadId: thread.id } });
   }
 
   revalidatePath("/admin/snippets");

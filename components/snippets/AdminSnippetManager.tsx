@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { Badge, Button, Card, Dialog, Flex, Heading, Text, TextArea, TextField } from "@radix-ui/themes";
-import { FileCode2, PackagePlus, Plus, Send, Sparkles, Trash2 } from "lucide-react";
+import { FileCode2, PackagePlus, Plus, Send, Sparkles, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import AdminDialogButton from "@/components/admin/AdminDialogButton";
 import {
@@ -16,6 +16,8 @@ import {
   humanizeSnippetValue,
   isActiveSnippetRequestStatus,
   PYTHON_SNIPPET_CATEGORIES,
+  SNIPPET_CATEGORIES,
+  SNIPPET_LANGUAGES,
   SNIPPET_REQUEST_STATUSES,
   SnippetCategoryValue,
   SnippetFile,
@@ -56,6 +58,27 @@ export interface AdminSnippetRequest {
   deliveredAt: string | null;
 }
 
+interface OllamaSnippetBriefInput {
+  requestId: string;
+  product: string;
+  language: SnippetLanguageValue;
+  category: SnippetCategoryValue;
+  preferences: {
+    primaryColor: string | null;
+    textColor: string | null;
+    backgroundColor: string | null;
+    fontFamily: string | null;
+    appearance: string | null;
+    responsive: boolean;
+  };
+  instructions: string | null;
+}
+
+interface LoadedOllamaBrief {
+  fileName: string;
+  brief: OllamaSnippetBriefInput;
+}
+
 const emptyProduct = {
   title: "",
   description: "",
@@ -66,6 +89,57 @@ const emptyProduct = {
 };
 
 const LOCAL_OLLAMA_ENABLED = process.env.NODE_ENV === "development";
+
+function nullableBriefText(value: unknown, field: string) {
+  if (value === null) return null;
+  if (typeof value !== "string") throw new Error(`${field} must be text or null.`);
+  return value;
+}
+
+function parseOllamaBrief(value: unknown, expectedRequestId: string): OllamaSnippetBriefInput {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error("The selected file is not a valid Ollama request brief.");
+  }
+
+  const brief = value as Record<string, unknown>;
+  const preferences = brief.preferences;
+  if (!preferences || typeof preferences !== "object" || Array.isArray(preferences)) {
+    throw new Error("The request brief is missing its preferences.");
+  }
+  const preferenceValues = preferences as Record<string, unknown>;
+
+  if (brief.requestId !== expectedRequestId) {
+    throw new Error("This JSON belongs to a different snippet request.");
+  }
+  if (typeof brief.product !== "string" || !brief.product.trim()) {
+    throw new Error("The request brief is missing the product name.");
+  }
+  if (!SNIPPET_LANGUAGES.includes(brief.language as SnippetLanguageValue)) {
+    throw new Error("The request brief contains an unsupported language.");
+  }
+  if (!SNIPPET_CATEGORIES.includes(brief.category as SnippetCategoryValue)) {
+    throw new Error("The request brief contains an unsupported component category.");
+  }
+  if (typeof preferenceValues.responsive !== "boolean") {
+    throw new Error("The request brief must specify whether the snippet is responsive.");
+  }
+
+  return {
+    requestId: brief.requestId,
+    product: brief.product,
+    language: brief.language as SnippetLanguageValue,
+    category: brief.category as SnippetCategoryValue,
+    preferences: {
+      primaryColor: nullableBriefText(preferenceValues.primaryColor, "Primary color"),
+      textColor: nullableBriefText(preferenceValues.textColor, "Text color"),
+      backgroundColor: nullableBriefText(preferenceValues.backgroundColor, "Background color"),
+      fontFamily: nullableBriefText(preferenceValues.fontFamily, "Font family"),
+      appearance: nullableBriefText(preferenceValues.appearance, "Appearance"),
+      responsive: preferenceValues.responsive,
+    },
+    instructions: nullableBriefText(brief.instructions, "Instructions"),
+  };
+}
 
 function starterFile(request: AdminSnippetRequest): SnippetFile {
   if (request.language === "HTML") return { path: "index.html", content: "" };
@@ -85,9 +159,11 @@ function statusColor(status: SnippetRequestStatusValue) {
 export default function AdminSnippetManager({
   initialProducts,
   initialRequests,
+  dataSource,
 }: {
   initialProducts: AdminSnippetProduct[];
   initialRequests: AdminSnippetRequest[];
+  dataSource: "PRODUCTION" | "APPLICATION";
 }) {
   const [products, setProducts] = useState(initialProducts);
   const [requests, setRequests] = useState(initialRequests);
@@ -101,6 +177,7 @@ export default function AdminSnippetManager({
   const [dependencies, setDependencies] = useState("");
   const [usageInstructions, setUsageInstructions] = useState("");
   const [generatingRequestId, setGeneratingRequestId] = useState<string | null>(null);
+  const [ollamaBriefs, setOllamaBriefs] = useState<Record<string, LoadedOllamaBrief>>({});
   const [isPending, startTransition] = useTransition();
 
   const availableCategories = productForm.language === "PYTHON"
@@ -198,7 +275,38 @@ export default function AdminSnippetManager({
     URL.revokeObjectURL(url);
   }
 
+  async function loadOllamaBrief(request: AdminSnippetRequest, file: File | undefined) {
+    if (!file) return;
+    try {
+      const brief = parseOllamaBrief(JSON.parse(await file.text()), request.id);
+      if (
+        brief.product !== request.productTitle ||
+        brief.language !== request.language ||
+        brief.category !== request.category
+      ) {
+        throw new Error("This JSON does not match the product, language, or component on this request.");
+      }
+      setOllamaBriefs((current) => ({
+        ...current,
+        [request.id]: { fileName: file.name, brief },
+      }));
+      toast.success("Ollama request brief loaded. You can now start generation.");
+    } catch (error) {
+      setOllamaBriefs((current) => {
+        const next = { ...current };
+        delete next[request.id];
+        return next;
+      });
+      toast.error(error instanceof Error ? error.message : "Unable to read the Ollama request brief.");
+    }
+  }
+
   async function generateWithOllama(request: AdminSnippetRequest) {
+    const loadedBrief = ollamaBriefs[request.id];
+    if (!loadedBrief) {
+      toast.error("Choose the exported request JSON before starting Ollama.");
+      return;
+    }
     const previousStatus = request.status;
     setGeneratingRequestId(request.id);
     setRequests((current) => current.map((item) =>
@@ -207,7 +315,7 @@ export default function AdminSnippetManager({
     const toastId = toast.loading("Ollama is generating the snippet locally. This may take a few minutes…");
 
     try {
-      const generated = await generateSnippetWithOllama(request.id);
+      const generated = await generateSnippetWithOllama(request.id, loadedBrief.brief);
       const updatedRequest = { ...request, status: generated.status };
       setRequests((current) => current.map((item) =>
         item.id === request.id ? { ...item, status: generated.status } : item
@@ -319,10 +427,17 @@ export default function AdminSnippetManager({
     <Flex direction="column" gap="6">
       <Flex justify="between" align="end" gap="3" wrap="wrap">
         <div>
-          <Heading as="h1" size="6">Snippet marketplace</Heading>
+          <Flex align="center" gap="2" wrap="wrap">
+            <Heading as="h1" size="6">Snippet marketplace</Heading>
+            {dataSource === "PRODUCTION" && (
+              <Badge color="orange" variant="soft">Live production requests</Badge>
+            )}
+          </Flex>
           <Text size="2" color="gray">Sell snippet credits, review customer requirements, and deliver approved source files through chat.</Text>
         </div>
-        <Button type="button" onClick={() => setProductOpen(true)}><PackagePlus size={17} />Add snippet product</Button>
+        {dataSource !== "PRODUCTION" && (
+          <Button type="button" onClick={() => setProductOpen(true)}><PackagePlus size={17} />Add snippet product</Button>
+        )}
       </Flex>
 
       <Card>
@@ -375,17 +490,39 @@ export default function AdminSnippetManager({
                   )}
                   <Button type="button" variant="soft" color="gray" onClick={() => downloadBrief(request)}>Export Ollama brief</Button>
                   {LOCAL_OLLAMA_ENABLED && (
-                    <Button
-                      type="button"
-                      variant="soft"
-                      color="violet"
-                      loading={generatingRequestId === request.id}
-                      disabled={Boolean(generatingRequestId) || request.status === "REJECTED"}
-                      onClick={() => void generateWithOllama(request)}
-                    >
-                      <Sparkles size={15} />
-                      {generatingRequestId === request.id ? "Generating…" : "Generate with Ollama"}
-                    </Button>
+                    <>
+                      <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-md border border-violet-300 bg-violet-50 px-3 text-sm font-medium text-violet-700 transition hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-950/40 dark:text-violet-300 dark:hover:bg-violet-950/70">
+                        <Upload size={15} />
+                        {ollamaBriefs[request.id] ? "Replace brief JSON" : "Choose brief JSON"}
+                        <input
+                          type="file"
+                          accept="application/json,.json"
+                          className="sr-only"
+                          disabled={Boolean(generatingRequestId) || request.status === "REJECTED"}
+                          onChange={(event) => {
+                            const file = event.currentTarget.files?.[0];
+                            event.currentTarget.value = "";
+                            void loadOllamaBrief(request, file);
+                          }}
+                        />
+                      </label>
+                      {ollamaBriefs[request.id] && (
+                        <Badge color="green" title={ollamaBriefs[request.id].fileName} className="max-w-52 truncate">
+                          {ollamaBriefs[request.id].fileName}
+                        </Badge>
+                      )}
+                      <Button
+                        type="button"
+                        variant="soft"
+                        color="violet"
+                        loading={generatingRequestId === request.id}
+                        disabled={Boolean(generatingRequestId) || request.status === "REJECTED" || !ollamaBriefs[request.id]}
+                        onClick={() => void generateWithOllama(request)}
+                      >
+                        <Sparkles size={15} />
+                        {generatingRequestId === request.id ? "Generating…" : "Generate with Ollama"}
+                      </Button>
+                    </>
                   )}
                   <Button type="button" disabled={isPending || Boolean(generatingRequestId) || request.status === "REJECTED"} onClick={() => openDelivery(request)}><Send size={15} />{request.status === "DELIVERED" ? "Deliver revision" : "Deliver snippet"}</Button>
                 </Flex>

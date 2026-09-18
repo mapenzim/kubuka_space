@@ -85,8 +85,10 @@ Paynow configuration is scaffolded in the project, but live Paynow payment proce
 Ollama generation stays on the developer's machine and is never called by Vercel:
 
 1. Ensure Ollama is running. The local connection and model are configured in `ollama.config.json`.
-2. In development, open `/admin/snippets` and select **Generate with Ollama** on a request.
-3. Wait for local generation to finish, then review every populated file in the delivery dialog before sending it to chat.
+2. Export the request brief from production or development as a `.json` file.
+3. In local development, open `/admin/snippets`, choose **Choose brief JSON** on the matching request, and select that exported file.
+4. Once the filename is confirmed, select **Generate with Ollama**.
+5. Wait for local generation to finish, then review every populated file in the delivery dialog before sending it to chat.
 
 The generation button is intentionally absent in production. The export/import workflow remains available as a manual fallback:
 
@@ -136,6 +138,26 @@ PAYNOW_RETURN_URL=""
 ```
 
 `NEXTAUTH_SECRET` can be used as a fallback when `AUTH_SECRET` is not set. Do not commit `.env` files or production credentials.
+
+### Local access to production snippet requests
+
+The local developer administrator can load the same snippet requests created on Vercel without exposing the database URL to the browser. Add these values only to the ignored local `.env.local` file:
+
+```bash
+DEV_PRODUCTION_DATABASE_URL_KUBUKA="copy-the-server-side-DATABASE_URL_KUBUKA-value-from-vercel"
+DEV_ADMIN_EMAIL="the-single-developer-admin@example.com"
+```
+
+The developer administrator must also exist as an active `ADMIN` or `SUPERUSER` in the local database. When the bridge is enabled:
+
+- Only that exact local administrator email may open the production snippet connection.
+- `/admin/snippets` reads current products and requests from the production database and displays **Live production requests**.
+- Generation status, reviewed deliveries, and the delivery marker sent to the customer's existing conversation are written back to the same production records.
+- Other local pages and actions continue using `DATABASE_URL_KUBUKA`; they cannot use this production connection.
+- Adding store products is disabled in this mode to keep the bridge limited to fulfilment.
+- Prisma migrations and seeding never use the bridge URL.
+
+Never prefix either variable with `NEXT_PUBLIC_`, commit them, or paste their values into client-side code.
 
 ### 3. Prepare the database
 

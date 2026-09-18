@@ -2,8 +2,8 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import AdminReauthGate from "@/components/admin/AdminReauthGate";
 import AdminShell from "@/components/admin/AdminShell";
+import { getAdminActiveSnippetRequestCount } from "@/app/actions/snippetActions.server";
 import { getActiveAdmin } from "@/lib/admin/require_admin";
-import prisma from "@/lib/prisma";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const admin = await getActiveAdmin();
@@ -17,9 +17,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     return <AdminReauthGate />;
   }
 
-  const activeSnippetRequestCount = await prisma.snippetRequest.count({
-    where: { status: { notIn: ["DELIVERED", "REJECTED"] } },
-  });
+  const activeSnippetRequestCount = await getAdminActiveSnippetRequestCount();
 
   return (
     <AdminShell
