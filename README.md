@@ -84,18 +84,19 @@ Paynow configuration is scaffolded in the project, but live Paynow payment proce
 
 Ollama generation stays on the developer's machine and is never called by Vercel:
 
-1. Open `/admin/snippets` and export the customer's Ollama brief.
-2. Ensure Ollama is running and the desired coding model is installed.
-3. Generate a structured delivery locally:
+1. Ensure Ollama is running. The local connection and model are configured in `ollama.config.json`.
+2. In development, open `/admin/snippets` and select **Generate with Ollama** on a request.
+3. Wait for local generation to finish, then review every populated file in the delivery dialog before sending it to chat.
+
+The generation button is intentionally absent in production. The export/import workflow remains available as a manual fallback:
 
 ```bash
-OLLAMA_MODEL="qwen2.5-coder:7b" pnpm snippet:generate -- ~/Downloads/snippet-request-ID.json
+pnpm snippet:generate -- ~/Downloads/snippet-request-ID.json
 ```
 
-4. Review and test the generated `.delivery.json` and its source files.
-5. Open the request's delivery dialog, import the reviewed JSON, make any corrections, and deliver it to chat.
+Export the customer's Ollama brief, run the command, review and test the generated `.delivery.json`, then import it through the request's delivery dialog.
 
-Set `OLLAMA_URL` only when Ollama is not available at `http://127.0.0.1:11434`. Generated code remains local until an administrator explicitly delivers it.
+The configured model is `qwen2.5-coder:7b` at `http://127.0.0.1:11434`. `OLLAMA_URL` and `OLLAMA_MODEL` environment variables can still temporarily override the configuration. Generated code remains local until an administrator explicitly delivers it.
 
 ## Getting started
 

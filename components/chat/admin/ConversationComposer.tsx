@@ -123,12 +123,12 @@ export default function ConversationComposer({
   // Render 
   //--------------------------------------------------------
   return (
-    <Box className="border-t border-zinc-200 bg-white/80 p-4 dark:border-zinc-800 dark:bg-zinc-900/60">
+    <Box className="shrink-0 border-t border-zinc-200 bg-white/80 p-3 dark:border-zinc-800 dark:bg-zinc-900/60">
       <form
         onSubmit={handleSubmit}
       >
         <Flex
-          gap="3"
+          gap="2"
           align="end"
         >
           <Box className="flex-1">
@@ -139,7 +139,7 @@ export default function ConversationComposer({
               placeholder={
                 placeholder
               }
-              height="7rem"
+              height="4.5rem"
               disabled={
                 disabled
               }

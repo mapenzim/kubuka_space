@@ -1,4 +1,4 @@
-import { SubmitEvent } from "react";
+import { ReactNode, SubmitEvent } from "react";
 import { ThreadDetailsDto } from "./dto/thread_details_dto";
 
 export interface MerchandiseItem {
@@ -51,6 +51,7 @@ export interface AuthUser {
 
 export interface UserChatProps {
   user: AuthUser | null;
+  snippetRemainingCount?: number;
 }
 
 export interface ChatHeaderProps {
@@ -59,6 +60,7 @@ export interface ChatHeaderProps {
   online: boolean;
   typing: boolean;
   lastSeen?: string;
+  action?: ReactNode;
 }
 
 export interface ChatMessagesProps {

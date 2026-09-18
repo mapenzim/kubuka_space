@@ -74,30 +74,32 @@ export default function InboxSidebar({
   const now = useRelativeTimeClock();
 
   return (
-    <Card className="flex h-full w-full flex-col overflow-hidden">
-      <ScrollArea className="flex-1">
-        {threads.length === 0 ? (
-          <Flex
-            align="center"
-            justify="center"
-            className="h-full p-8"
-          >
-            <Text color="gray">
-              No conversations
-            </Text>
-          </Flex>
-        ) : (
-          threads.map(thread => (
-            <InboxSidebarItem
-              key={thread.id}
-              thread={thread}
-              selected={selectedThreadId === thread.id}
-              now={now}
-              onSelect={onSelect}
-            />
-          ))
-        )}
-      </ScrollArea>
+    <Card className="h-full w-full overflow-hidden">
+      <div className="flex h-full min-h-0 flex-col overflow-hidden">
+        <ScrollArea style={{ height: "100%" }}>
+          {threads.length === 0 ? (
+            <Flex
+              align="center"
+              justify="center"
+              className="h-full p-8"
+            >
+              <Text color="gray">
+                No conversations
+              </Text>
+            </Flex>
+          ) : (
+            threads.map(thread => (
+              <InboxSidebarItem
+                key={thread.id}
+                thread={thread}
+                selected={selectedThreadId === thread.id}
+                now={now}
+                onSelect={onSelect}
+              />
+            ))
+          )}
+        </ScrollArea>
+      </div>
     </Card>
   );
 }

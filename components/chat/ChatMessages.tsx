@@ -55,13 +55,10 @@ export default function ChatMessages({
   //--------------------------------------------------
 
   return (
-    <Box className="flex-1 overflow-hidden bg-zinc-50/70 dark:bg-zinc-950/40">
+    <Box className="min-h-0 flex-1 overflow-hidden bg-zinc-50/70 dark:bg-zinc-950/40">
       <ScrollArea
         ref={scrollRef}
-        style={{
-          height: 390,
-          padding: 16,
-        }}
+        style={{ height: "100%", padding: 16 }}
       >
         <div className="grid w-full min-w-0 grid-cols-1 gap-3">
           {thread.messages.map(

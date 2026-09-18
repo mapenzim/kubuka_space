@@ -10,6 +10,10 @@ const Page = async ({ searchParams }: { searchParams: Promise<{ category?: strin
   const merchandise = await prisma.merchandise.findMany({
     where: { deletedAt: null, ...(category ? { category: { slug: category, isActive: true } } : {}) },
     orderBy: { createdAt: "desc" },
+    include: {
+      category: { select: { name: true, slug: true } },
+      snippetProduct: { select: { language: true, categories: true } },
+    },
   });
   const categories = await prisma.productCategory.findMany({ where: { isActive: true }, orderBy: { name: "asc" } });
   const selectedCategory = category
@@ -21,6 +25,8 @@ const Page = async ({ searchParams }: { searchParams: Promise<{ category?: strin
     body: item.body,
     price: Number(item.price),
     stockQuantity: item.stockQuantity,
+    category: item.category,
+    snippetProduct: item.snippetProduct,
   }));
 
   // Wrap CartStatus in a client component that listens for updates
@@ -32,7 +38,7 @@ const Page = async ({ searchParams }: { searchParams: Promise<{ category?: strin
       </nav>
 
       {minifiedMerchandise.length > 0 ? (
-        <div className="grid gap-y-4 md:my-16 md:grid-cols-3 md:gap-x-16 md:gap-y-8 md:px-16">
+        <div className="mx-auto my-8 grid w-full max-w-7xl gap-6 sm:grid-cols-2 xl:my-14 xl:grid-cols-3">
           {minifiedMerchandise.map((item) => (
             <MerchandiseCard
               key={item.id}

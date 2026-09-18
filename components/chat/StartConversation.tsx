@@ -17,7 +17,7 @@ export default function StartConversationForm({
   onSubmit,
 }: StartConversationFormProps) {
   return (
-    <Card className="contact-chat-surface border border-zinc-200 shadow-sm dark:border-zinc-800">
+    <Card className="contact-chat-surface h-full border border-zinc-200 shadow-sm dark:border-zinc-800">
       <Heading mb="4" className="text-zinc-900 dark:text-zinc-100">
         Start Conversation
       </Heading>

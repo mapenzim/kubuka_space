@@ -2,16 +2,15 @@ import {
   Box,
   Container,
   Flex,
-  Grid,
   Heading,
   Link,
-  Section,
   Separator,
   Text,
 } from "@radix-ui/themes";
 import UserChat from "@/components/chat/UserChat";
 import { auth } from "@/auth";
 import ContactReadMarker from "@/components/chat/ContactReadMarker";
+import { getSnippetEntitlements } from "@/app/actions/snippetActions.server";
 
 export default async function ContactUsPage() {
   const session = await auth();
@@ -24,30 +23,29 @@ export default async function ContactUsPage() {
         email: session.user.email ?? null,
       }
     : null;
+  const snippetEntitlements = userData ? await getSnippetEntitlements() : [];
+  const snippetRemainingCount = snippetEntitlements.reduce(
+    (total, entitlement) => total + entitlement.remaining,
+    0,
+  );
 
   return (
     <Container
       size="4"
       px="4"
-      mt={{ initial: "2", md: "8" }}
-      pb="8"
-      className="min-h-[calc(100vh-4rem)] bg-zinc-50 text-zinc-900 transition-colors dark:bg-zinc-950 dark:text-zinc-100"
+      className="min-h-[calc(100dvh-4rem)] bg-zinc-50 text-zinc-900 transition-colors dark:bg-zinc-950 dark:text-zinc-100 md:min-h-dvh"
     >
       <ContactReadMarker userId={session?.user?.id ?? null} />
-      <Section size="4">
-        <Grid
-          columns={{ initial: "1", md: "2" }}
-          gap="6"
-          align="start"
-        >
+        <div className="grid grid-cols-1 items-start gap-6 py-3 md:grid-cols-[minmax(0,60%)_minmax(0,30%)] md:justify-between md:pb-3 md:pt-20">
           {/* Chat Section */}
-          <UserChat user={userData} />
+          <div className="h-[calc(100dvh-5.5rem)] min-h-[32rem] md:h-[calc(100dvh-5.75rem)]">
+            <UserChat user={userData} snippetRemainingCount={snippetRemainingCount} />
+          </div>
 
           {/* Contact Information Section */}
           <Flex
             direction="column"
             gap="6"
-            pl={{ initial: "0", md: "6" }}
             className="text-zinc-900 dark:text-zinc-100"
           >
             <Box>
@@ -83,8 +81,7 @@ export default async function ContactUsPage() {
               </Text>
             </Box>
           </Flex>
-        </Grid>
-      </Section>
+        </div>
     </Container>
   );
 }

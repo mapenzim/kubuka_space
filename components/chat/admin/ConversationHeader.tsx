@@ -40,7 +40,7 @@ export default function ConversationHeader({
       <Flex
         justify="between"
         align="center"
-        className="border-b p-4"
+        className="shrink-0 border-b p-3"
       >
         <Flex gap="3" align="center">
         <Avatar

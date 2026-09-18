@@ -17,11 +17,11 @@ import { UserChatProps } from "@/lib/type_interface";
 import { getUserSupportThreads } from "@/app/actions/messageThreadAction";
 import { useEffect } from "react";
 import SnippetRequestDialog from "@/components/snippets/SnippetRequestDialog";
-import { Separator } from "@radix-ui/themes";
 import { getGuestChatSession } from "@/lib/chat/client/guest_session";
 
 export default function UserChat({
   user,
+  snippetRemainingCount = 0,
 }: UserChatProps) {
   //--------------------------------------------------
   // UI
@@ -148,7 +148,7 @@ export default function UserChat({
     return (
       <Card
         variant="ghost"
-        className="contact-chat-surface flex h-160 items-center justify-center border border-zinc-200 shadow-sm dark:border-zinc-800"
+        className="contact-chat-surface flex h-full min-h-0 items-center justify-center border border-zinc-200 shadow-sm dark:border-zinc-800"
       >
         <Text className="text-zinc-600 dark:text-zinc-400">
           Loading your conversation…
@@ -188,37 +188,31 @@ export default function UserChat({
   return (
     <Card
       variant="ghost"
-      className="contact-chat-surface flex h-160 flex-col overflow-hidden border border-zinc-200 shadow-sm dark:border-zinc-800"
+      className="contact-chat-surface h-full min-h-0 overflow-hidden border border-zinc-200 shadow-sm dark:border-zinc-800"
     >
-      <ChatHeader
-        thread={thread}
-        connected={connected}
-        online={connected}
-        typing={isTyping("admin")}
-        lastSeen={getParticipantByRole("admin")?.lastSeen}
-      />
+      <div className="flex h-full min-h-0 flex-col overflow-hidden">
+        <ChatHeader
+          thread={thread}
+          connected={connected}
+          online={connected}
+          typing={isTyping("admin")}
+          lastSeen={getParticipantByRole("admin")?.lastSeen}
+          action={user?.id ? <SnippetRequestDialog threadId={thread.id} initialRemainingCount={snippetRemainingCount} /> : undefined}
+        />
 
-      <ChatMessages
-        thread={thread}
-        selfRole="user"
-      />
+        <ChatMessages
+          thread={thread}
+          selfRole="user"
+        />
 
-      {user?.id && (
-        <>
-          <Separator />
-          <div className="flex justify-end bg-white px-3 py-2 dark:bg-zinc-900">
-            <SnippetRequestDialog threadId={thread.id} />
-          </div>
-        </>
-      )}
-
-      <ConversationComposer
-        placeholder={`Reply as ${thread.sender}...`}
-        disabled={isPending}
-        onSend={handleSend}
-        onTypingStart={startTyping}
-        onTypingStop={stopTyping}
-      />
+        <ConversationComposer
+          placeholder={`Reply as ${thread.sender}...`}
+          disabled={isPending}
+          onSend={handleSend}
+          onTypingStart={startTyping}
+          onTypingStop={stopTyping}
+        />
+      </div>
     </Card>
   );
-} 
+}

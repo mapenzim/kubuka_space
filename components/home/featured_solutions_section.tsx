@@ -1,15 +1,9 @@
 import Link from "next/link";
-import MerchandiseCard from "@/components/cart/components/merchandise_card";
+import MerchandiseCard, { type StoreMerchandiseItem } from "@/components/cart/components/merchandise_card";
 import prisma from "@/lib/prisma";
 
 const FeaturedSolutionsSection = async () => {
-  let products: {
-    id: string;
-    title: string;
-    body: string;
-    price: number;
-    stockQuantity: number;
-  }[] = [];
+  let products: StoreMerchandiseItem[] = [];
 
   try {
     const merchandise = await prisma.merchandise.findMany({
@@ -25,6 +19,8 @@ const FeaturedSolutionsSection = async () => {
         body: true,
         price: true,
         stockQuantity: true,
+        category: { select: { name: true, slug: true } },
+        snippetProduct: { select: { language: true, categories: true } },
       },
     });
 

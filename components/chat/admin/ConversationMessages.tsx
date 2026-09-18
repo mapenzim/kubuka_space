@@ -15,13 +15,11 @@ import { useRelativeTimeClock } from "@/lib/chat/hooks/use_relative_time_clock";
 interface ConversationMessagesProps {
   messages: MessageDto[];
   selfRole: "admin" | "user";
-  height?: number;
 }
 
 export default function ConversationMessages({
   messages,
   selfRole,
-  height = 560,
 }: ConversationMessagesProps) {
   const viewportRef =
     useRef<HTMLDivElement>(null);
@@ -36,13 +34,10 @@ export default function ConversationMessages({
   }, [lastMessageId]);
 
   return ( 
-    <Box className="flex-1 overflow-hidden">
+    <Box className="min-h-0 flex-1 overflow-hidden">
       <ScrollArea
         ref={viewportRef}
-        style={{
-          height,
-          padding: 16,
-        }}
+        style={{ height: "100%", padding: 16 }}
       >
         <Flex
           direction="column"

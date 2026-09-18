@@ -13,11 +13,10 @@ import {
   Card,
   Flex,
   Heading,
-  IconButton,
   Separator,
   Text,
 } from "@radix-ui/themes";
-import { ArrowLeft, Inbox } from "lucide-react";
+import { Inbox } from "lucide-react";
 
 import { useChat } from "@/lib/chat/hooks/use_chat";
 import { useChatSession } from "@/lib/chat/session/use_chat_session";
@@ -137,7 +136,7 @@ export default function AdminMessenger() {
       gap="2"
       className="h-full overflow-hidden"
     >
-      <Box>
+      <Box className="shrink-0">
         <Heading
           as="h1"
           size="6"
@@ -221,67 +220,58 @@ export default function AdminMessenger() {
         </Box>
 
         <Card
-          className={`min-w-0 flex-1 flex-col overflow-hidden ${
+          className={`min-h-0 min-w-0 flex-1 overflow-hidden ${
             selectedThreadId && !mobileInboxOpen
-              ? "flex"
-              : "hidden md:flex"
+              ? "block"
+              : "hidden md:block"
           }`}
         >
-          {/*selectedThreadId && (
-            <Box className="border-b border-zinc-200 p-2 dark:border-zinc-800 md:hidden">
-              <IconButton
-                variant="ghost"
-                aria-label="Back to conversations"
-                onClick={() => setMobileInboxOpen(true)}
+          <div className="flex h-full min-h-0 flex-col overflow-hidden">
+            {!thread ? (
+              <Flex
+                align="center"
+                justify="center"
+                className="h-full"
               >
-                <ArrowLeft size={18} />
-              </IconButton>
-            </Box>
-          )*/}
-          {!thread ? (
-            <Flex
-              align="center"
-              justify="center"
-              className="h-full"
-            >
-              <Text color="gray">
-                Select a conversation
-              </Text>
-            </Flex>
-          ) : (
-            <>
-              <ConversationHeader
-                thread={thread}
-                connected={connected}
-                online={getParticipantByRole("user")?.online ?? false}
-                typing={isTyping("user")}
-                lastSeen={getParticipantByRole("user")?.lastSeen}
-                onArchive={archiveCurrentConversation}
-                onDelete={deleteCurrentConversation}
-              /> 
+                <Text color="gray">
+                  Select a conversation
+                </Text>
+              </Flex>
+            ) : (
+              <>
+                <ConversationHeader
+                  thread={thread}
+                  connected={connected}
+                  online={getParticipantByRole("user")?.online ?? false}
+                  typing={isTyping("user")}
+                  lastSeen={getParticipantByRole("user")?.lastSeen}
+                  onArchive={archiveCurrentConversation}
+                  onDelete={deleteCurrentConversation}
+                />
 
-              <ConversationMessages
-                messages={
-                  thread.messages
-                }
-                selfRole="admin"
-              />
+                <ConversationMessages
+                  messages={
+                    thread.messages
+                  }
+                  selfRole="admin"
+                />
 
-              <Separator />
+                <Separator />
 
-              <ConversationComposer
-                placeholder={`Reply to ${thread.sender}...`}
-                disabled={isPending}
-                onSend={sendReply}
-                onTypingStart={
-                  startTyping
-                }
-                onTypingStop={
-                  stopTyping
-                }
-              />
-            </>
-          )}
+                <ConversationComposer
+                  placeholder={`Reply to ${thread.sender}...`}
+                  disabled={isPending}
+                  onSend={sendReply}
+                  onTypingStart={
+                    startTyping
+                  }
+                  onTypingStop={
+                    stopTyping
+                  }
+                />
+              </>
+            )}
+          </div>
         </Card>
       </Flex>
     </Flex>

@@ -33,6 +33,12 @@ export const SNIPPET_REQUEST_STATUSES = [
 ] as const;
 export type SnippetRequestStatusValue = (typeof SNIPPET_REQUEST_STATUSES)[number];
 
+export const ADMIN_SNIPPET_COUNT_EVENT = "kubuka-admin-snippet-count";
+
+export function isActiveSnippetRequestStatus(status: string) {
+  return status !== "DELIVERED" && status !== "REJECTED";
+}
+
 export interface SnippetFile {
   path: string;
   content: string;

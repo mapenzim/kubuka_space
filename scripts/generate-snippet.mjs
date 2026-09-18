@@ -1,18 +1,36 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { basename, dirname, extname, join } from "node:path";
 
-const inputPath = process.argv[2];
+const configPath = join(process.cwd(), "ollama.config.json");
+let localConfig = {};
+
+try {
+  localConfig = JSON.parse(await readFile(configPath, "utf8"));
+} catch (error) {
+  if (!(error instanceof Error && "code" in error && error.code === "ENOENT")) {
+    console.error(`Unable to read ${configPath}.`);
+    console.error(error instanceof Error ? error.message : error);
+    process.exit(1);
+  }
+}
+
+const args = process.argv.slice(2);
+if (args[0] === "--") args.shift();
+
+const inputPath = args[0];
 if (!inputPath) {
   console.error("Usage: pnpm snippet:generate -- path/to/request.json [output.json]");
   process.exit(1);
 }
 
-const outputPath = process.argv[3] ?? join(
+const outputPath = args[1] ?? join(
   dirname(inputPath),
   `${basename(inputPath, extname(inputPath))}.delivery.json`,
 );
-const ollamaUrl = (process.env.OLLAMA_URL ?? "http://127.0.0.1:11434").replace(/\/$/, "");
-const model = process.env.OLLAMA_MODEL ?? "qwen2.5-coder:7b";
+const ollamaUrl = (
+  process.env.OLLAMA_URL ?? localConfig.url ?? "http://127.0.0.1:11434"
+).replace(/\/$/, "");
+const model = process.env.OLLAMA_MODEL ?? localConfig.model ?? "qwen2.5-coder:7b";
 const brief = JSON.parse(await readFile(inputPath, "utf8"));
 
 const deliverySchema = {
@@ -39,7 +57,7 @@ const deliverySchema = {
   required: ["title", "description", "files", "dependencies", "usageInstructions"],
 };
 
-const prompt = `You are preparing a production-quality code delivery for Kubuka Space.
+const prompt = `You are preparing a production-quality code delivery for My Company.
 Generate only the requested ${brief.language} ${brief.category}.
 Respect every supplied style and behavior preference. Use accessible markup, responsive design when requested, concise comments, and no placeholder prose.
 For React, return self-contained TSX plus any required CSS files and list external packages in dependencies.

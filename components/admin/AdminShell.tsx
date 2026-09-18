@@ -28,9 +28,11 @@ import {
   Text,
 } from "@radix-ui/themes";
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { ADMIN_SNIPPET_COUNT_EVENT } from "@/lib/snippets";
 
 interface AdminShellProps {
   children: React.ReactNode;
+  initialActiveSnippetRequestCount: number;
   user: {
     name?: string | null;
     email?: string | null;
@@ -101,10 +103,12 @@ function isActivePath(pathname: string, href: string) {
     : pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export default function AdminShell({ children, user }: AdminShellProps) {
+export default function AdminShell({ children, initialActiveSnippetRequestCount, user }: AdminShellProps) {
   const pathname = usePathname();
   const pageTitle = pageTitles[pathname] ?? "Admin Dashboard";
+  const isMessagesPage = pathname === "/admin/messages";
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeSnippetRequestCount, setActiveSnippetRequestCount] = useState(initialActiveSnippetRequestCount);
   const darkMode = useSyncExternalStore(
     subscribeToTheme,
     getThemeSnapshot,
@@ -120,6 +124,16 @@ export default function AdminShell({ children, user }: AdminShellProps) {
     return () => document.body.classList.remove("admin-menu-open");
   }, [mobileMenuOpen]);
 
+  useEffect(() => {
+    const updateCount = (event: Event) => {
+      if (event instanceof CustomEvent && typeof event.detail === "number") {
+        setActiveSnippetRequestCount(Math.max(0, event.detail));
+      }
+    };
+    window.addEventListener(ADMIN_SNIPPET_COUNT_EVENT, updateCount);
+    return () => window.removeEventListener(ADMIN_SNIPPET_COUNT_EVENT, updateCount);
+  }, []);
+
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
   return (
@@ -131,6 +145,7 @@ export default function AdminShell({ children, user }: AdminShellProps) {
             pageTitle={pageTitle}
             darkMode={darkMode}
             user={user}
+            activeSnippetRequestCount={activeSnippetRequestCount}
             onToggleTheme={toggleTheme}
           />
         </aside>
@@ -156,6 +171,7 @@ export default function AdminShell({ children, user }: AdminShellProps) {
             pageTitle={pageTitle}
             darkMode={darkMode}
             user={user}
+            activeSnippetRequestCount={activeSnippetRequestCount}
             mobile
             onClose={closeMobileMenu}
             onToggleTheme={toggleTheme}
@@ -165,7 +181,11 @@ export default function AdminShell({ children, user }: AdminShellProps) {
         <Flex direction="column" className="relative h-dvh max-h-dvh min-w-0 flex-1 overflow-hidden">
           <div className="admin-pattern pointer-events-none absolute inset-0 z-0" />
 
-          <main className="relative z-10 min-h-0 flex-1 overflow-y-auto p-3 pt-16 sm:p-5 lg:p-6">
+          <main className={`relative z-10 min-h-0 flex-1 ${
+            isMessagesPage
+              ? "overflow-hidden p-2 pt-14 sm:p-3 md:p-3"
+              : "overflow-y-auto p-3 pt-16 sm:p-5 lg:p-6"
+          }`}>
             {children}
           </main>
 
@@ -190,6 +210,7 @@ function AdminSidebarContent({
   pageTitle,
   darkMode,
   user,
+  activeSnippetRequestCount,
   mobile = false,
   onClose,
   onToggleTheme,
@@ -198,6 +219,7 @@ function AdminSidebarContent({
   pageTitle: string;
   darkMode: boolean;
   user: AdminShellProps["user"];
+  activeSnippetRequestCount: number;
   mobile?: boolean;
   onClose?: () => void;
   onToggleTheme: () => void;
@@ -215,7 +237,7 @@ function AdminSidebarContent({
       <Separator size="4" />
       <AdminContextHeader pageTitle={pageTitle} darkMode={darkMode} onToggleTheme={onToggleTheme} />
       <Separator size="4" />
-      <AdminNavigation pathname={pathname} onNavigate={onClose} />
+      <AdminNavigation pathname={pathname} activeSnippetRequestCount={activeSnippetRequestCount} onNavigate={onClose} />
       <AdminAccountFooter user={user} onNavigate={onClose} />
     </>
   );
@@ -265,9 +287,11 @@ function AdminContextHeader({
 
 function AdminNavigation({
   pathname,
+  activeSnippetRequestCount,
   onNavigate,
 }: {
   pathname: string;
+  activeSnippetRequestCount: number;
   onNavigate?: () => void;
 }) {
   return (
@@ -290,7 +314,16 @@ function AdminNavigation({
             </summary>
             <div className="ml-3 mt-1 flex w-full flex-col gap-1 border-l border-(--gray-a6) pl-2">
               {group.items.map(({ href, label, icon: Icon }) => (
-                <AdminLink key={href} href={href} label={label} icon={Icon} active={isActivePath(pathname, href)} onNavigate={onNavigate} nested />
+                <AdminLink
+                  key={href}
+                  href={href}
+                  label={label}
+                  icon={Icon}
+                  active={isActivePath(pathname, href)}
+                  badge={href === "/admin/snippets" ? activeSnippetRequestCount : undefined}
+                  onNavigate={onNavigate}
+                  nested
+                />
               ))}
             </div>
           </details>
@@ -362,6 +395,7 @@ function AdminLink({
   label,
   icon: Icon,
   active,
+  badge,
   onNavigate,
   nested,
 }: {
@@ -369,6 +403,7 @@ function AdminLink({
   label: string;
   icon: typeof LayoutPanelTopIcon;
   active: boolean;
+  badge?: number;
   onNavigate?: () => void;
   nested?: boolean;
 }) {
@@ -384,7 +419,12 @@ function AdminLink({
       }`}
     >
       <Icon size={18} className="shrink-0" aria-hidden="true" />
-      <span className="min-w-0 text-left text-sm font-medium">{label}</span>
+      <span className="min-w-0 flex-1 text-left text-sm font-medium">{label}</span>
+      {!!badge && (
+        <span className="grid min-h-5 min-w-5 shrink-0 place-items-center rounded-full bg-rose-500 px-1.5 text-[10px] font-bold leading-none text-white" aria-label={`${badge} active snippet request${badge === 1 ? "" : "s"}`}>
+          {badge > 99 ? "99+" : badge}
+        </span>
+      )}
     </Link>
   );
 }

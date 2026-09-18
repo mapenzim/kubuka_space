@@ -1,17 +1,20 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { Badge, Button, Card, Dialog, Flex, Heading, Text, TextArea, TextField } from "@radix-ui/themes";
-import { FileCode2, PackagePlus, Plus, Send, Trash2 } from "lucide-react";
+import { FileCode2, PackagePlus, Plus, Send, Sparkles, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import AdminDialogButton from "@/components/admin/AdminDialogButton";
 import {
   createSnippetProduct,
   deliverSnippetRequest,
+  generateSnippetWithOllama,
   updateSnippetRequestStatus,
 } from "@/app/actions/snippetActions.server";
 import {
+  ADMIN_SNIPPET_COUNT_EVENT,
   humanizeSnippetValue,
+  isActiveSnippetRequestStatus,
   PYTHON_SNIPPET_CATEGORIES,
   SNIPPET_REQUEST_STATUSES,
   SnippetCategoryValue,
@@ -62,6 +65,8 @@ const emptyProduct = {
   categories: [...WEB_SNIPPET_CATEGORIES],
 };
 
+const LOCAL_OLLAMA_ENABLED = process.env.NODE_ENV === "development";
+
 function starterFile(request: AdminSnippetRequest): SnippetFile {
   if (request.language === "HTML") return { path: "index.html", content: "" };
   if (request.language === "REACT") return { path: `${humanizeSnippetValue(request.category).replaceAll(" ", "")}Component.tsx`, content: "" };
@@ -95,15 +100,22 @@ export default function AdminSnippetManager({
   const [deliveryFiles, setDeliveryFiles] = useState<SnippetFile[]>([]);
   const [dependencies, setDependencies] = useState("");
   const [usageInstructions, setUsageInstructions] = useState("");
+  const [generatingRequestId, setGeneratingRequestId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const availableCategories = productForm.language === "PYTHON"
     ? PYTHON_SNIPPET_CATEGORIES
     : WEB_SNIPPET_CATEGORIES;
   const activeRequests = useMemo(
-    () => requests.filter((request) => request.status !== "DELIVERED" && request.status !== "REJECTED"),
+    () => requests.filter((request) => isActiveSnippetRequestStatus(request.status)),
     [requests],
   );
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent(ADMIN_SNIPPET_COUNT_EVENT, {
+      detail: activeRequests.length,
+    }));
+  }, [activeRequests.length]);
 
   function changeLanguage(language: SnippetLanguageValue) {
     setProductForm((current) => ({
@@ -186,16 +198,61 @@ export default function AdminSnippetManager({
     URL.revokeObjectURL(url);
   }
 
+  async function generateWithOllama(request: AdminSnippetRequest) {
+    const previousStatus = request.status;
+    setGeneratingRequestId(request.id);
+    setRequests((current) => current.map((item) =>
+      item.id === request.id ? { ...item, status: "GENERATING" } : item
+    ));
+    const toastId = toast.loading("Ollama is generating the snippet locally. This may take a few minutes…");
+
+    try {
+      const generated = await generateSnippetWithOllama(request.id);
+      const updatedRequest = { ...request, status: generated.status };
+      setRequests((current) => current.map((item) =>
+        item.id === request.id ? { ...item, status: generated.status } : item
+      ));
+      setSelectedRequest(updatedRequest);
+      setDeliveryTitle(generated.title);
+      setDeliveryDescription(generated.description);
+      setDeliveryFiles(generated.files);
+      setDependencies(generated.dependencies.join(", "));
+      setUsageInstructions(generated.usageInstructions);
+      setDeliveryOpen(true);
+      toast.success(`Generated with ${generated.model}. Review every file before delivery.`, { id: toastId });
+    } catch (error) {
+      setRequests((current) => current.map((item) =>
+        item.id === request.id ? { ...item, status: previousStatus } : item
+      ));
+      toast.error(error instanceof Error ? error.message : "Unable to generate the snippet.", { id: toastId });
+    } finally {
+      setGeneratingRequestId(null);
+    }
+  }
+
   async function importDelivery(file: File | undefined) {
     if (!file) return;
     try {
       const payload = JSON.parse(await file.text()) as {
+        requestId?: unknown;
+        language?: unknown;
+        category?: unknown;
         title?: unknown;
         description?: unknown;
         files?: unknown;
         dependencies?: unknown;
         usageInstructions?: unknown;
       };
+      if (
+        typeof payload.requestId === "string" &&
+        typeof payload.language === "string" &&
+        typeof payload.category === "string" &&
+        payload.files === undefined
+      ) {
+        throw new Error(
+          "You selected the exported Ollama request brief. Run the local generator first, then import the resulting .delivery.json file.",
+        );
+      }
       if (
         typeof payload.title !== "string" ||
         typeof payload.description !== "string" ||
@@ -205,7 +262,9 @@ export default function AdminSnippetManager({
         !payload.dependencies.every((item) => typeof item === "string") ||
         typeof payload.usageInstructions !== "string"
       ) {
-        throw new Error("The selected file is not a valid snippet delivery.");
+        throw new Error(
+          "This JSON does not contain a complete snippet delivery. Select the generated .delivery.json file.",
+        );
       }
       setDeliveryTitle(payload.title);
       setDeliveryDescription(payload.description);
@@ -310,12 +369,25 @@ export default function AdminSnippetManager({
                 {request.instructions && <Text as="p" size="2" className="whitespace-pre-wrap rounded-lg bg-zinc-100 p-3 dark:bg-zinc-800">{request.instructions}</Text>}
                 <Flex justify="end" gap="2" wrap="wrap">
                   {request.status !== "DELIVERED" && (
-                    <select disabled={isPending} value={request.status} onChange={(event) => changeStatus(request, event.target.value as SnippetRequestStatusValue)} className="h-9 rounded-md border border-zinc-300 bg-white px-3 text-sm dark:border-zinc-600 dark:bg-zinc-800">
+                    <select disabled={isPending || generatingRequestId === request.id} value={request.status} onChange={(event) => changeStatus(request, event.target.value as SnippetRequestStatusValue)} className="h-9 rounded-md border border-zinc-300 bg-white px-3 text-sm dark:border-zinc-600 dark:bg-zinc-800">
                       {SNIPPET_REQUEST_STATUSES.filter((status) => status !== "DELIVERED").map((status) => <option key={status} value={status}>{humanizeSnippetValue(status)}</option>)}
                     </select>
                   )}
                   <Button type="button" variant="soft" color="gray" onClick={() => downloadBrief(request)}>Export Ollama brief</Button>
-                  <Button type="button" disabled={isPending || request.status === "REJECTED"} onClick={() => openDelivery(request)}><Send size={15} />{request.status === "DELIVERED" ? "Deliver revision" : "Deliver snippet"}</Button>
+                  {LOCAL_OLLAMA_ENABLED && (
+                    <Button
+                      type="button"
+                      variant="soft"
+                      color="violet"
+                      loading={generatingRequestId === request.id}
+                      disabled={Boolean(generatingRequestId) || request.status === "REJECTED"}
+                      onClick={() => void generateWithOllama(request)}
+                    >
+                      <Sparkles size={15} />
+                      {generatingRequestId === request.id ? "Generating…" : "Generate with Ollama"}
+                    </Button>
+                  )}
+                  <Button type="button" disabled={isPending || Boolean(generatingRequestId) || request.status === "REJECTED"} onClick={() => openDelivery(request)}><Send size={15} />{request.status === "DELIVERED" ? "Deliver revision" : "Deliver snippet"}</Button>
                 </Flex>
               </Flex>
             </Card>
@@ -346,9 +418,21 @@ export default function AdminSnippetManager({
           <Dialog.Description size="2" color="gray">The customer will receive a secure code card in their conversation.</Dialog.Description>
           <Flex direction="column" gap="3" mt="4">
             <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-indigo-400 bg-indigo-50 px-4 py-3 text-sm font-semibold text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-950/30 dark:text-indigo-300 dark:hover:bg-indigo-950/50">
-              Import reviewed Ollama delivery JSON
-              <input type="file" accept="application/json,.json" className="sr-only" onChange={(event) => void importDelivery(event.target.files?.[0])} />
+              Import generated .delivery.json
+              <input
+                type="file"
+                accept="application/json,.json"
+                className="sr-only"
+                onChange={(event) => {
+                  const file = event.currentTarget.files?.[0];
+                  event.currentTarget.value = "";
+                  void importDelivery(file);
+                }}
+              />
             </label>
+            <Text size="1" color="gray" align="center">
+              The exported request brief is the input for Ollama. Upload the reviewed file created by <code>pnpm snippet:generate</code>, normally named <code>snippet-request-{selectedRequest?.id}.delivery.json</code>.
+            </Text>
             <TextField.Root placeholder="Delivery title" value={deliveryTitle} onChange={(event) => setDeliveryTitle(event.target.value)} />
             <TextArea placeholder="Short description" value={deliveryDescription} onChange={(event) => setDeliveryDescription(event.target.value)} />
             {deliveryFiles.map((file, index) => (

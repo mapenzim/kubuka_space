@@ -5,6 +5,7 @@ import { requireAdmin } from "@/lib/admin/require_admin";
 import { chatGateway } from "@/lib/container/runtime";
 import prisma from "@/lib/prisma";
 import { ulidId } from "@/lib/server-utils";
+import { generateSnippetDeliveryWithOllama } from "@/lib/snippets/ollama.server";
 import {
   createSnippetDeliveryMarker,
   humanizeSnippetValue,
@@ -310,6 +311,85 @@ export async function updateSnippetRequestStatus(id: string, status: SnippetRequ
   const request = await prisma.snippetRequest.update({ where: { id }, data: { status } });
   revalidatePath("/admin/snippets");
   return { id: request.id, status: request.status };
+}
+
+export async function generateSnippetWithOllama(requestId: string) {
+  await requireAdmin();
+  if (process.env.NODE_ENV !== "development") {
+    throw new Error("Local Ollama generation is available only in the development environment.");
+  }
+
+  const request = await prisma.snippetRequest.findUnique({
+    where: { id: requestId },
+    include: {
+      snippetProduct: {
+        include: { merchandise: { select: { title: true } } },
+      },
+    },
+  });
+  if (!request) throw new Error("Snippet request not found.");
+  if (request.status === "REJECTED") throw new Error("A rejected request cannot be generated.");
+
+  const previousStatus = request.status;
+  await prisma.snippetRequest.update({
+    where: { id: request.id },
+    data: { status: "GENERATING" },
+  });
+
+  try {
+    const generated = await generateSnippetDeliveryWithOllama({
+      requestId: request.id,
+      product: request.snippetProduct.merchandise.title,
+      language: request.language,
+      category: request.category,
+      preferences: {
+        primaryColor: request.primaryColor,
+        textColor: request.textColor,
+        backgroundColor: request.backgroundColor,
+        fontFamily: request.fontFamily,
+        appearance: request.appearance,
+        responsive: request.responsive,
+      },
+      instructions: request.instructions,
+    });
+
+    const title = generated.delivery.title.trim();
+    const description = generated.delivery.description.trim();
+    const usageInstructions = generated.delivery.usageInstructions.trim();
+    if (!title || title.length > 120 || !description || description.length > 1000) {
+      throw new Error("Ollama generated a title or description that is too long. Try again.");
+    }
+    if (!usageInstructions || usageInstructions.length > 5000) {
+      throw new Error("Ollama generated invalid usage instructions. Try again.");
+    }
+
+    const files = validateFiles(generated.delivery.files);
+    const dependencies = [...new Set(generated.delivery.dependencies.map((item) => item.trim()).filter(Boolean))];
+    if (dependencies.length > 30) throw new Error("Ollama generated too many dependencies.");
+
+    await prisma.snippetRequest.update({
+      where: { id: request.id },
+      data: { status: "REVIEW" },
+    });
+    revalidatePath("/admin/snippets");
+
+    return {
+      title,
+      description,
+      files,
+      dependencies,
+      usageInstructions,
+      model: generated.model,
+      status: "REVIEW" as const,
+    };
+  } catch (error) {
+    await prisma.snippetRequest.update({
+      where: { id: request.id },
+      data: { status: previousStatus },
+    }).catch(() => undefined);
+    revalidatePath("/admin/snippets");
+    throw error;
+  }
 }
 
 function validateFiles(files: SnippetFile[]) {
