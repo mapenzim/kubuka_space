@@ -3,11 +3,19 @@
 import {
   ReactNode,
   useCallback,
+  useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
+import { useSession } from "next-auth/react";
 
 import { SenderRole } from "../../interfaces";
+import {
+  clearUserChatSession,
+  USER_CHAT_SIGNED_OUT_EVENT,
+} from "@/lib/chat/client/guest_session";
+import { chatStores } from "@/lib/chat/stores";
 import { ChatSessionContext } from "./chat_session";
 
 interface Props {
@@ -19,6 +27,8 @@ export function ChatSessionProvider({
   role,
   children,
 }: Props) {
+  const { status: authenticationStatus } = useSession();
+  const previousAuthenticationStatus = useRef(authenticationStatus);
   //--------------------------------------------------------
   // Stable client id
   //--------------------------------------------------------
@@ -55,6 +65,31 @@ export function ChatSessionProvider({
         undefined,
       );
     }, []);
+
+  useEffect(() => {
+    const clearChat = () => {
+      chatStores.conversation.clear();
+      chatStores.presence.clear();
+      chatStores.activity.clear();
+      reset();
+    };
+
+    window.addEventListener(USER_CHAT_SIGNED_OUT_EVENT, clearChat);
+    return () => window.removeEventListener(USER_CHAT_SIGNED_OUT_EVENT, clearChat);
+  }, [reset]);
+
+  useEffect(() => {
+    const previousStatus = previousAuthenticationStatus.current;
+    previousAuthenticationStatus.current = authenticationStatus;
+
+    if (
+      role === "user" &&
+      previousStatus === "authenticated" &&
+      authenticationStatus === "unauthenticated"
+    ) {
+      clearUserChatSession();
+    }
+  }, [authenticationStatus, role]);
 
   //--------------------------------------------------------
   // Context

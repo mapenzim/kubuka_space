@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 import { useChatSession } from "@/lib/chat/session";
 import { conversationStore } from "@/lib/chat/stores/conversation_store";
@@ -9,17 +9,36 @@ import { ThreadEvent } from "@/lib/events/thread/thread_event";
 import { ThreadEventType } from "@/lib/events/thread/thread_event_type";
 import { useEventStream } from "./use_event_stream";
 import { toast } from "sonner";
-import { clearGuestChatSession } from "@/lib/chat/client/guest_session";
+import {
+  clearGuestChatSession,
+  USER_CHAT_SIGNED_OUT_EVENT,
+} from "@/lib/chat/client/guest_session";
 
 export function useThreadEvents() {
   const session = useChatSession();
   const { presence, activity } = chatStores;
+  const signedOutRef = useRef(false);
+
+  useEffect(() => {
+    const markSignedOut = () => {
+      signedOutRef.current = true;
+    };
+
+    window.addEventListener(USER_CHAT_SIGNED_OUT_EVENT, markSignedOut);
+    return () => window.removeEventListener(USER_CHAT_SIGNED_OUT_EVENT, markSignedOut);
+  }, []);
+
+  useEffect(() => {
+    if (session.threadId) signedOutRef.current = false;
+  }, [session.threadId]);
 
   //----------------------------------------------------------
   // Dispatch every event to the correct store
   //----------------------------------------------------------
   const handleEvent = useCallback(
     (event: ThreadEvent) => {
+      if (signedOutRef.current || event.threadId !== session.threadId) return;
+
       switch (event.type) {
         case ThreadEventType.MESSAGE_CREATED:
           conversationStore.appendMessage(

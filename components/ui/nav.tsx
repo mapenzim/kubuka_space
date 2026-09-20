@@ -10,6 +10,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { isAdminRole } from "@/lib/roles";
 import SupportNotificationLink from "@/components/chat/SupportNotificationLink";
+import { clearUserChatSession } from "@/lib/chat/client/guest_session";
 
 const navLinks = [
   { name: "Products", path: "/store" },
@@ -36,9 +37,11 @@ const NavigationApp = () => {
   }, []);
 
   const handleSignout = async () => {
+    clearUserChatSession();
     await signOut({ redirect: false });
     localStorage.removeItem("tempCart");
     localStorage.removeItem("tempCartId");
+    router.refresh();
   }
 
   React.useEffect(() => {

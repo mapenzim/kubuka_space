@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useRef,
   useState,
   useTransition,
 } from "react";
@@ -17,7 +18,10 @@ import { UserChatProps } from "@/lib/type_interface";
 import { getUserSupportThreads } from "@/app/actions/messageThreadAction";
 import { useEffect } from "react";
 import SnippetRequestDialog from "@/components/snippets/SnippetRequestDialog";
-import { getGuestChatSession } from "@/lib/chat/client/guest_session";
+import {
+  getGuestChatSession,
+  USER_CHAT_SIGNED_OUT_EVENT,
+} from "@/lib/chat/client/guest_session";
 
 export default function UserChat({
   user,
@@ -32,6 +36,7 @@ export default function UserChat({
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loadingHistory, setLoadingHistory] = useState(true);
+  const historyLoadRef = useRef(0);
 
   //--------------------------------------------------
   // Chat
@@ -50,12 +55,24 @@ export default function UserChat({
   } = useChat();
 
   useEffect(() => {
+    const invalidateHistoryLoad = () => {
+      historyLoadRef.current += 1;
+      setLoadingHistory(false);
+      setError("");
+    };
+
+    window.addEventListener(USER_CHAT_SIGNED_OUT_EVENT, invalidateHistoryLoad);
+    return () => window.removeEventListener(USER_CHAT_SIGNED_OUT_EVENT, invalidateHistoryLoad);
+  }, []);
+
+  useEffect(() => {
     let active = true;
+    const requestId = ++historyLoadRef.current;
     void (async () => {
       try {
         if (user?.email) {
           const result = await getUserSupportThreads();
-          if (!active) return;
+          if (!active || requestId !== historyLoadRef.current) return;
           const existing = result.threads[0];
           if (existing) setExistingThread(existing);
         } else {
@@ -65,9 +82,11 @@ export default function UserChat({
           }
         }
       } catch {
-        if (active) setError("Unable to restore the previous conversation.");
+        if (active && requestId === historyLoadRef.current) {
+          setError("Unable to restore the previous conversation.");
+        }
       } finally {
-        if (active) setLoadingHistory(false);
+        if (active && requestId === historyLoadRef.current) setLoadingHistory(false);
       }
     })();
 

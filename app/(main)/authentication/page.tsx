@@ -13,6 +13,7 @@ import Loading from "@/components/loading";
 import Turnstile from "react-turnstile";
 import Image from "next/image";
 import Link from "next/link";
+import { clearUserChatSession } from "@/lib/chat/client/guest_session";
 
 const VARIANTS = {
   login: "LOGIN",
@@ -53,6 +54,7 @@ const AuthenticationPage = () => {
   useEffect(() => {
     if (status === "authenticated") {
       if (session?.user?.status && session.user.status !== "ACTIVE") {
+        clearUserChatSession();
         void signOut({ redirect: false }).then(() => {
           toast.error("This account is suspended or archived.");
           router.replace("/authentication?account=inactive");

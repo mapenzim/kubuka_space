@@ -2,9 +2,11 @@
 
 import {
   useCallback,
+  useEffect,
   useRef,
   useSyncExternalStore,
 } from "react";
+import { useSession } from "next-auth/react";
 
 import {
   conversationClient,
@@ -25,9 +27,11 @@ import {
   clearGuestChatSession,
   getGuestChatSession,
   saveGuestChatSession,
+  USER_CHAT_SIGNED_OUT_EVENT,
 } from "@/lib/chat/client/guest_session";
 
 export function useConversation() {
+  const { status: authenticationStatus } = useSession();
   const {
     threadId,
     conversationKey,
@@ -37,6 +41,7 @@ export function useConversation() {
     reset,
   } = useChatSession();
   const loadRequestRef = useRef(0);
+  const isAuthenticatedUser = role === "user" && authenticationStatus === "authenticated";
 
   const { conversation } =
     chatStores;
@@ -49,6 +54,15 @@ export function useConversation() {
     conversation.snapshot,
     conversation.snapshot
   );
+
+  useEffect(() => {
+    const invalidatePendingLoads = () => {
+      loadRequestRef.current += 1;
+    };
+
+    window.addEventListener(USER_CHAT_SIGNED_OUT_EVENT, invalidatePendingLoads);
+    return () => window.removeEventListener(USER_CHAT_SIGNED_OUT_EVENT, invalidatePendingLoads);
+  }, []);
 
   const syncThread = useCallback(async () => {
     if (!threadId || conversation.getThread()?.id !== threadId) {
@@ -133,11 +147,13 @@ export function useConversation() {
     restoredThreadId: string,
     restoredConversationKey: string,
   ) => {
+    const requestId = ++loadRequestRef.current;
     try {
       const response = await conversationClient.getThread(
         restoredThreadId,
         restoredConversationKey,
       );
+      if (requestId !== loadRequestRef.current) return null;
       if (!response.data) {
         clearGuestChatSession();
         conversation.clear();
@@ -163,17 +179,11 @@ export function useConversation() {
       async (
         request: StartConversationRequest,
       ) => {
-        const storageKey =
-          `kubuka:conversation-key:${request.email.trim().toLowerCase()}`;
-        let conversationKey =
-          window.localStorage.getItem(storageKey);
+        const requestId = ++loadRequestRef.current;
+        let activeConversationKey: string | undefined;
 
-        if (!conversationKey) {
-          conversationKey = crypto.randomUUID();
-          window.localStorage.setItem(
-            storageKey,
-            conversationKey,
-          );
+        if (!isAuthenticatedUser) {
+          activeConversationKey = crypto.randomUUID();
         }
 
         let response;
@@ -182,7 +192,7 @@ export function useConversation() {
             await conversationClient.startConversation(
               {
                 ...request,
-                conversationKey,
+                conversationKey: activeConversationKey,
               },
             );
         } catch (error) {
@@ -194,19 +204,21 @@ export function useConversation() {
           throw error;
         }
 
+        if (requestId !== loadRequestRef.current) return null;
+
         conversation.setThread(
           response.data,
         );
 
-        setConversationKey(conversationKey);
+        setConversationKey(activeConversationKey);
         setThreadId(
           response.data.id,
         );
 
-        if (role === "user") {
+        if (role === "user" && !isAuthenticatedUser && activeConversationKey) {
           saveGuestChatSession({
             threadId: response.data.id,
-            conversationKey,
+            conversationKey: activeConversationKey,
           });
         }
 
@@ -214,7 +226,7 @@ export function useConversation() {
 
         return response.data;
       },
-      [conversation, role, setConversationKey, setThreadId],
+      [conversation, isAuthenticatedUser, role, setConversationKey, setThreadId],
     );
 
   //--------------------------------------------------------
@@ -226,16 +238,15 @@ export function useConversation() {
       async (
         content: string,
       ) => {
+      const identityRequestId = loadRequestRef.current;
       const visibleThread = conversation.getThread();
-      const storedGuestSession = role === "user" ? getGuestChatSession() : null;
-      const legacyConversationKey = role === "user" && visibleThread?.email
-        ? window.localStorage.getItem(`kubuka:conversation-key:${visibleThread.email.trim().toLowerCase()}`) ?? undefined
-        : undefined;
+      const useGuestCredentials = role === "user" && !isAuthenticatedUser;
+      const storedGuestSession = useGuestCredentials ? getGuestChatSession() : null;
       const activeThreadId = threadId ?? visibleThread?.id ?? storedGuestSession?.threadId;
       const activeConversationKey = conversationKey ?? (
         storedGuestSession && storedGuestSession.threadId === activeThreadId
           ? storedGuestSession.conversationKey
-          : legacyConversationKey
+          : undefined
       );
 
       if (!activeThreadId) {
@@ -248,7 +259,7 @@ export function useConversation() {
       if (activeConversationKey && activeConversationKey !== conversationKey) {
         setConversationKey(activeConversationKey);
       }
-      if (role === "user" && activeConversationKey) {
+      if (useGuestCredentials && activeConversationKey) {
         saveGuestChatSession({ threadId: activeThreadId, conversationKey: activeConversationKey });
       }
 
@@ -261,6 +272,8 @@ export function useConversation() {
               conversationKey: activeConversationKey,
             },
           );
+
+          if (identityRequestId !== loadRequestRef.current) return;
 
           // Render from the acknowledged server response immediately. The
           // SSE event is still useful for the other participant, but must not
@@ -279,7 +292,7 @@ export function useConversation() {
           throw error;
         }
       },
-      [conversation, conversationKey, role, setConversationKey, setThreadId, threadId],
+      [conversation, conversationKey, isAuthenticatedUser, role, setConversationKey, setThreadId, threadId],
     );
 
   //--------------------------------------------------------
@@ -288,6 +301,7 @@ export function useConversation() {
 
   const clear =
     useCallback(() => {
+      loadRequestRef.current += 1;
       conversation.clear();
       reset();
       if (role === "user") clearGuestChatSession();

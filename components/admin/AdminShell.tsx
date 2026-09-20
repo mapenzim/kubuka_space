@@ -29,6 +29,7 @@ import {
 } from "@radix-ui/themes";
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { ADMIN_SNIPPET_COUNT_EVENT } from "@/lib/snippets";
+import { clearUserChatSession } from "@/lib/chat/client/guest_session";
 
 interface AdminShellProps {
   children: React.ReactNode;
@@ -347,6 +348,7 @@ function AdminAccountFooter({
 
   async function handleSignOut() {
     setIsSigningOut(true);
+    clearUserChatSession();
     await signOut({ redirect: false });
     localStorage.removeItem("tempCart");
     localStorage.removeItem("tempCartId");
