@@ -167,7 +167,7 @@ export default function UserChat({
     return (
       <Card
         variant="ghost"
-        className="contact-chat-surface flex h-full min-h-0 items-center justify-center border border-zinc-200 shadow-sm dark:border-zinc-800"
+        className="contact-chat-surface z-99999 flex h-full min-h-0 items-center justify-center border border-zinc-200 shadow-sm dark:border-zinc-800"
       >
         <Text className="text-zinc-600 dark:text-zinc-400">
           Loading your conversation…
@@ -202,7 +202,7 @@ export default function UserChat({
   }
 
   //--------------------------------------------------
-  // Conversation
+  // Conversation 
   //--------------------------------------------------
   return (
     <Card
