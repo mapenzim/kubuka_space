@@ -38,7 +38,7 @@ export default async function ContactUsPage() {
       <ContactReadMarker userId={session?.user?.id ?? null} />
         <div className="grid grid-cols-1 items-start gap-6 py-3 md:grid-cols-[minmax(0,60%)_minmax(0,30%)] md:justify-between md:pb-3 md:pt-20">
           {/* Chat Section */}
-          <div className="h-[calc(100dvh-5.5rem)] min-h-[32rem] md:h-[calc(100dvh-5.75rem)]">
+          <div className="h-[calc(100dvh-5.5rem)] min-h-128 md:h-[calc(100dvh-5.75rem)]">
             <UserChat user={userData} snippetRemainingCount={snippetRemainingCount} />
           </div>
 

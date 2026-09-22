@@ -49,7 +49,7 @@ export default async function Posts() {
             Blog
           </Heading>
           
-          {session?.user && (
+          {session?.user && session.user.role === "EDITOR" && (
             <Button size="3" asChild className="cursor-pointer">
               <Link href={`/posts/new`}>New Post</Link>
             </Button>
