@@ -17,16 +17,22 @@ import { useChat } from "@/lib/chat/hooks/use_chat";
 import { UserChatProps } from "@/lib/type_interface";
 import { getUserSupportThreads } from "@/app/actions/messageThreadAction";
 import { useEffect } from "react";
+import { useSession } from "next-auth/react";
 import SnippetRequestDialog from "@/components/snippets/SnippetRequestDialog";
 import {
   getGuestChatSession,
+  getChatSessionRevision,
   USER_CHAT_SIGNED_OUT_EVENT,
 } from "@/lib/chat/client/guest_session";
 
 export default function UserChat({
-  user,
+  user: initialUser,
   snippetRemainingCount = 0,
 }: UserChatProps) {
+  const { data: session, status } = useSession();
+  const user = status === "authenticated" && session?.user?.status === "ACTIVE"
+    ? { id: session.user.id, name: session.user.name ?? null, email: session.user.email ?? null }
+    : null;
   //--------------------------------------------------
   // UI
   //--------------------------------------------------
@@ -68,11 +74,12 @@ export default function UserChat({
   useEffect(() => {
     let active = true;
     const requestId = ++historyLoadRef.current;
+    const revision = getChatSessionRevision();
     void (async () => {
       try {
         if (user?.email) {
           const result = await getUserSupportThreads();
-          if (!active || requestId !== historyLoadRef.current) return;
+          if (!active || requestId !== historyLoadRef.current || revision !== getChatSessionRevision()) return;
           const existing = result.threads[0];
           if (existing) setExistingThread(existing);
         } else {
@@ -91,7 +98,7 @@ export default function UserChat({
     })();
 
     return () => { active = false; };
-  }, [user?.email, restoreConversation, setExistingThread]);
+  }, [user?.id, user?.email, restoreConversation, setExistingThread]);
 
   //--------------------------------------------------
   // Start Conversation
@@ -216,7 +223,7 @@ export default function UserChat({
           online={connected}
           typing={isTyping("admin")}
           lastSeen={getParticipantByRole("admin")?.lastSeen}
-          action={user?.id ? <SnippetRequestDialog threadId={thread.id} initialRemainingCount={snippetRemainingCount} /> : undefined}
+          action={user?.id ? <SnippetRequestDialog threadId={thread.id} initialRemainingCount={initialUser?.id === user.id ? snippetRemainingCount : 0} /> : undefined}
         />
 
         <ChatMessages

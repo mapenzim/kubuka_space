@@ -5,7 +5,6 @@ import {
   useCallback,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from "react";
 import { useSession } from "next-auth/react";
@@ -13,9 +12,11 @@ import { useSession } from "next-auth/react";
 import { SenderRole } from "../../interfaces";
 import {
   clearUserChatSession,
+  clearChatMemory,
+  clearGuestChatSession,
   USER_CHAT_SIGNED_OUT_EVENT,
+  USER_CHAT_SIGNED_OUT_STORAGE_KEY,
 } from "@/lib/chat/client/guest_session";
-import { chatStores } from "@/lib/chat/stores";
 import { ChatSessionContext } from "./chat_session";
 
 interface Props {
@@ -27,8 +28,58 @@ export function ChatSessionProvider({
   role,
   children,
 }: Props) {
-  const { status: authenticationStatus } = useSession();
-  const previousAuthenticationStatus = useRef(authenticationStatus);
+  const { data: session, status } = useSession();
+  const identity = status === "authenticated" && session?.user?.status === "ACTIVE"
+    ? `account:${session.user.id}`
+    : "guest";
+
+  useEffect(() => {
+    if (identity !== "guest") clearGuestChatSession();
+  }, [identity]);
+
+  if (status === "loading") return <p role="status">Loading chat…</p>;
+  if (role === "admin" && identity === "guest") return null;
+
+  // A different account or guest session must never reuse private component state.
+  return (
+    <ChatIdentityBoundary key={`${role}:${identity}`} role={role}>
+      {children}
+    </ChatIdentityBoundary>
+  );
+}
+
+function ChatIdentityBoundary({ role, children }: Props) {
+  const [revoked, setRevoked] = useState(false);
+
+  useEffect(() => {
+    const revoke = () => setRevoked(true);
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === USER_CHAT_SIGNED_OUT_STORAGE_KEY) {
+        clearUserChatSession(false);
+      }
+    };
+    window.addEventListener(USER_CHAT_SIGNED_OUT_EVENT, revoke);
+    window.addEventListener("storage", onStorage);
+    return () => {
+      window.removeEventListener(USER_CHAT_SIGNED_OUT_EVENT, revoke);
+      window.removeEventListener("storage", onStorage);
+    };
+  }, []);
+
+  // Unmount private messages and their transports immediately. A new identity
+  // gets a fresh provider even when Next keeps the route's server props cached.
+  if (revoked) {
+    return <p role="status">Chat session ended. Sign in again or refresh to start a new conversation.</p>;
+  }
+
+  return (
+    <IdentityChatSessionProvider role={role}>
+      {children}
+    </IdentityChatSessionProvider>
+  );
+}
+
+function IdentityChatSessionProvider({ role, children }: Props) {
   //--------------------------------------------------------
   // Stable client id
   //--------------------------------------------------------
@@ -66,30 +117,7 @@ export function ChatSessionProvider({
       );
     }, []);
 
-  useEffect(() => {
-    const clearChat = () => {
-      chatStores.conversation.clear();
-      chatStores.presence.clear();
-      chatStores.activity.clear();
-      reset();
-    };
-
-    window.addEventListener(USER_CHAT_SIGNED_OUT_EVENT, clearChat);
-    return () => window.removeEventListener(USER_CHAT_SIGNED_OUT_EVENT, clearChat);
-  }, [reset]);
-
-  useEffect(() => {
-    const previousStatus = previousAuthenticationStatus.current;
-    previousAuthenticationStatus.current = authenticationStatus;
-
-    if (
-      role === "user" &&
-      previousStatus === "authenticated" &&
-      authenticationStatus === "unauthenticated"
-    ) {
-      clearUserChatSession();
-    }
-  }, [authenticationStatus, role]);
+  useEffect(() => () => clearChatMemory(), []);
 
   //--------------------------------------------------------
   // Context

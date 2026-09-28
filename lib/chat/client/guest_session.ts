@@ -1,10 +1,26 @@
 "use client";
 
+import { chatStores } from "@/lib/chat/stores";
+
 const STORAGE_KEY = "kubuka:guest-chat-session";
 const LEGACY_CONVERSATION_KEY_PREFIX = "kubuka:conversation-key:";
 const STORAGE_VERSION = 2;
 
 export const USER_CHAT_SIGNED_OUT_EVENT = "kubuka:user-chat-signed-out";
+export const USER_CHAT_SIGNED_OUT_STORAGE_KEY = "kubuka:chat-sign-out";
+
+let sessionRevision = 0;
+
+export function getChatSessionRevision() {
+  return sessionRevision;
+}
+
+export function clearChatMemory() {
+  sessionRevision += 1;
+  chatStores.conversation.clear();
+  chatStores.presence.clear();
+  chatStores.activity.clear();
+}
 
 export interface GuestChatSession {
   threadId: string;
@@ -46,18 +62,30 @@ export function saveGuestChatSession(session: GuestChatSession) {
 }
 
 export function clearGuestChatSession() {
-  window.localStorage.removeItem(STORAGE_KEY);
+  try {
+    window.localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // Storage can be unavailable in private browsing.
+  }
 }
 
-export function clearUserChatSession() {
-  clearGuestChatSession();
-
-  for (let index = window.localStorage.length - 1; index >= 0; index -= 1) {
-    const key = window.localStorage.key(index);
-    if (key?.startsWith(LEGACY_CONVERSATION_KEY_PREFIX)) {
-      window.localStorage.removeItem(key);
+export function clearUserChatSession(broadcast = true) {
+  // This must also run when the contact page/provider is not mounted.
+  clearChatMemory();
+  try {
+    clearGuestChatSession();
+    for (let index = window.localStorage.length - 1; index >= 0; index -= 1) {
+      const key = window.localStorage.key(index);
+      if (key?.startsWith(LEGACY_CONVERSATION_KEY_PREFIX)) {
+        window.localStorage.removeItem(key);
+      }
     }
+    if (broadcast) {
+      window.localStorage.setItem(USER_CHAT_SIGNED_OUT_STORAGE_KEY, crypto.randomUUID());
+    }
+  } catch {
+    // A storage failure must never prevent sign-out or local cleanup.
+  } finally {
+    window.dispatchEvent(new Event(USER_CHAT_SIGNED_OUT_EVENT));
   }
-
-  window.dispatchEvent(new Event(USER_CHAT_SIGNED_OUT_EVENT));
 }

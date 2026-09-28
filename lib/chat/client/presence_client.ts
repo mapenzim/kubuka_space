@@ -7,6 +7,8 @@ import {
   HeartbeatRequest,
   PresenceApi,
 } from "./presence_api";
+import { assertChatAccess } from "./access_guard";
+import { getChatSessionRevision } from "./guest_session";
 
 class PresenceHttpClient
   implements PresenceApi
@@ -14,6 +16,7 @@ class PresenceHttpClient
   async connect(
     request: ConnectRequest,
   ): Promise<void> {
+    const revision = getChatSessionRevision();
     const response = await fetch(
       "/api/chat/connect",
       {
@@ -28,6 +31,7 @@ class PresenceHttpClient
       },
     );
 
+    assertChatAccess(response, revision);
     if (!response.ok) {
       throw new Error(
         await response.text(),
@@ -38,6 +42,7 @@ class PresenceHttpClient
   async heartbeat(
     request: HeartbeatRequest,
   ): Promise<void> {
+    const revision = getChatSessionRevision();
     const response = await fetch(
       "/api/chat/heartbeat",
       {
@@ -52,6 +57,7 @@ class PresenceHttpClient
       },
     );
 
+    assertChatAccess(response, revision);
     if (!response.ok) {
       throw new Error(
         await response.text(),

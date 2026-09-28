@@ -9,6 +9,8 @@ import {
   SendMessageRequest,
   DeleteConversationRequest,
 } from "./conversation_api";
+import { assertChatAccess } from "./access_guard";
+import { getChatSessionRevision } from "./guest_session";
 
 class ConversationHttpClient
   implements ConversationApi
@@ -42,6 +44,7 @@ class ConversationHttpClient
   async sendMessage(
     request: SendMessageRequest,
   ): Promise<SendMessageResponse> {
+    const revision = getChatSessionRevision();
     const response = await fetch(
       "/api/chat/send",
       {
@@ -56,6 +59,7 @@ class ConversationHttpClient
       },
     );
 
+    assertChatAccess(response, revision);
     if (!response.ok) {
       throw new Error(
         await response.text(),
@@ -103,6 +107,7 @@ class ConversationHttpClient
     threadId: string,
     conversationKey?: string,
   ): Promise<ConversationThreadResponse> {
+    const revision = getChatSessionRevision();
     const params = new URLSearchParams();
     if (conversationKey) params.set("conversationKey", conversationKey);
     const query = params.size ? `?${params.toString()}` : "";
@@ -115,6 +120,7 @@ class ConversationHttpClient
       },
     );
 
+    assertChatAccess(response, revision);
     if (!response.ok) {
       if (response.status === 404 || response.status === 410) {
         return {

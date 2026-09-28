@@ -1,12 +1,12 @@
 "use server";
 
 import { chatGateway } from "@/lib/container/runtime";
-import { auth } from "@/auth";
+import { getActiveActor } from "@/lib/rbac/server";
 import prisma from "@/lib/prisma";
 
 export async function getUserSupportThreads() {
-  const session = await auth();
-  const email = session?.user?.email?.toLowerCase();
+  const actor = await getActiveActor();
+  const email = actor?.email.toLowerCase();
   if (!email) return { success: false, threads: [] };
 
   const validThreads = await chatGateway.getThreadsByEmail(email, 1);
@@ -14,8 +14,8 @@ export async function getUserSupportThreads() {
 }
 
 export async function getUserSupportUnreadCount() {
-  const session = await auth();
-  const email = session?.user?.email?.toLowerCase();
+  const actor = await getActiveActor();
+  const email = actor?.email.toLowerCase();
   if (!email) return 0;
 
   return prisma.message.count({
@@ -31,8 +31,8 @@ export async function getUserSupportUnreadCount() {
 }
 
 export async function markUserSupportRead() {
-  const session = await auth();
-  const email = session?.user?.email?.toLowerCase();
+  const actor = await getActiveActor();
+  const email = actor?.email.toLowerCase();
   if (!email) return { success: false };
 
   const now = new Date();

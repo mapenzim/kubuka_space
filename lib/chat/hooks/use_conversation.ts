@@ -25,6 +25,7 @@ import { chatStores } from "../stores";
 import { useVisibilityPoll } from "./use_visibility_poll";
 import {
   clearGuestChatSession,
+  getChatSessionRevision,
   getGuestChatSession,
   saveGuestChatSession,
   USER_CHAT_SIGNED_OUT_EVENT,
@@ -61,7 +62,10 @@ export function useConversation() {
     };
 
     window.addEventListener(USER_CHAT_SIGNED_OUT_EVENT, invalidatePendingLoads);
-    return () => window.removeEventListener(USER_CHAT_SIGNED_OUT_EVENT, invalidatePendingLoads);
+    return () => {
+      loadRequestRef.current += 1;
+      window.removeEventListener(USER_CHAT_SIGNED_OUT_EVENT, invalidatePendingLoads);
+    };
   }, []);
 
   const syncThread = useCallback(async () => {
@@ -69,12 +73,16 @@ export function useConversation() {
       return;
     }
 
+    const revision = getChatSessionRevision();
+    const requestId = loadRequestRef.current;
     const response = await conversationClient.getThread(
       threadId,
       conversationKey,
     );
 
     if (
+      revision === getChatSessionRevision() &&
+      requestId === loadRequestRef.current &&
       conversation.getThread()?.id === threadId
     ) {
       if (!response.data) {
@@ -109,6 +117,7 @@ export function useConversation() {
       }
 
       const requestId = ++loadRequestRef.current;
+      const revision = getChatSessionRevision();
 
       const response =
         await conversationClient.getThread(
@@ -116,7 +125,7 @@ export function useConversation() {
           conversationKey,
         );
 
-      if (requestId !== loadRequestRef.current) return null;
+      if (requestId !== loadRequestRef.current || revision !== getChatSessionRevision()) return null;
 
       if (!response.data) {
         conversation.clear();
@@ -148,12 +157,13 @@ export function useConversation() {
     restoredConversationKey: string,
   ) => {
     const requestId = ++loadRequestRef.current;
+    const revision = getChatSessionRevision();
     try {
       const response = await conversationClient.getThread(
         restoredThreadId,
         restoredConversationKey,
       );
-      if (requestId !== loadRequestRef.current) return null;
+      if (requestId !== loadRequestRef.current || revision !== getChatSessionRevision()) return null;
       if (!response.data) {
         clearGuestChatSession();
         conversation.clear();
@@ -165,7 +175,7 @@ export function useConversation() {
       setThreadId(response.data.id);
       return response.data;
     } catch (error) {
-      clearGuestChatSession();
+      if (revision === getChatSessionRevision()) clearGuestChatSession();
       throw error;
     }
   }, [conversation, reset, setConversationKey, setThreadId]);
@@ -180,6 +190,7 @@ export function useConversation() {
         request: StartConversationRequest,
       ) => {
         const requestId = ++loadRequestRef.current;
+        const revision = getChatSessionRevision();
         let activeConversationKey: string | undefined;
 
         if (!isAuthenticatedUser) {
@@ -204,7 +215,7 @@ export function useConversation() {
           throw error;
         }
 
-        if (requestId !== loadRequestRef.current) return null;
+        if (requestId !== loadRequestRef.current || revision !== getChatSessionRevision()) return null;
 
         conversation.setThread(
           response.data,
@@ -239,10 +250,10 @@ export function useConversation() {
         content: string,
       ) => {
       const identityRequestId = loadRequestRef.current;
-      const visibleThread = conversation.getThread();
+      const revision = getChatSessionRevision();
       const useGuestCredentials = role === "user" && !isAuthenticatedUser;
       const storedGuestSession = useGuestCredentials ? getGuestChatSession() : null;
-      const activeThreadId = threadId ?? visibleThread?.id ?? storedGuestSession?.threadId;
+      const activeThreadId = threadId ?? storedGuestSession?.threadId;
       const activeConversationKey = conversationKey ?? (
         storedGuestSession && storedGuestSession.threadId === activeThreadId
           ? storedGuestSession.conversationKey
@@ -273,7 +284,7 @@ export function useConversation() {
             },
           );
 
-          if (identityRequestId !== loadRequestRef.current) return;
+          if (identityRequestId !== loadRequestRef.current || revision !== getChatSessionRevision()) return;
 
           // Render from the acknowledged server response immediately. The
           // SSE event is still useful for the other participant, but must not
@@ -362,8 +373,9 @@ export function useConversation() {
   //--------------------------------------------------------
 
   return {
-    thread,
-    messages,
+    // A global cache is not proof that this provider owns that conversation.
+    thread: threadId && thread?.id === threadId ? thread : undefined,
+    messages: threadId && thread?.id === threadId ? messages : [],
 
     loadThread,
     setExistingThread,

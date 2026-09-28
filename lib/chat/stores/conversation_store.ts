@@ -140,6 +140,8 @@ export class ConversationStore {
       return;
     }
 
+    if (message.threadId !== this.thread.id) return;
+
     if (
       this.thread.messages.some(
         (current) => current.id === message.id,

@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { USER_CHAT_SIGNED_OUT_EVENT } from "@/lib/chat/client/guest_session";
 
 interface UseEventStreamOptions<TEvent> {
   threadId?: string;
@@ -224,7 +225,7 @@ export function useEventStream<TEvent>({
     // Cleanup
     //------------------------------------------------------
 
-    return () => {
+    const close = () => {
       disposed = true;
 
       if (
@@ -242,6 +243,11 @@ export function useEventStream<TEvent>({
       );
 
       onCloseRef.current?.();
+    };
+    window.addEventListener(USER_CHAT_SIGNED_OUT_EVENT, close);
+    return () => {
+      close();
+      window.removeEventListener(USER_CHAT_SIGNED_OUT_EVENT, close);
     };
   }, [
     threadId,

@@ -119,7 +119,7 @@ export function usePresence() {
       return;
     }
 
-    connect();
+    void connect().catch(console.error);
 
     return () => {
       disconnect().catch(
