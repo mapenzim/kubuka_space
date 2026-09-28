@@ -1,10 +1,11 @@
 import type { DefaultSession } from "next-auth";
+import type { AppRole } from "@/lib/rbac/policy";
 
 declare module "next-auth" {
   interface Session {
     user: {
       id: string;
-      role: string;
+      role: Exclude<AppRole, "GUEST">;
       status: "ACTIVE" | "SUSPENDED" | "ARCHIVED";
       bio?: {
         id: string;
@@ -20,7 +21,7 @@ declare module "next-auth" {
 
   interface User {
     id: string;
-    role: string;
+    role: Exclude<AppRole, "GUEST">;
     status: "ACTIVE" | "SUSPENDED" | "ARCHIVED";
     bio?: {
       id: string;
@@ -35,7 +36,7 @@ declare module "next-auth" {
 
   interface JWT {
     id: string;
-    role: string;
+    role: Exclude<AppRole, "GUEST">;
     status: "ACTIVE" | "SUSPENDED" | "ARCHIVED";
     bio?: {
       id: string;

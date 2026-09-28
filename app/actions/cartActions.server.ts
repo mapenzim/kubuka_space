@@ -1,6 +1,5 @@
 "use server";
 
-import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import { serializeDecimal } from "@/lib/prisma";
 import { ulidId } from "@/lib/server-utils";
@@ -9,6 +8,8 @@ import { revalidatePath } from "next/cache";
 import { getDiscountedUnitPrice } from "@/lib/pricing";
 import { chatGateway } from "@/lib/container/runtime";
 import { humanizeSnippetValue } from "@/lib/snippets";
+import { getActiveActor, requirePermission } from "@/lib/rbac/server";
+import { PERMISSIONS } from "@/lib/rbac/policy";
 
 async function getOrCreateCart(tx: Prisma.TransactionClient | PrismaClient, userId: string, cartId?: string) {
   if (cartId) {
@@ -69,10 +70,10 @@ export async function batchAddToCartAction({
   cartId,
   items,
 }: BatchAddInput) {
-  const session = await auth();
-  const authenticatedUserId = session?.user?.id;
+  const actor = await getActiveActor();
+  const authenticatedUserId = actor?.id;
 
-  if (!authenticatedUserId) {
+  if (!actor || !authenticatedUserId) {
     return { error: { message: "Sign in to add items to a server cart." } };
   }
 
@@ -158,19 +159,19 @@ export async function batchAddToCartAction({
 }
 
 export async function getCurrentUserCart() {
-  const session = await auth();
-  const userId = session?.user?.id;
+  const actor = await getActiveActor();
+  const userId = actor?.id;
   if (!userId) return null;
 
   return getCartSnapshot(userId);
 }
 
 export async function updateCartQuantity(itemId: string, quantity: number) {
-  const session = await auth();
-  if (!session?.user?.id || !Number.isInteger(quantity) || quantity < 1) return;
+  const actor = await getActiveActor();
+  if (!actor || !Number.isInteger(quantity) || quantity < 1) return;
 
   const item = await prisma.cartItem.findFirst({
-    where: { id: itemId, cart: { userId: session.user.id } },
+    where: { id: itemId, cart: { userId: actor.id } },
     include: { merchandise: true },
   });
   if (!item || item.merchandise.deletedAt || quantity > item.merchandise.stockQuantity) {
@@ -186,12 +187,12 @@ export async function updateCartQuantity(itemId: string, quantity: number) {
 }
 
 export async function deleteCartItem(itemId: string) {
-  const session = await auth();
-  if (!session?.user?.id) return { error: "Unauthorized" };
+  const actor = await getActiveActor();
+  if (!actor) return { error: "Unauthorized" };
 
   try {
     const deleted = await prisma.cartItem.deleteMany({
-      where: { id: itemId, cart: { userId: session.user.id } },
+      where: { id: itemId, cart: { userId: actor.id } },
     });
     if (deleted.count !== 1) return { error: "Cart item not found" };
     // trigger revalidation so UI updates
@@ -203,10 +204,8 @@ export async function deleteCartItem(itemId: string) {
 }
 
 export async function checkoutAction(formData: FormData) {
-  const session = await auth();
-  if (!session?.user) throw new Error("Unauthorized");
-
-  const userId = session.user.id;
+  const actor = await requirePermission(PERMISSIONS.ORDER_MANAGE_SELF);
+  const userId = actor.id;
   const requestedCartId = String(formData.get("cartId") ?? "");
 
   const fullName = String(formData.get("fullName") ?? "").trim();
@@ -327,7 +326,7 @@ export async function checkoutAction(formData: FormData) {
     return { success: true, orderId: order.id, snippetItems };
   });
 
-  if (result.snippetItems.length > 0 && session.user.email) {
+  if (result.snippetItems.length > 0 && actor.email) {
     const totalCredits = result.snippetItems.reduce((sum, item) => sum + item.quantity, 0);
     const productSummary = result.snippetItems
       .map((item) => `${item.quantity}× ${item.title} (${humanizeSnippetValue(item.language)})`)
@@ -342,7 +341,7 @@ export async function checkoutAction(formData: FormData) {
       const existingThread = await prisma.thread.findFirst({
         where: {
           archived: false,
-          email: { equals: session.user.email, mode: "insensitive" },
+          email: { equals: actor.email, mode: "insensitive" },
         },
         orderBy: { updatedAt: "desc" },
         select: { id: true },
@@ -352,8 +351,8 @@ export async function checkoutAction(formData: FormData) {
         await chatGateway.sendMessage(existingThread.id, "bot", acknowledgement);
       } else {
         await chatGateway.startConversation(
-          session.user.name ?? fullName,
-          session.user.email,
+          actor.name ?? fullName,
+          actor.email,
           acknowledgement,
           undefined,
           "bot",
@@ -379,8 +378,8 @@ export async function checkoutAction(formData: FormData) {
 }
 
 export async function getAllOrdersByUser(userId: string) {
-  const session = await auth();
-  if (!session?.user?.id || session.user.id !== userId) return [];
+  const actor = await getActiveActor();
+  if (!actor || actor.id !== userId) return [];
 
   return await prisma.order.findMany({
     where: {

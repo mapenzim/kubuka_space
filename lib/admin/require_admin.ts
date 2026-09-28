@@ -2,47 +2,26 @@ import "server-only";
 
 import { cache } from "react";
 
-import { auth } from "@/auth";
-import prisma from "@/lib/prisma";
-import { isAdminRole } from "@/lib/roles";
+import { getActiveActor, requirePermission } from "@/lib/rbac/server";
+import { hasPermission, PERMISSIONS } from "@/lib/rbac/policy";
 
 export type AdminRole = "ADMIN" | "SUPERUSER";
 
 export const getActiveAdmin = cache(async () => {
-  const session = await auth();
-  if (!session?.user?.id) return null;
+  const actor = await getActiveActor();
+  return actor && hasPermission(actor.role, PERMISSIONS.ADMIN_DASHBOARD_READ)
+    ? { ...actor, role: actor.role as AdminRole }
+    : null;
+});
 
-  const actor = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      image: true,
-      status: true,
-      role: { select: { name: true } },
-    },
-  });
-
-  if (
-    !actor ||
-    actor.status !== "ACTIVE" ||
-    !isAdminRole(actor.role?.name)
-  ) {
-    return null;
-  }
-
-  return {
-    id: actor.id,
-    name: actor.name,
-    email: actor.email,
-    image: actor.image,
-    role: actor.role!.name as AdminRole,
-  };
+export const getActiveBackofficeActor = cache(async () => {
+  const actor = await getActiveActor();
+  return actor && hasPermission(actor.role, PERMISSIONS.BLOG_READ_ANY)
+    ? actor
+    : null;
 });
 
 export async function requireAdmin() {
-  const actor = await getActiveAdmin();
-  if (!actor) throw new Error("Administrator access required.");
-  return actor;
+  const actor = await requirePermission(PERMISSIONS.ADMIN_DASHBOARD_READ);
+  return { ...actor, role: actor.role as AdminRole };
 }

@@ -2,6 +2,7 @@ import { getPost } from "@/app/actions/postActions.server";
 import { auth } from "@/auth";
 import { PostForm } from "@/components/post";
 import { redirect } from "next/navigation";
+import { hasPermission, PERMISSIONS } from "@/lib/rbac/policy";
 
 type Props = {
   params: Promise<{ item: string }>; 
@@ -10,11 +11,11 @@ type Props = {
 export default async function ItemPage({ params }: Props) {
   const session = await auth();
   const { item } = await params;
-  const post = await getPost(item);
-
-  if (!session) {
-    redirect("/authentication");
+  if (!session?.user || !hasPermission(session.user.role, PERMISSIONS.BLOG_CREATE)) {
+    redirect("/not-authorized");
   }
+
+  const post = await getPost(item);
 
   switch (item) {
     case post?.id:

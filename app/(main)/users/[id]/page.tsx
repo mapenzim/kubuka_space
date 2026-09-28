@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import Image from "next/image";
 import Link from "next/link";
 import { formatName } from "@/lib/utils";
+import { hasPermission, PERMISSIONS } from "@/lib/rbac/policy";
 
 export default async function UserProfile({
   params,
@@ -12,11 +13,21 @@ export default async function UserProfile({
 }) {
   const { id } = await params;
   const session = await auth();
+  const canManageBlog = Boolean(
+    session?.user && hasPermission(session.user.role, PERMISSIONS.BLOG_READ_ANY),
+  );
 
   const user = await prisma.user.findUnique({
     where: { id },
-    include: {
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      image: true,
       posts: {
+        where: canManageBlog
+          ? { deletedAt: null }
+          : { published: true, deletedAt: null },
         orderBy: { id: "desc" },
       },
     },
@@ -26,10 +37,7 @@ export default async function UserProfile({
     notFound();
   }
 
-  const isOwnProfile = session?.user?.email === user.email;
-  const posts = isOwnProfile
-    ? user.posts
-    : user.posts.filter((post: { published: any; }) => post.published);
+  const posts = user.posts;
 
   return (
     <div className="min-h-screen">
@@ -70,7 +78,7 @@ export default async function UserProfile({
             <h2 className="text-2xl font-bold text-gray-900">
               Published Posts
             </h2>
-            {isOwnProfile && (
+            {canManageBlog && (
               <Link
                 href="/posts/new"
                 className="inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
@@ -95,11 +103,11 @@ export default async function UserProfile({
           {posts.length === 0 ? (
             <div className="bg-white rounded-lg border border-gray-100 p-8 text-center">
               <p className="text-gray-500 mb-4">
-                {isOwnProfile
+                {canManageBlog
                   ? "You haven't published any posts yet."
                   : "No published posts yet."}
               </p>
-              {isOwnProfile && (
+              {canManageBlog && (
                 <Link
                   href="/posts/new"
                   className="inline-flex items-center gap-2 text-blue-500 hover:text-blue-600 font-medium transition-colors"

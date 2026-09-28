@@ -9,6 +9,7 @@ import { ClientViewer } from "@/components/lexical-editor/client-viewer";
 import { Box, Card, Flex, Heading, Text, Badge, Button, Container } from "@radix-ui/themes";
 import { CalendarDays } from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import { hasPermission, PERMISSIONS } from "@/lib/rbac/policy";
 
 export const dynamic = "force-dynamic";
 
@@ -44,7 +45,9 @@ export default async function ReadPage({ params }: { params: Promise<{ item: str
     redirect("/posts");
   }
 
-  const isAuthor = session?.user?.email === post?.author?.email;
+  const canManagePost = Boolean(
+    session?.user && hasPermission(session.user.role, PERMISSIONS.BLOG_UPDATE_ANY),
+  );
   const readTime = calculateReadTime(post.content as string);
 
   return (
@@ -75,7 +78,7 @@ export default async function ReadPage({ params }: { params: Promise<{ item: str
             <Flex direction="column" className="w-full">
               
               {/* Top Bar: Status & Actions */}
-              {isAuthor && (
+              {canManagePost && (
                 <Flex gap="3" align="center" wrap="wrap" mb="4">
                   <Badge 
                     color={post.published ? "green" : "orange"} 

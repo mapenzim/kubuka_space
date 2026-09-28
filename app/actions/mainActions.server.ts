@@ -3,6 +3,8 @@
 import prisma from "@/lib/prisma";
 import { ulidId } from "@/lib/server-utils";
 import { containsProfanity } from "@/lib/utils";
+import { requirePermission } from "@/lib/rbac/server";
+import { PERMISSIONS } from "@/lib/rbac/policy";
 
 type CreateMessageResult =
   | { success: true }
@@ -73,6 +75,7 @@ export async function createPrivateMessage(
 }
 
 export async function getMessages() {
+  await requirePermission(PERMISSIONS.CONTACT_MANAGE_ANY);
   return prisma.privatemessage.findMany({
     where: {
       deletedAt: null,
@@ -84,6 +87,7 @@ export async function getMessages() {
 }
 
 export async function markMessageAsRead(id: string) {
+  await requirePermission(PERMISSIONS.CONTACT_MANAGE_ANY);
   await prisma.privatemessage.update({
     where: { id },
     data: { read: true },
@@ -91,6 +95,7 @@ export async function markMessageAsRead(id: string) {
 }
 
 export async function deleteMessage(id: string) {
+  await requirePermission(PERMISSIONS.CONTACT_MANAGE_ANY);
   await prisma.privatemessage.update({
     where: { id },
     data: { deletedAt: new Date() },

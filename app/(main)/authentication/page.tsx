@@ -14,6 +14,7 @@ import Turnstile from "react-turnstile";
 import Image from "next/image";
 import Link from "next/link";
 import { clearUserChatSession } from "@/lib/chat/client/guest_session";
+import { defaultRouteForRole } from "@/lib/rbac/policy";
 
 const VARIANTS = {
   login: "LOGIN",
@@ -62,11 +63,8 @@ const AuthenticationPage = () => {
         return;
       }
 
-      const role = session?.user?.role;
-      const redirect =
-        role === "ADMIN" || role === "SUPERUSER" ? "/admin" :
-        role === "EDITOR" ? "/admin/posts" :
-        callbackUrl;
+      const roleHome = defaultRouteForRole(session?.user?.role);
+      const redirect = roleHome === "/" ? callbackUrl : roleHome;
       router.replace(redirect);
     }
   }, [callbackUrl, status, session, router]);

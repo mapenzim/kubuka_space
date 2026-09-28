@@ -5,6 +5,7 @@ import { Box, Button, Card, Flex, Grid, Heading, Inset, Text, Container } from "
 import { auth } from "@/auth";
 import { CalendarDays } from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import { hasPermission, PERMISSIONS } from "@/lib/rbac/policy";
 
 export const dynamic = "force-dynamic";
 
@@ -15,9 +16,9 @@ export const dynamic = "force-dynamic";
  */
 interface PostAuthor {
   id: string;
-  name: any;
+  name: string | null;
   email: string;
-  image: any;
+  image: string | null;
 }
 
 interface Post {
@@ -49,7 +50,7 @@ export default async function Posts() {
             Blog
           </Heading>
           
-          {session?.user && session.user.role === "EDITOR" && (
+          {session?.user && hasPermission(session.user.role, PERMISSIONS.BLOG_CREATE) && (
             <Button size="3" asChild className="cursor-pointer">
               <Link href={`/posts/new`}>New Post</Link>
             </Button>
@@ -112,11 +113,11 @@ export default async function Posts() {
                   <Flex direction="row" justify="between" align="center" mt="auto">
                     <Text size="2" color="gray" weight="medium" className="relative z-10 hover:underline dark:text-zinc-500!">
                       <Link href={`/authors/${post.author.id}`}>
-                        {formatName(post.author.name)}
+                        {formatName(post.author.name ?? undefined)}
                       </Link>
                     </Text>
 
-                    {session?.user?.email === post.author.email && (
+                    {session?.user && hasPermission(session.user.role, PERMISSIONS.BLOG_UPDATE_ANY) && (
                       <Text size="2" color="gray" className="relative z-10 hover:underline dark:text-zinc-500! dark:hover:text-teal-600!" asChild >
                         <Link href={`/posts/${post.id}`}>
                           Update

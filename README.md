@@ -44,14 +44,15 @@ The protected `/admin` area provides:
 
 ## Roles and access rules
 
-The application supports four roles:
+The application uses a deny-by-default RBAC policy with five roles:
 
 | Role | Purpose |
 | --- | --- |
 | `SUPERUSER` | The single owner-level account. It is created during initial seeding and can add other administrators. |
-| `ADMIN` | Manages users, products, orders, posts, and customer conversations. |
-| `EDITOR` | Provides restricted content-management access where permitted. |
-| `USER` | Uses the public store, profile, orders, and support chat. |
+| `ADMIN` | Manages users, products, orders, posts, snippets, notifications, and customer conversations, but cannot create an administrator or superuser. |
+| `EDITOR` | Creates, reads, updates, archives, and deletes blog posts only; it has no user or operational administration access. |
+| `USER` | Manages their own profile, cart, orders, snippet deliveries, and contact conversation. |
+| `GUEST` | Reads public content and may use a browser-local cart or start a contact conversation without receiving an account record. |
 
 Important account rules:
 
@@ -61,6 +62,13 @@ Important account rules:
 - An administrator cannot change their own role.
 - A user's email address is immutable after account creation.
 - Suspended and archived account states are enforced by the authentication and administration flows.
+
+The policy matrix is defined in `lib/rbac/policy.ts`. Server actions and API
+routes resolve the current active account again through `lib/rbac/server.ts`
+before protected database work. Route middleware and navigation use the same
+policy for early redirects and presentation, while the server check remains the
+authoritative enforcement layer. Ownership checks use the authenticated actor
+ID; IDs and roles sent by a browser are never trusted as authorization.
 
 ## Checkout status
 

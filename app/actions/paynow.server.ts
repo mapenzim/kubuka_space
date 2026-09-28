@@ -1,8 +1,9 @@
 "use server";
 
-import { auth } from "@/auth";
 import { Paynow } from "paynow";
 import prisma from "@/lib/prisma";
+import { requirePermission } from "@/lib/rbac/server";
+import { PERMISSIONS } from "@/lib/rbac/policy";
 
 const paynow = new Paynow(
   process.env.PAYNOW_INTEGRATION_ID!,
@@ -13,8 +14,7 @@ paynow.resultUrl = process.env.PAYNOW_RESULT_URL!;
 paynow.returnUrl = process.env.PAYNOW_RETURN_URL!;
 
 export async function initiateEcoCashPayment(orderId: string) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
+  const actor = await requirePermission(PERMISSIONS.ORDER_MANAGE_SELF);
 
   return prisma.$transaction(async (tx) => {
     const order = await tx.order.findUnique({
@@ -22,7 +22,7 @@ export async function initiateEcoCashPayment(orderId: string) {
       include: { payments: true },
     });
 
-    if (!order || order.userId !== session.user.id) {
+    if (!order || order.userId !== actor.id) {
       throw new Error("Order not found");
     }
 
@@ -41,7 +41,7 @@ export async function initiateEcoCashPayment(orderId: string) {
 
     const payment = paynow.createPayment(
       `Order ${order.id}`,
-      session.user.email ?? "customer@example.com"
+      actor.email
     );
 
     payment.add("Order Payment", Number(order.totalAmount));
@@ -72,11 +72,10 @@ export async function initiateEcoCashPayment(orderId: string) {
 }
 
 export async function verifyPayment(orderId: string) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
+  const actor = await requirePermission(PERMISSIONS.ORDER_MANAGE_SELF);
 
   const order = await prisma.order.findFirst({
-    where: { id: orderId, userId: session.user.id },
+    where: { id: orderId, userId: actor.id },
   });
   if (!order) throw new Error("Order not found");
 
@@ -106,6 +105,7 @@ export async function verifyPayment(orderId: string) {
  * Reconcile payments that are still pending but may have been completed outside of the normal flow (e.g. webhook failure, user closed tab). This can be run as a scheduled job every 5-10 minutes.
  */
 export async function reconcilePayments() {
+  await requirePermission(PERMISSIONS.ORDERS_MANAGE_ANY);
   const pending = await prisma.payment.findMany({
     where: {
       status: "PENDING",
@@ -137,6 +137,7 @@ export async function reconcilePayments() {
  * make payment queues to expire after a given time
  */
 export async function expirePayments() {
+  await requirePermission(PERMISSIONS.ORDERS_MANAGE_ANY);
   await prisma.payment.updateMany({
     where: {
       status: "PENDING",
@@ -165,11 +166,10 @@ export async function retryPayment(orderId: string) {
  * @returns 
  */
 export async function getPaymentStatus(orderId: string) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
+  const actor = await requirePermission(PERMISSIONS.ORDER_MANAGE_SELF);
 
   const order = await prisma.order.findFirst({
-    where: { id: orderId, userId: session.user.id },
+    where: { id: orderId, userId: actor.id },
   });
   if (!order) throw new Error("Order not found");
 

@@ -83,8 +83,8 @@ export default function WorkExperienceSection({
                 </Box>
 
                 <Flex
-                  gap="2"
-                  className="opacity-100 transition-opacity sm:pointer-events-none sm:opacity-0 sm:group-hover:pointer-events-auto sm:group-hover:opacity-100 sm:group-focus-within:pointer-events-auto sm:group-focus-within:opacity-100"
+                  gap="4"
+                  className="opacity-100 transition-opacity sm:pointer-events-none sm:opacity-0 sm:group-hover:pointer-events-auto sm:group-hover:opacity-100 sm:group-focus-within:pointer-events-auto sm:group-focus-within:opacity-100 items-center"
                 >
                   <AddUpdateExperiencePopover
                     workExperience={experience}

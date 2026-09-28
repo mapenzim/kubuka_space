@@ -3,8 +3,8 @@ import "server-only";
 import { auth } from "@/auth";
 import { conversationKeyService } from "@/lib/container/runtime";
 import prisma from "@/lib/prisma";
-import { isAdminRole } from "@/lib/roles";
 import { ApiError } from "@/lib/api/api_error";
+import { hasPermission, PERMISSIONS } from "@/lib/rbac/policy";
 
 export type ChatActorRole = "admin" | "user";
 
@@ -27,7 +27,7 @@ export async function requireChatAdmin(): Promise<void> {
   if (
     !user ||
     user.status !== "ACTIVE" ||
-    !isAdminRole(user.role?.name)
+    !hasPermission(user.role?.name, PERMISSIONS.CONTACT_MANAGE_ANY)
   ) {
     throw new ApiError("Administrator access required.", 403);
   }
@@ -51,7 +51,7 @@ export async function authorizeThreadAccess(
 
   if (
     user?.status === "ACTIVE" &&
-    isAdminRole(user.role?.name)
+    hasPermission(user.role?.name, PERMISSIONS.CONTACT_MANAGE_ANY)
   ) {
     return "admin";
   }

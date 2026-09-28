@@ -293,9 +293,7 @@ export default function UserManager({
             <Table.Body>
               {filteredUsers.map((user) => {
                 const isSelf = user.id === actorId;
-                const canManageAdmin =
-                  actorRole === "SUPERUSER" || user.role !== "ADMIN" || isSelf;
-                const canChangeLifecycle = canManageAdmin && !isSelf;
+                const canChangeLifecycle = !isSelf;
                 const isBusy = busyUserId === user.id;
 
                 return (
@@ -352,7 +350,7 @@ export default function UserManager({
                             variant="ghost"
                             color="gray"
                             size="2"
-                            disabled={isBusy || !canManageAdmin}
+                            disabled={isBusy}
                             aria-label={`Manage ${user.name ?? user.email}`}
                           >
                             <MoreVertical size={17} aria-hidden="true" />
@@ -514,10 +512,6 @@ function UserDialog({
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }) {
   const editingSelf = mode === "edit" && user?.id === actorId;
-  const adminRoleLocked =
-    mode === "edit" &&
-    actorRole !== "SUPERUSER" &&
-    user?.role === "ADMIN";
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -573,7 +567,7 @@ function UserDialog({
                 name="role"
                 required
                 defaultValue={user?.role ?? "USER"}
-                disabled={editingSelf || adminRoleLocked}
+                disabled={editingSelf}
                 className="mt-1.5 h-12 w-full rounded-md border border-(--gray-a7) bg-(--color-panel-solid) px-3 py-2.5 text-sm text-(--gray-12) outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <option value="USER">User</option>
@@ -582,13 +576,11 @@ function UserDialog({
                   <option value="ADMIN">Administrator</option>
                 )}
               </select>
-              {(editingSelf || adminRoleLocked) && user && (
+              {editingSelf && user && (
                 <>
                   <input type="hidden" name="role" value={user.role} />
                   <span className="mt-1.5 block text-xs text-(--gray-10)">
-                    {editingSelf
-                      ? "You cannot change your own role."
-                      : "Only the superuser can change administrator roles."}
+                    You cannot change your own role.
                   </span>
                 </>
               )}

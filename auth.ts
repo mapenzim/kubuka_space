@@ -1,7 +1,8 @@
-import NextAuth from "next-auth";
+import NextAuth, { type NextAuthConfig } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { compare } from "bcryptjs";
+import { AppRole, isAppRole } from "@/lib/rbac/policy";
 
 export const dynamic = "force-dynamic";
 
@@ -9,6 +10,11 @@ const authSecret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
 
 // Keep sign-in sessions finite. Users must authenticate again after 30 days.
 const SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;
+type AccountRole = Exclude<AppRole, "GUEST">;
+
+function accountRole(role: unknown): AccountRole {
+  return isAppRole(role) && role !== "GUEST" ? role : "USER";
+}
 
 async function getPrisma() {
   const { default: prisma } = await import("@/lib/prisma");
@@ -17,11 +23,13 @@ async function getPrisma() {
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter({
-    async getAdapter() {
-      const prisma = await getPrisma();
-      return prisma;
-    },
-  } as any) as any, // workaround for typing
+      async getAdapter() {
+        const prisma = await getPrisma();
+        return prisma;
+      },
+    } as unknown as Parameters<typeof PrismaAdapter>[0]) as unknown as NonNullable<
+      NextAuthConfig["adapter"]
+    >,
 
   providers: [
     CredentialsProvider({
@@ -64,7 +72,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           id: String(user.id),
           name: user.name || "Anonymous",
           email: user.email,
-          role: user.role?.name ?? "USER",
+          role: accountRole(user.role?.name),
           status: user.status,
         };
       },
@@ -92,7 +100,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           });
 
           token.status = account?.status ?? "ARCHIVED";
-          token.role = account?.role?.name ?? "USER";
+          token.role = accountRole(account?.role?.name);
         }
       }
 
@@ -109,7 +117,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
     async session({ session, token }) {
       session.user.id = (token.id ?? token.sub) as string;
-      session.user.role = token.role as string;
+      session.user.role = accountRole(token.role);
       session.user.status = token.status as "ACTIVE" | "SUSPENDED" | "ARCHIVED";
       return session;
     },

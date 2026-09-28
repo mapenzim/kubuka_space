@@ -5,7 +5,12 @@ import { hash } from "bcryptjs";
 import { ulidId } from "@/lib/server-utils";
 import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
-import { AdminRole, requireAdmin } from "@/lib/admin/require_admin";
+import { requirePermission, RbacActor } from "@/lib/rbac/server";
+import {
+  canAssignRole,
+  canManageUserRole,
+  PERMISSIONS,
+} from "@/lib/rbac/policy";
 
 type ManageableRole = "USER" | "EDITOR" | "ADMIN";
 type ManagedUserStatus = "ACTIVE" | "SUSPENDED" | "ARCHIVED";
@@ -64,7 +69,7 @@ async function getManagedTarget(userId: string) {
 }
 
 function assertCanManageTarget(
-  actor: { id: string; role: AdminRole },
+  actor: Pick<RbacActor, "id" | "role">,
   target: Awaited<ReturnType<typeof getManagedTarget>>,
   options: { destructive?: boolean } = {},
 ) {
@@ -72,12 +77,8 @@ function assertCanManageTarget(
     throw new Error("You cannot suspend, archive, or delete your own account.");
   }
 
-  if (
-    actor.role !== "SUPERUSER" &&
-    target.role?.name === "ADMIN" &&
-    target.id !== actor.id
-  ) {
-    throw new Error("Only the superuser can manage another administrator.");
+  if (target.id !== actor.id && !canManageUserRole(actor.role, target.role?.name)) {
+    throw new Error("You cannot manage an account with this role.");
   }
 }
 
@@ -85,7 +86,7 @@ export async function createUser(
   formData: FormData,
 ): Promise<AdminActionResult> {
   try {
-    const actor = await requireAdmin();
+    const actor = await requirePermission(PERMISSIONS.USERS_CREATE);
     const name = String(formData.get("name") ?? "").trim();
     const email = String(formData.get("email") ?? "").trim().toLowerCase();
     const password = String(formData.get("password") ?? "");
@@ -106,10 +107,10 @@ export async function createUser(
       };
     }
 
-    if (roleName === "ADMIN" && actor.role !== "SUPERUSER") {
+    if (!canAssignRole(actor.role, roleName)) {
       return {
         success: false,
-        error: "Only the superuser can create an administrator.",
+        error: "You cannot create an account with the selected role.",
       };
     }
 
@@ -165,7 +166,7 @@ export async function updateManagedUser(
   formData: FormData,
 ): Promise<AdminActionResult> {
   try {
-    const actor = await requireAdmin();
+    const actor = await requirePermission(PERMISSIONS.USERS_UPDATE);
     const userId = String(formData.get("userId") ?? "");
     const name = String(formData.get("name") ?? "").trim();
     const submittedEmail = String(formData.get("email") ?? "")
@@ -194,14 +195,10 @@ export async function updateManagedUser(
       return { success: false, error: "You cannot change your own role." };
     }
 
-    if (
-      (roleName === "ADMIN" || currentRole === "ADMIN") &&
-      actor.role !== "SUPERUSER" &&
-      actor.id !== target.id
-    ) {
+    if (roleName !== currentRole && !canAssignRole(actor.role, roleName)) {
       return {
         success: false,
-        error: "Only the superuser can manage administrator roles.",
+        error: "You cannot assign the selected role.",
       };
     }
 
@@ -259,7 +256,7 @@ export async function setManagedUserStatus(
   status: ManagedUserStatus,
 ): Promise<AdminActionResult> {
   try {
-    const actor = await requireAdmin();
+    const actor = await requirePermission(PERMISSIONS.USERS_ARCHIVE);
     const target = await getManagedTarget(userId);
     assertCanManageTarget(actor, target, { destructive: true });
 
@@ -303,7 +300,7 @@ export async function deleteManagedUser(
   userId: string,
 ): Promise<AdminActionResult> {
   try {
-    const actor = await requireAdmin();
+    const actor = await requirePermission(PERMISSIONS.USERS_DELETE);
     const target = await getManagedTarget(userId);
     assertCanManageTarget(actor, target, { destructive: true });
 
@@ -338,7 +335,7 @@ export async function deleteManagedUser(
 }
 
 export async function getAllUsers() {
-  await requireAdmin();
+  await requirePermission(PERMISSIONS.USERS_READ);
   return prisma.user.findMany({
     where: {
       NOT: {
@@ -366,7 +363,7 @@ export async function getAllUsers() {
 }
 
 export async function getAdminDashboardData() {
-  await requireAdmin();
+  await requirePermission(PERMISSIONS.ADMIN_DASHBOARD_READ);
 
   const [
     totalUsers,

@@ -18,6 +18,7 @@ import {
   Card,
 } from "@radix-ui/themes";
 import Form from "next/form";
+import { hasPermission, PERMISSIONS } from "@/lib/rbac/policy";
 
 function SubmitButton({
   isPublished,
@@ -109,7 +110,9 @@ export function PostForm({ post }: PostFormProps) {
   };
 
   const isPublished = post?.published;
-  const cannotEdit = Boolean(post && session?.user.id !== post.authorId);
+  const cannotEdit = Boolean(
+    session?.user && !hasPermission(session.user.role, PERMISSIONS.BLOG_UPDATE_ANY),
+  );
 
   useEffect(() => {
     if (!cannotEdit) return;

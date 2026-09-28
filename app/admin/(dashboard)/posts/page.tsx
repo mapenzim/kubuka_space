@@ -1,5 +1,5 @@
 import { fetchAllPosts } from "@/app/actions/postActions.server";
-import { DeletePost } from "@/components/buttons/delete-post-btn";
+import { ArchivePost, DeletePost } from "@/components/buttons/delete-post-btn";
 import { formatDate, generateLexicalExcerpt } from "@/lib/utils";
 import { 
   Flex, 
@@ -39,7 +39,7 @@ export default async function AdminPostsPage() {
           <Text color="gray" size="2">Manage your blog articles, news, and publications.</Text>
         </Box>
         <Button size="3" color="indigo" style={{ cursor: "pointer" }} asChild>
-          <Link href="#">
+          <Link href="/posts/new">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
               <path d="M12 5v14"/><path d="M5 12h14"/>
             </svg>
@@ -71,7 +71,7 @@ export default async function AdminPostsPage() {
                   <Table.RowHeaderCell className="max-w-72">
                     <Box className="truncate">
                       <RadixLink asChild color="indigo" weight="bold" size="2">
-                        <Link href={`/admin/posts/${post.id}/edit`}>
+                        <Link href={`/posts/${post.id}`}>
                           {post.title}
                         </Link>
                       </RadixLink>
@@ -122,10 +122,15 @@ export default async function AdminPostsPage() {
                       </DropdownMenu.Trigger>
                       <DropdownMenu.Content size="2" align="end">
                         <DropdownMenu.Item asChild>
-                          <Link href={`/admin/posts/${post.id}/edit`}>Edit Post</Link>
+                          <Link href={`/posts/${post.id}`}>Edit Post</Link>
                         </DropdownMenu.Item>
-                        <DropdownMenu.Item>View Live</DropdownMenu.Item>
+                        {post.status === "Published" && (
+                          <DropdownMenu.Item asChild>
+                            <Link href={`/posts/${post.id}/read`}>View Live</Link>
+                          </DropdownMenu.Item>
+                        )}
                         <DropdownMenu.Separator />
+                        <ArchivePost path="/admin/posts" postId={post.id} />
                         <DeletePost path="/admin/posts" postId={post.id} />
                       </DropdownMenu.Content>
                     </DropdownMenu.Root>

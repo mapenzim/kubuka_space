@@ -1,13 +1,9 @@
-import { auth } from "@/auth";
-import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { getActiveActor } from "@/lib/rbac/server";
+import { permissionsForRole } from "@/lib/rbac/policy";
 
 export async function GET() {
-  const session = await auth();
-  const roleName = session?.user?.role;
-  if (!roleName || session.user.status !== "ACTIVE") {
-    return NextResponse.json({ paths: [] }, { status: 401 });
-  }
-  const role = await prisma.role.findUnique({ where: { name: roleName }, include: { permissions: true } });
-  return NextResponse.json({ paths: role?.permissions.map((permission) => permission.path) ?? [] });
+  const actor = await getActiveActor();
+  if (!actor) return NextResponse.json({ permissions: [] }, { status: 401 });
+  return NextResponse.json({ permissions: permissionsForRole(actor.role) });
 }

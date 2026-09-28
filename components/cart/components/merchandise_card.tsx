@@ -165,7 +165,7 @@ export default function MerchandiseCard({ item }: Props) {
     : `${item.stockQuantity} available`;
 
   return (
-    <article className="group flex min-h-[31rem] flex-col overflow-hidden rounded-3xl border border-zinc-200/80 bg-white text-zinc-950 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-indigo-300 hover:shadow-xl hover:shadow-indigo-950/10 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-50 dark:hover:border-indigo-400/50 dark:hover:shadow-black/30">
+    <article className="group flex min-h-124 flex-col overflow-hidden rounded-3xl border border-zinc-200/80 bg-white text-zinc-950 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-indigo-300 hover:shadow-xl hover:shadow-indigo-950/10 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-50 dark:hover:border-indigo-400/50 dark:hover:shadow-black/30">
       <ProductVisual item={item} />
 
       <div className="flex flex-1 flex-col p-5">

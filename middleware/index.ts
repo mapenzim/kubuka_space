@@ -1,6 +1,10 @@
 import type { NextAuthRequest } from "next-auth";
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import {
+  canAccessProtectedPath,
+  defaultRouteForRole,
+} from "@/lib/rbac/policy";
 
 export const dynamic = "force-dynamic";
 
@@ -36,8 +40,8 @@ export async function middleware(req: NextAuthRequest) {
       return redirectToAuthentication();
     }
 
-    if (accountRole !== "ADMIN" && accountRole !== "SUPERUSER") {
-      return NextResponse.redirect(new URL("/", req.url));
+    if (!canAccessProtectedPath(accountRole, pathname)) {
+      return NextResponse.redirect(new URL("/not-authorized", req.url));
     }
   }
 
@@ -50,24 +54,7 @@ export async function middleware(req: NextAuthRequest) {
       return redirectToAuthentication();
     }
 
-    const userRole = accountRole as string;
-    if (!userRole) return NextResponse.redirect(new URL("/not-authorized", req.url));
-
-    try {
-      const permissionsResponse = await fetch(new URL("/api/authorization/permissions", req.url), {
-        headers: { cookie: req.headers.get("cookie") ?? "" },
-        cache: "no-store",
-      });
-      const { paths: allowedPaths = [] } = await permissionsResponse.json() as { paths?: string[] };
-      const hasAccess = allowedPaths.some(
-        path => pathname === path || pathname.startsWith(`${path}/`)
-      );
-
-      if (!hasAccess) {
-        return NextResponse.redirect(new URL("/not-authorized", req.url));
-      }
-    } catch (err) {
-      console.error("⚠️ Middleware role check failed:", err);
+    if (!canAccessProtectedPath(accountRole, pathname)) {
       return NextResponse.redirect(new URL("/not-authorized", req.url));
     }
   }
@@ -75,7 +62,8 @@ export async function middleware(req: NextAuthRequest) {
   if (pathname.startsWith("/profile")) {
     if (
       !sessionUser ||
-      (accountStatus && accountStatus !== "ACTIVE")
+      (accountStatus && accountStatus !== "ACTIVE") ||
+      !canAccessProtectedPath(accountRole, pathname)
     ) {
       return redirectToAuthentication();
     }
@@ -95,12 +83,7 @@ export async function middleware(req: NextAuthRequest) {
     sessionUser &&
     (!accountStatus || accountStatus === "ACTIVE")
   ) {
-    const redirectUrl =
-      accountRole === "ADMIN" || accountRole === "SUPERUSER"
-        ? "/admin"
-        : accountRole === "EDITOR"
-        ? "/admin/posts"
-        : "/";
+    const redirectUrl = defaultRouteForRole(accountRole);
     return NextResponse.redirect(new URL(redirectUrl, req.url));
   }
 

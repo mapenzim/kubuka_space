@@ -1,29 +1,34 @@
 "use server";
 
-import { auth } from "@/auth";
 import { containsProfanity } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 
 import prisma from "@/lib/prisma";
 import { getBroadcaster } from "@/lib/broadcaster";
 import { ulidId } from "@/lib/server-utils";
+import { getActiveActor, requireActor, requirePermission } from "@/lib/rbac/server";
+import { hasPermission, PERMISSIONS } from "@/lib/rbac/policy";
 
 type PostResult =
   | { success: true }
   | { error: { message: string } };
 
 export async function createPost(formData: FormData): Promise<PostResult> {
-  const title = formData.get("title") as string;
-  const content = formData.get("content") as string;
-  const authorId = formData.get('authorId') as string;
+  const actor = await requirePermission(PERMISSIONS.BLOG_CREATE);
+  const title = String(formData.get("title") ?? "").trim();
+  const content = String(formData.get("content") ?? "").trim();
+
+  if (!title) return { error: { message: "Title is required." } };
+  if (containsProfanity(content)) {
+    return { error: { message: "Content contains profanity." } };
+  }
 
   await prisma.post.create({
     data: { 
       id: ulidId(), 
-      title, 
-      content, 
-      authorId: authorId 
+      title,
+      content,
+      authorId: actor.id,
     },
   });
 
@@ -31,10 +36,7 @@ export async function createPost(formData: FormData): Promise<PostResult> {
 }
 
 export async function publishPost(formData: FormData): Promise<PostResult> {
-  const session = await auth();
-  if (!session?.user) {
-    redirect("/authentication");
-  }
+  const actor = await requirePermission(PERMISSIONS.BLOG_CREATE);
 
   const title = formData.get("title") as string;
   const content = formData.get("content") as string;
@@ -59,7 +61,11 @@ export async function publishPost(formData: FormData): Promise<PostResult> {
       })
     : null;
 
-  if (postId && (!existingPost || existingPost.authorId !== session.user.id)) {
+  if (postId && !existingPost) {
+    return { error: { message: "Post not found." } };
+  }
+
+  if (existingPost && !hasPermission(actor.role, PERMISSIONS.BLOG_UPDATE_ANY)) {
     return {
       error: { message: "You do not have permission to update this post." },
     };
@@ -83,7 +89,7 @@ export async function publishPost(formData: FormData): Promise<PostResult> {
           content: content?.trim(),
           published: true,
           publishedAt,
-          authorId: session.user.id,
+          authorId: actor.id,
         },
       });
 
@@ -102,10 +108,7 @@ export async function publishPost(formData: FormData): Promise<PostResult> {
 }
 
 export async function saveDraft(formData: FormData): Promise<PostResult> {
-  const session = await auth();
-  if (!session?.user) {
-    redirect("/");
-  }
+  const actor = await requirePermission(PERMISSIONS.BLOG_CREATE);
 
   const title = formData.get("title") as string;
   const content = formData.get("content") as string;
@@ -119,30 +122,37 @@ export async function saveDraft(formData: FormData): Promise<PostResult> {
     return { error: { message: "Content contains profanity" } };
   }
 
-  const post = await prisma.post.upsert({
-    where: {
-      id: postId ?? "",
-      author: {
-        email: session.user.email!,
-      },
-    },
-    update: {
-      title: title.trim(),
-      content: content?.trim(),
-      published: false,
-    },
-    create: {
-      id: ulidId(),
-      title: title.trim(),
-      content: content?.trim(),
-      published: false,
-      author: {
-        connect: {
-          email: session.user.email!,
+  const existingPost = postId
+    ? await prisma.post.findUnique({ where: { id: postId } })
+    : null;
+
+  if (postId && !existingPost) {
+    return { error: { message: "Post not found." } };
+  }
+
+  if (existingPost && !hasPermission(actor.role, PERMISSIONS.BLOG_UPDATE_ANY)) {
+    return { error: { message: "You do not have permission to update this post." } };
+  }
+
+  const post = existingPost
+    ? await prisma.post.update({
+        where: { id: existingPost.id },
+        data: {
+          title: title.trim(),
+          content: content?.trim(),
+          published: false,
+          publishedAt: null,
         },
-      },
-    },
-  });
+      })
+    : await prisma.post.create({
+        data: {
+          id: ulidId(),
+          title: title.trim(),
+          content: content?.trim(),
+          published: false,
+          authorId: actor.id,
+        },
+      });
 
   revalidatePath(`/posts/${post.id}`);
   revalidatePath("/posts");
@@ -151,8 +161,12 @@ export async function saveDraft(formData: FormData): Promise<PostResult> {
 }
 
 export async function getOwnPosts(authorId: string) {
+  const actor = await requireActor();
+  if (actor.id !== authorId && !hasPermission(actor.role, PERMISSIONS.BLOG_READ_ANY)) {
+    throw new Error("You can only view your own posts.");
+  }
   return await prisma.post.findMany({
-    where: { authorId },
+    where: { authorId, deletedAt: null },
     orderBy: { createdAt: "desc" }
   });
 }
@@ -173,8 +187,9 @@ export async function getAllPosts() {
 }
 
 export async function fetchAllPosts() {
+  await requirePermission(PERMISSIONS.BLOG_READ_ANY);
   return await prisma.post.findMany({
-    where: {},
+    where: { deletedAt: null },
     include: { author: {
       select: {
         name: true,
@@ -188,8 +203,13 @@ export async function fetchAllPosts() {
 }
 
 export async function getPost (postId: string) {
-  return await prisma.post.findUnique({
-    where: { id: postId },
+  const actor = await getActiveActor();
+  const canReadUnpublished = actor && hasPermission(actor.role, PERMISSIONS.BLOG_READ_ANY);
+
+  return await prisma.post.findFirst({
+    where: canReadUnpublished
+      ? { id: postId, deletedAt: null }
+      : { id: postId, published: true, deletedAt: null },
     include: { author: {
       select: {
         name: true,
@@ -203,6 +223,7 @@ export async function getPost (postId: string) {
 
 export async function deletePost(postId: string, path: string) {
   try {
+    await requirePermission(PERMISSIONS.BLOG_DELETE_ANY);
     await prisma.post.delete({ where: {id: postId} });
     revalidatePath(path);
 
@@ -210,4 +231,15 @@ export async function deletePost(postId: string, path: string) {
   } catch {
     return { error: "Failed to delete post." }
   }
+}
+
+export async function archivePost(postId: string, path = "/admin/posts") {
+  await requirePermission(PERMISSIONS.BLOG_ARCHIVE_ANY);
+  await prisma.post.update({
+    where: { id: postId },
+    data: { deletedAt: new Date() },
+  });
+  revalidatePath(path);
+  revalidatePath("/posts");
+  return { success: true };
 }

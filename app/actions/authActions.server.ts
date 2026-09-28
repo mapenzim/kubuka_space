@@ -3,12 +3,20 @@
 import prisma from "@/lib/prisma";
 import { ulidId } from "@/lib/server-utils";
 import { hash } from "bcryptjs";
-import { auth } from "@/auth";
 import type { WorkExperience } from "@prisma/client";
+import { getActiveActor } from "@/lib/rbac/server";
+import { hasPermission, PERMISSIONS } from "@/lib/rbac/policy";
 
 type CreateUserResult =
   | { success: true }
   | { error: { message: string } };
+
+async function getProfileActor() {
+  const actor = await getActiveActor();
+  return actor && hasPermission(actor.role, PERMISSIONS.PROFILE_MANAGE_SELF)
+    ? actor
+    : null;
+}
 
 export async function createUser(form: FormData): Promise<CreateUserResult> {
   const name = String(form.get("name") ?? "").trim();
@@ -114,11 +122,11 @@ type BioSubmitResult =
   | { error: { message: string } };
 
 export async function userBio(form: FormData): Promise<BioSubmitResult> {
-  const session = await auth();
-  const userId = session?.user?.id;
+  const actor = await getProfileActor();
+  const userId = actor?.id;
   const text = String(form.get("bio") ?? "").trim();
 
-  if (!userId || session.user.status !== "ACTIVE") {
+  if (!userId) {
     return { error: { message: "Please sign in before updating your bio." } };
   }
 
@@ -198,8 +206,8 @@ type WorkExperienceSubmitResult =
   | { error: { message: string } };
 
 export async function userWorkExperience(form: FormData): Promise<WorkExperienceSubmitResult> {
-  const session = await auth();
-  const userId = session?.user?.id;
+  const actor = await getProfileActor();
+  const userId = actor?.id;
   const experienceId = String(form.get("experienceId") ?? "").trim();
   const jobTitle = String(form.get("jobTitle") ?? "").trim();
   const companyName = String(form.get("companyName") ?? "").trim();
@@ -216,7 +224,7 @@ export async function userWorkExperience(form: FormData): Promise<WorkExperience
       );
   const duties = String(form.get("duties") ?? "").trim();
 
-  if (!userId || session.user.status !== "ACTIVE") {
+  if (!userId) {
     return { error: { message: "Please sign in before adding work experience." } };
   }
 
@@ -312,10 +320,10 @@ export async function getUserAllExperience(userId: string) {
 export async function deleteUserWorkExperience(expId: string): Promise<
   { success: true } | { error: { message: string } }
 > {
-  const session = await auth();
-  const userId = session?.user?.id;
+  const actor = await getProfileActor();
+  const userId = actor?.id;
 
-  if (!userId || session.user.status !== "ACTIVE") {
+  if (!userId) {
     return { error: { message: "Please sign in before deleting work experience." } };
   }
 
@@ -342,12 +350,12 @@ type SkillSubmitResult =
   | { error: { message: string } };
 
 export async function userSkillAction(formData: FormData): Promise<SkillSubmitResult> {
-  const session = await auth();
-  const userId = session?.user?.id;
+  const actor = await getProfileActor();
+  const userId = actor?.id;
   const skillId = String(formData.get("skillId") ?? "").trim();
   const text = String(formData.get("text") ?? "").trim();
 
-  if (!userId || session.user.status !== "ACTIVE") {
+  if (!userId) {
     return { error: { message: "Please sign in before adding a skill." } };
   }
 
@@ -421,10 +429,10 @@ type SkillDeleteResult =
   | { error: { message: string } };
 
 export async function deleteUserSkill(id: string): Promise<SkillDeleteResult> {
-  const session = await auth();
-  const userId = session?.user?.id;
+  const actor = await getProfileActor();
+  const userId = actor?.id;
 
-  if (!userId || session.user.status !== "ACTIVE") {
+  if (!userId) {
     return { error: { message: "Please sign in before deleting a skill." } };
   }
 

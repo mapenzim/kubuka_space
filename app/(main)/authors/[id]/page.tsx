@@ -6,6 +6,7 @@ import { auth } from "@/auth";
 import Link from "next/link";
 import { formatName } from "@/lib/utils";
 import { Box, Card, Container, Flex, Heading, Text, Avatar, Button, Badge, Grid } from "@radix-ui/themes";
+import { hasPermission, PERMISSIONS } from "@/lib/rbac/policy";
 
 /**
  * ---------------------------
@@ -26,11 +27,21 @@ export default async function AuthorProfile({
 }) {
   const { id } = await params;
   const session = await auth();
+  const canManageBlog = Boolean(
+    session?.user && hasPermission(session.user.role, PERMISSIONS.BLOG_READ_ANY),
+  );
 
   const user = await prisma.user.findUnique({
     where: { id: id },
-    include: {
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      image: true,
       posts: {
+        where: canManageBlog
+          ? { deletedAt: null }
+          : { published: true, deletedAt: null },
         orderBy: { id: "desc" },
       },
     },
@@ -40,12 +51,7 @@ export default async function AuthorProfile({
     notFound();
   }
 
-  const isOwnProfile = session?.user?.email === user.email;
-  
-  // Filter posts depending on who is viewing
-  const posts: Post[] = isOwnProfile
-    ? user.posts as unknown as Post[] // Type assertion depending on your Prisma schema
-    : user.posts.filter((post: { published: any; }) => post.published) as unknown as Post[];
+  const posts: Post[] = user.posts;
 
   const isEmpty = posts.length === 0;
   const fallbackLetter = user.name?.charAt(0) || user.email?.charAt(0) || "?";
@@ -88,9 +94,9 @@ export default async function AuthorProfile({
         <Box mt='8'>
           <Flex align="center" justify="between" mb="5">
             <Heading as="h2" size="6" className="text-zinc-900 dark:text-zinc-400">
-              {isOwnProfile ? "Your Posts" : "Published Posts"}
+              {canManageBlog ? "Blog Posts" : "Published Posts"}
             </Heading>
-            {isOwnProfile && (
+            {canManageBlog && (
               <Button size="2" asChild className="cursor-pointer text-zinc-400!">
                 <Link href="/posts/new">
                   <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -107,13 +113,13 @@ export default async function AuthorProfile({
               className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 py-12 text-center border-dashed"
               m="4"
             >
-              <Text as="p" size="3" color="gray" mb={isOwnProfile ? "4" : "0"}>
-                {isOwnProfile
+              <Text as="p" size="3" color="gray" mb={canManageBlog ? "4" : "0"}>
+                {canManageBlog
                   ? "You haven't published any posts yet."
                   : "No published posts yet."}
               </Text>
               
-              {isOwnProfile && (
+              {canManageBlog && (
                 <Link
                   href="/posts/new"
                   className="inline-flex items-center gap-1 text-(--iris-11) hover:underline font-medium transition-colors"

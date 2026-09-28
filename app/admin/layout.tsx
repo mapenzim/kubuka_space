@@ -3,10 +3,11 @@ import { cookies } from "next/headers";
 import AdminReauthGate from "@/components/admin/AdminReauthGate";
 import AdminShell from "@/components/admin/AdminShell";
 import { getAdminActiveSnippetRequestCount } from "@/app/actions/snippetActions.server";
-import { getActiveAdmin } from "@/lib/admin/require_admin";
+import { getActiveBackofficeActor } from "@/lib/admin/require_admin";
+import { hasPermission, PERMISSIONS } from "@/lib/rbac/policy";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const admin = await getActiveAdmin();
+  const admin = await getActiveBackofficeActor();
 
   if (!admin) {
     redirect("/authentication?callbackUrl=/admin");
@@ -17,7 +18,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     return <AdminReauthGate />;
   }
 
-  const activeSnippetRequestCount = await getAdminActiveSnippetRequestCount();
+  const activeSnippetRequestCount = hasPermission(admin.role, PERMISSIONS.SNIPPETS_MANAGE)
+    ? await getAdminActiveSnippetRequestCount()
+    : 0;
 
   return (
     <AdminShell
@@ -26,6 +29,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         name: admin.name,
         email: admin.email,
         image: admin.image,
+        role: admin.role,
       }}
     >
       {children}

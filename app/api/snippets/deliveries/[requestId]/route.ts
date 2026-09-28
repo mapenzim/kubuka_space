@@ -1,7 +1,7 @@
-import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
-import { isAdminRole } from "@/lib/roles";
 import { NextResponse } from "next/server";
+import { getActiveActor } from "@/lib/rbac/server";
+import { hasPermission, PERMISSIONS } from "@/lib/rbac/policy";
 
 export const dynamic = "force-dynamic";
 
@@ -9,15 +9,11 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ requestId: string }> },
 ) {
-  const session = await auth();
-  if (!session?.user?.id || session.user.status !== "ACTIVE") {
+  const actor = await getActiveActor();
+  if (!actor) {
     return NextResponse.json({ error: "Authentication required." }, { status: 401 });
   }
 
-  const actor = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { role: { select: { name: true } } },
-  });
   const { requestId } = await params;
   const request = await prisma.snippetRequest.findUnique({
     where: { id: requestId },
@@ -42,7 +38,7 @@ export async function GET(
   if (!request || !request.delivery) {
     return NextResponse.json({ error: "Snippet delivery not found." }, { status: 404 });
   }
-  if (request.userId !== session.user.id && !isAdminRole(actor?.role?.name)) {
+  if (request.userId !== actor.id && !hasPermission(actor.role, PERMISSIONS.SNIPPETS_MANAGE)) {
     return NextResponse.json({ error: "You cannot access this delivery." }, { status: 403 });
   }
 

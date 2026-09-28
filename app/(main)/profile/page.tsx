@@ -71,9 +71,11 @@ const ProfilePage = async () => {
           </Flex>
 
 
-          {/* =========================================
-              RIGHT COLUMN: Main Content (Spans 8)
-              ========================================= */}
+          {/* 
+            =========================================
+            RIGHT COLUMN: Main Content (Spans 8)
+            ========================================= 
+          */}
           <Flex direction="column" gap="6" className="md:col-span-8">
             
             <Card size="1" variant="ghost" className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 shadow-sm rounded-2xl">
@@ -151,10 +153,10 @@ const ProfilePage = async () => {
                     </Button>
                   </Flex>
 
-                  <Flex direction="column" gap="4">
+                  <div className="grid grid-cols-4">
                     {orders.length ? (
                       orders.map((order) => (
-                        <Card key={order.id} variant="ghost" size="2" className="bg-zinc-500 dark:bg-zinc-900! border border-zinc-200 dark:border-zinc-800" m={{ sm: "1", md: "4" }}>
+                        <Card key={order.id} variant="surface" size="1" className="z-40 shadow-2xl hover:shadow-amber-200 hover:shadow-lg" m={{ sm: "1", md: "4" }}>
                           <Flex justify="between" align="center" wrap="wrap" gap="4" mb="3">
                             <Text size="2" weight="bold" className="text-zinc-700 dark:text-zinc-300">
                               Order #: {String(order.id).slice(-6).toUpperCase()}
@@ -182,7 +184,7 @@ const ProfilePage = async () => {
                         Your order history is empty.
                       </Text>
                     )}
-                  </Flex>
+                  </div>
                 </Box>
 
               </Flex>

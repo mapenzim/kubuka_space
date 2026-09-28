@@ -1,8 +1,8 @@
 "use server";
 
-import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
-import { isAdminRole } from "@/lib/roles";
+import { getActiveActor } from "@/lib/rbac/server";
+import { hasPermission, PERMISSIONS } from "@/lib/rbac/policy";
 import { compare } from "bcryptjs";
 import { cookies } from "next/headers";
 
@@ -10,9 +10,9 @@ const ADMIN_REAUTH_COOKIE = "kubuka_admin_reauth";
 const REAUTH_WINDOW_SECONDS = 15 * 60;
 
 export async function confirmAdminAccess(password: string) {
-  const session = await auth();
-  if (!session?.user?.id || !isAdminRole(session.user.role)) {
-    return { success: false, message: "Administrator access required." };
+  const actor = await getActiveActor();
+  if (!actor || !hasPermission(actor.role, PERMISSIONS.BLOG_READ_ANY)) {
+    return { success: false, message: "Back-office access required." };
   }
 
   if (!password || password.length > 256) {
@@ -20,7 +20,7 @@ export async function confirmAdminAccess(password: string) {
   }
 
   const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
+    where: { id: actor.id },
     select: { password: true },
   });
   if (!user || !(await compare(password, user.password))) {

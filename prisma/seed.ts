@@ -2,6 +2,7 @@ import "dotenv/config";
 import { hash } from "bcryptjs";
 import { ulid } from "ulid";
 import prisma from "@/lib/prisma";
+import { AppRole, permissionsForRole } from "@/lib/rbac/policy";
 
 // 🔐 Helper for password hashing
 async function securePassword(password: string) {
@@ -11,40 +12,31 @@ async function securePassword(password: string) {
 async function main() {
 
   // --- 1️⃣ Roles & Permissions ---
-  const rolesData = [
-    {
-      name: "ADMIN",
-      permissions: [
-        { path: "/*" },
-      ],
-    },
-    {
-      name: "EDITOR",
-      permissions: [
-        { path: "/" },
-      ],
-    },
-    {
-      name: "SUPERUSER",
-      permissions: [
-        { path: "/" },
-        { path: "/dashboard" },
-        { path: "/api/admin" },
-        { path: "/api/secure" },
-      ],
-    },
-    {
-      name: "USER",
-      permissions: [
-        { path: "/" },
-      ],
-    },
+  // GUEST is an unauthenticated policy role and deliberately has no database
+  // record. Authenticated accounts may only receive one of these four roles.
+  const persistedRoles: Exclude<AppRole, "GUEST">[] = [
+    "SUPERUSER",
+    "ADMIN",
+    "EDITOR",
+    "USER",
   ];
+  const rolesData = persistedRoles.map((name) => ({
+    name,
+    permissions: permissionsForRole(name).map((path) => ({ path })),
+  }));
 
   for (const role of rolesData) {
     await prisma.role.upsert({
       where: { name: role.name },
-      update: {},
+      update: {
+        permissions: {
+          deleteMany: {},
+          create: role.permissions.map((permission) => ({
+            ...permission,
+            id: ulid(),
+          })),
+        },
+      },
       create: {
         id: ulid(),
         name: role.name,

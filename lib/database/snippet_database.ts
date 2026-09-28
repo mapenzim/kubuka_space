@@ -4,7 +4,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 
 import prisma from "@/lib/prisma";
-import { isAdminRole } from "@/lib/roles";
+import { hasPermission, PERMISSIONS } from "@/lib/rbac/policy";
 
 type SnippetDatabaseActor = {
   email: string;
@@ -29,7 +29,10 @@ function requireProductionSnippetAccess(actor: SnippetDatabaseActor) {
       "DEV_ADMIN_EMAIL is required before production snippet requests can be loaded locally.",
     );
   }
-  if (actor.email.trim().toLowerCase() !== allowedEmail || !isAdminRole(actor.role)) {
+  if (
+    actor.email.trim().toLowerCase() !== allowedEmail ||
+    !hasPermission(actor.role, PERMISSIONS.SNIPPETS_MANAGE)
+  ) {
     throw new Error("Only the configured developer administrator can access production snippet requests.");
   }
 }

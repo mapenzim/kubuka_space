@@ -9,12 +9,18 @@ export default async function Authors() {
   const authors = await prisma.user.findMany({
     where: {
       posts: {
-        some: { published: true },
+        some: { published: true, deletedAt: null },
       },
+      status: "ACTIVE",
     },
-    include: {
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      image: true,
       posts: {
-        where: { published: true },
+        where: { published: true, deletedAt: null },
+        select: { id: true },
       },
     },
     orderBy: {

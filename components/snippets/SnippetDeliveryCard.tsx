@@ -24,6 +24,7 @@ export default function SnippetDeliveryCard({ requestId }: { requestId: string }
   const [error, setError] = useState("");
   const [activePath, setActivePath] = useState("");
   const [copied, setCopied] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -55,15 +56,60 @@ export default function SnippetDeliveryCard({ requestId }: { requestId: string }
     window.setTimeout(() => setCopied(false), 1500);
   }
 
-  function downloadFile() {
-    if (!activeFile) return;
-    const blob = new Blob([activeFile.content], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = activeFile.path.split("/").at(-1) || "snippet.txt";
-    anchor.click();
-    URL.revokeObjectURL(url);
+  async function downloadAllFiles() {
+    if (!delivery || delivery.files.length === 0 || downloading) return;
+
+    setDownloading(true);
+    try {
+      // Loaded on demand so viewing chat deliveries does not add the ZIP
+      // implementation to the initial client bundle.
+      const { strToU8, zipSync } = await import("fflate");
+      const archiveFiles: Record<string, Uint8Array> = {};
+      const usedPaths = new Set<string>();
+
+      delivery.files.forEach((file, index) => {
+        const normalizedPath = file.path
+          .replaceAll("\\", "/")
+          .split("/")
+          .filter((segment) => segment && segment !== "." && segment !== "..")
+          .join("/") || `file-${index + 1}.txt`;
+
+        let archivePath = normalizedPath;
+        let duplicateNumber = 2;
+        while (usedPaths.has(archivePath)) {
+          const extensionIndex = normalizedPath.lastIndexOf(".");
+          archivePath = extensionIndex > normalizedPath.lastIndexOf("/")
+            ? `${normalizedPath.slice(0, extensionIndex)}-${duplicateNumber}${normalizedPath.slice(extensionIndex)}`
+            : `${normalizedPath}-${duplicateNumber}`;
+          duplicateNumber += 1;
+        }
+
+        usedPaths.add(archivePath);
+        archiveFiles[archivePath] = strToU8(file.content);
+      });
+
+      const archive = zipSync(archiveFiles, { level: 6 });
+      const blob = new Blob([archive], { type: "application/zip" });
+      const url = URL.createObjectURL(blob);
+      const safeTitle = delivery.title
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "") || "code-snippet";
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `${safeTitle}-v${delivery.version}.zip`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 0);
+      toast.success(`Downloaded ${delivery.files.length} snippet file${delivery.files.length === 1 ? "" : "s"}.`);
+    } catch (reason) {
+      console.error("Unable to create snippet ZIP", reason);
+      toast.error("Unable to prepare the snippet download.");
+    } finally {
+      setDownloading(false);
+    }
   }
 
   if (error) {
@@ -115,8 +161,8 @@ export default function SnippetDeliveryCard({ requestId }: { requestId: string }
           <Button type="button" variant="soft" color="gray" onClick={() => void copyCode()}>
             {copied ? <Check size={15} /> : <Copy size={15} />}{copied ? "Copied" : "Copy code"}
           </Button>
-          <Button type="button" color="indigo" onClick={downloadFile}>
-            <Download size={15} />Download {activeFile.path.split("/").at(-1)}
+          <Button type="button" color="indigo" disabled={downloading} onClick={() => void downloadAllFiles()}>
+            <Download size={15} />{downloading ? "Preparing ZIP…" : "Download all files (.zip)"}
           </Button>
         </Flex>
       </Flex>

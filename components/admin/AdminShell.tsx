@@ -30,6 +30,12 @@ import {
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { ADMIN_SNIPPET_COUNT_EVENT } from "@/lib/snippets";
 import { clearUserChatSession } from "@/lib/chat/client/guest_session";
+import {
+  AppRole,
+  hasPermission,
+  Permission,
+  PERMISSIONS,
+} from "@/lib/rbac/policy";
 
 interface AdminShellProps {
   children: React.ReactNode;
@@ -38,27 +44,28 @@ interface AdminShellProps {
     name?: string | null;
     email?: string | null;
     image?: string | null;
+    role: Exclude<AppRole, "GUEST">;
   };
 }
 
 const overviewNavigation = [
-  { href: "/admin", label: "Dashboard", icon: LayoutPanelTopIcon },
+  { href: "/admin", label: "Dashboard", icon: LayoutPanelTopIcon, permission: PERMISSIONS.ADMIN_DASHBOARD_READ },
 ];
 
 const navigationGroups = [
   {
     label: "Content",
     items: [
-      { href: "/admin/posts", label: "All Posts", icon: NotebookTabs },
-      { href: "/admin/users", label: "Users", icon: Users },
+      { href: "/admin/posts", label: "All Posts", icon: NotebookTabs, permission: PERMISSIONS.BLOG_READ_ANY },
+      { href: "/admin/users", label: "Users", icon: Users, permission: PERMISSIONS.USERS_READ },
     ],
   },
   {
     label: "Operations",
     items: [
-      { href: "/admin/store", label: "Storefront", icon: ShoppingCart },
-      { href: "/admin/snippets", label: "Code Snippets", icon: Code2 },
-      { href: "/admin/messages", label: "Messages", icon: MailPlus },
+      { href: "/admin/store", label: "Storefront", icon: ShoppingCart, permission: PERMISSIONS.STORE_MANAGE },
+      { href: "/admin/snippets", label: "Code Snippets", icon: Code2, permission: PERMISSIONS.SNIPPETS_MANAGE },
+      { href: "/admin/messages", label: "Messages", icon: MailPlus, permission: PERMISSIONS.CONTACT_MANAGE_ANY },
     ],
   },
 ];
@@ -146,6 +153,7 @@ export default function AdminShell({ children, initialActiveSnippetRequestCount,
             pageTitle={pageTitle}
             darkMode={darkMode}
             user={user}
+            role={user.role}
             activeSnippetRequestCount={activeSnippetRequestCount}
             onToggleTheme={toggleTheme}
           />
@@ -172,6 +180,7 @@ export default function AdminShell({ children, initialActiveSnippetRequestCount,
             pageTitle={pageTitle}
             darkMode={darkMode}
             user={user}
+            role={user.role}
             activeSnippetRequestCount={activeSnippetRequestCount}
             mobile
             onClose={closeMobileMenu}
@@ -211,6 +220,7 @@ function AdminSidebarContent({
   pageTitle,
   darkMode,
   user,
+  role,
   activeSnippetRequestCount,
   mobile = false,
   onClose,
@@ -220,6 +230,7 @@ function AdminSidebarContent({
   pageTitle: string;
   darkMode: boolean;
   user: AdminShellProps["user"];
+  role: AppRole;
   activeSnippetRequestCount: number;
   mobile?: boolean;
   onClose?: () => void;
@@ -238,7 +249,7 @@ function AdminSidebarContent({
       <Separator size="4" />
       <AdminContextHeader pageTitle={pageTitle} darkMode={darkMode} onToggleTheme={onToggleTheme} />
       <Separator size="4" />
-      <AdminNavigation pathname={pathname} activeSnippetRequestCount={activeSnippetRequestCount} onNavigate={onClose} />
+      <AdminNavigation pathname={pathname} role={role} activeSnippetRequestCount={activeSnippetRequestCount} onNavigate={onClose} />
       <AdminAccountFooter user={user} onNavigate={onClose} />
     </>
   );
@@ -288,10 +299,12 @@ function AdminContextHeader({
 
 function AdminNavigation({
   pathname,
+  role,
   activeSnippetRequestCount,
   onNavigate,
 }: {
   pathname: string;
+  role: AppRole;
   activeSnippetRequestCount: number;
   onNavigate?: () => void;
 }) {
@@ -300,12 +313,14 @@ function AdminNavigation({
       <Text size="1" weight="bold" mb="2" className="px-3 uppercase tracking-wider text-(--admin-sidebar-muted)">
         Overview
       </Text>
-      {overviewNavigation.map(({ href, label, icon: Icon }) => (
+      {overviewNavigation.filter((item) => hasPermission(role, item.permission)).map(({ href, label, icon: Icon }) => (
         <AdminLink key={href} href={href} label={label} icon={Icon} active={isActivePath(pathname, href)} onNavigate={onNavigate} />
       ))}
 
       {navigationGroups.map((group) => {
-        const groupIsActive = group.items.some((item) => isActivePath(pathname, item.href));
+        const visibleItems = group.items.filter((item) => hasPermission(role, item.permission as Permission));
+        if (visibleItems.length === 0) return null;
+        const groupIsActive = visibleItems.some((item) => isActivePath(pathname, item.href));
 
         return (
           <details key={group.label} open={groupIsActive} className="group mt-1 w-full">
@@ -314,7 +329,7 @@ function AdminNavigation({
               <ChevronDown size={17} className="shrink-0 transition-transform duration-200 group-open:rotate-180" aria-hidden="true" />
             </summary>
             <div className="ml-3 mt-1 flex w-full flex-col gap-1 border-l border-(--gray-a6) pl-2">
-              {group.items.map(({ href, label, icon: Icon }) => (
+              {visibleItems.map(({ href, label, icon: Icon }) => (
                 <AdminLink
                   key={href}
                   href={href}
@@ -374,9 +389,11 @@ function AdminAccountFooter({
           <ChevronDown size={17} className="shrink-0 transition-transform duration-200 group-open:rotate-180" aria-hidden="true" />
         </summary>
         <div className="mt-2 flex w-full flex-col gap-1 rounded-lg border border-(--gray-a6) p-1">
-          <Link href="/admin/profile" onClick={onNavigate} className="block rounded-md px-3 py-2 text-sm text-(--admin-sidebar-foreground) hover:bg-(--admin-sidebar-hover)">
-            Profile
-          </Link>
+          {hasPermission(user.role, PERMISSIONS.ADMIN_PROFILE_MANAGE) && (
+            <Link href="/admin/profile" onClick={onNavigate} className="block rounded-md px-3 py-2 text-sm text-(--admin-sidebar-foreground) hover:bg-(--admin-sidebar-hover)">
+              Profile
+            </Link>
+          )}
           <button
             type="button"
             disabled={isSigningOut}
